@@ -5,7 +5,9 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
-    "start": "pnpm run build && node dist/main.js"
+    "start": "pnpm run build && node dist/main.js",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -13,6 +15,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
+    "prettier": "^3.3.3",
     "typescript": "^5.6.3"
   }
 }

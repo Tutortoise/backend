@@ -1,0 +1,7 @@
+# Ignore artifacts:
+dist
+coverage
+
+*.yaml
+*.yml
+.pnpm-store
