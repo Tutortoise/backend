@@ -3,6 +3,8 @@ import admin from "firebase-admin";
 
 export const PORT = process.env.PORT || 8080;
 
+export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+
 // Firebase Related
 if (
   !process.env.FIREBASE_SERVICE_ACCOUNT_KEY ||
