@@ -7,6 +7,7 @@ import {
   rateLimitMiddleware,
   compressionMiddleware,
 } from "./middleware/security.middleware";
+import router from "./routes";
 
 const app = express();
 
@@ -22,13 +23,8 @@ app.use(morganMiddleware);
 // Parse JSON payloads
 app.use(express.json({ limit: "10kb" })); // The request payload should not exceed 10kb
 
-app.get("/", (_req, res) => {
-  res
-    .json({
-      message: "Hello World",
-    })
-    .status(200);
-});
+// Routes
+app.use(router);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on http://localhost:${PORT}`);
