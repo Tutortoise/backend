@@ -1,6 +1,10 @@
-declare namespace Express {
-  export interface Request {
-    user: User;
-    tutor: Tutor;
+import type { User, Tutor } from "./types";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: User;
+      tutor: Tutor;
+    }
   }
 }

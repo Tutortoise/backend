@@ -1,4 +1,5 @@
 import type { RequestHandler } from "express";
+import type { Tutor, User } from "../types";
 import { auth, firestore } from "../config";
 import { logger } from "./logging.middleware";
 
@@ -22,13 +23,13 @@ export const firebaseAuthMiddleware: RequestHandler = async (
 
     if (userData.exists) {
       req.user = {
-        uid: user.uid,
-        ...userData.data(),
+        ...(userData.data() as User),
+        id: user.uid,
       };
     } else if (tutorData.exists) {
       req.tutor = {
-        uid: user.uid,
-        ...tutorData.data(),
+        ...(tutorData.data() as Tutor),
+        id: user.uid,
       };
     } else {
       throw new Error("User not found");
