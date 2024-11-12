@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { registerSchema } from "../schemas/auth.schema";
-import { auth } from "../config";
+import { auth, firestore } from "../config";
 import { z } from "zod";
 import type { Controller } from "../types";
 
@@ -14,6 +14,12 @@ export const register: Controller<RegisterSchema> = async (req, res) => {
     const { name: displayName, email, password } = req.body;
 
     const user = await auth.createUser({ displayName, email, password });
+    const currentDate = new Date();
+    firestore.collection("users").doc(user.uid).set({
+      name: displayName,
+      createdAt: currentDate,
+      updatedAt: currentDate,
+    });
 
     res.status(201).json({
       status: "success",
