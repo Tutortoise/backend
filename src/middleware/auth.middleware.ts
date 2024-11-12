@@ -15,8 +15,8 @@ export const firebaseAuthMiddleware: RequestHandler = async (
 
     // Validating the token.
     await auth.verifyIdToken(token);
-  } catch (err) {
-    logger.debug(`Failed to verify token: ${err}`);
+  } catch (error) {
+    logger.debug(`Failed to verify token: ${error}`);
 
     res.status(401).json({ status: "fail", message: "Token is not valid" });
     return;
