@@ -25,3 +25,8 @@ interface User {
   updatedAt: Date;
   lastSeen?: Date;
 }
+
+export interface Subject {
+  name: string;
+  iconUrl: string;
+}
