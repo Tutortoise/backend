@@ -12,7 +12,7 @@ export const getAllSubjects: Controller = async (_req, res) => {
     logger.error(`Error when getting all subjects: ${error}`);
     res.status(400).json({
       status: "fail",
-      data: { message: "Failed to get all subjects." },
+      message: "Failed to get all subjects.",
     });
   }
 };
