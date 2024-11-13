@@ -1,7 +1,7 @@
+import { GCS_BUCKET_NAME } from "@/config";
 import { Storage } from "@google-cloud/storage";
-import { GCS_BUCKET_NAME } from "../config";
+import { logger } from "@middleware/logging.middleware";
 import sharp from "sharp";
-import { logger } from "../middleware/logging.middleware";
 
 const storage = new Storage();
 

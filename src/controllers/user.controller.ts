@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { userSchema } from "../schemas/user.schema";
-import { Controller } from "../types";
-import { firestore } from "../config";
-import { logger } from "../middleware/logging.middleware";
+import { firestore } from "@/config";
+import { Controller } from "@/types";
+import { logger } from "@middleware/logging.middleware";
+import { userSchema } from "@schemas/user.schema";
+import { uploadProfilePicture } from "@services/upload.service";
 import type { RequestHandler } from "express";
-import { uploadProfilePicture } from "../services/upload.service";
+import { z } from "zod";
 
 type UpdateProfileSchema = z.infer<typeof userSchema>;
 export const updateProfile: Controller<UpdateProfileSchema> = async (

@@ -1,6 +1,6 @@
-import { firestore } from "../config";
-import { logger } from "../middleware/logging.middleware";
-import { Controller, Subject } from "../types";
+import { firestore } from "@/config";
+import { Controller, Subject } from "@/types";
+import { logger } from "@middleware/logging.middleware";
 
 export const getAllSubjects: Controller = async (_req, res) => {
   try {

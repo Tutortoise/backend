@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { registerSchema } from "../schemas/auth.schema";
-import { auth, firestore } from "../config";
+import { registerSchema } from "@schemas/auth.schema";
+import { auth, firestore } from "@/config";
 import { z } from "zod";
-import type { Controller } from "../types";
+import type { Controller } from "@/types";
 
 export const helloAuth = (_req: Request, res: Response) => {
   res.json({ message: "hello auth" });

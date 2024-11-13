@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
-import type { Tutor, User } from "../types";
-import { auth, firestore } from "../config";
+import type { Tutor, User } from "@/types";
+import { auth, firestore } from "@/config";
 import { logger } from "./logging.middleware";
 
 export const firebaseAuthMiddleware: RequestHandler = async (

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as authController from "@controllers/auth.controller";
-import { validator } from "../../middleware/validation.middleware";
-import { registerSchema } from "../../schemas/auth.schema";
+import { validator } from "@middleware/validation.middleware";
+import { registerSchema } from "@schemas/auth.schema";
 
 // /api/v1/auth
 const authRouter = Router();

@@ -2,7 +2,7 @@ import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import compression from "compression";
-import { CORS_ORIGIN } from "../config";
+import { CORS_ORIGIN } from "@/config";
 
 // Basic CORS configuration
 export const corsMiddleware = cors({
