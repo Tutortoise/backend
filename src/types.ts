@@ -1,4 +1,6 @@
+import { userSchema } from "@schemas/user.schema";
 import type { RequestHandler } from "express";
+import { z } from "zod";
 
 interface RequestData {
   body?: Record<string, any>;
@@ -9,22 +11,7 @@ interface RequestData {
 export interface Controller<T extends RequestData = RequestData>
   extends RequestHandler<T["params"], {}, T["body"], T["query"]> {}
 
-enum LearningStyle {
-  VISUAL = "VISUAL",
-  AUDITORY = "AUDITORY",
-  KINESTHETIC = "KINESTHETIC",
-}
-
-export interface User {
-  id: string;
-  phoneNum?: string;
-  city?: string;
-  interests?: string[];
-  learningStyle?: LearningStyle;
-  createdAt: Date;
-  updatedAt: Date;
-  lastSeen?: Date;
-}
+export type User = z.infer<typeof userSchema>;
 
 export interface Tutor {
   id: string;
