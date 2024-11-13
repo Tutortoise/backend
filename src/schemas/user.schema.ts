@@ -42,9 +42,9 @@ export const userSchema = z.object({
     })
     .optional(),
   learningStyle: z
-    .enum(["visual", "auditory", "reading/writing", "kinesthetic"], {
+    .enum(["visual", "auditory", "kinesthetic"], {
       message:
-        "Learning style must be one of 'visual', 'auditory', 'reading/writing', or 'kinesthetic'",
+        "Learning style must be one of 'visual', 'auditory', or 'kinesthetic'",
     })
     .optional(),
 });
