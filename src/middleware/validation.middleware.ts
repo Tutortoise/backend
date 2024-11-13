@@ -5,11 +5,16 @@ export const validator =
   (schema: AnyZodObject): RequestHandler =>
   async (req, res, next) => {
     try {
-      schema.parse({
+      const result = schema.parse({
         body: req.body,
         params: req.params,
         query: req.query,
       });
+
+      req.body = result.body;
+      req.params = result.params;
+      req.query = result.query;
+
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
