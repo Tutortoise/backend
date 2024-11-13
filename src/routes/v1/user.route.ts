@@ -4,7 +4,10 @@ import {
   firebaseAuthMiddleware,
   verifyUser,
 } from "../../middleware/auth.middleware";
-import { validator } from "../../middleware/validation.middleware";
+import {
+  validateProfilePictureUpload,
+  validator,
+} from "../../middleware/validation.middleware";
 import { userSchema } from "../../schemas/user.schema";
 
 // /api/v1/users
@@ -16,6 +19,12 @@ userRouter.patch(
   "/profile",
   validator(userSchema),
   userController.updateProfile,
+);
+
+userRouter.put(
+  "/profile/picture",
+  validateProfilePictureUpload,
+  userController.updateProfilePicture,
 );
 
 export default userRouter;

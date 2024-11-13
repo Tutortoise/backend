@@ -5,6 +5,12 @@ export const PORT = process.env.PORT || 8080;
 
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
+export const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME!;
+
+if (!GCS_BUCKET_NAME) {
+  throw new Error("Missing Google Cloud Storage Bucket Name");
+}
+
 // Firebase Related
 if (
   !process.env.FIREBASE_SERVICE_ACCOUNT_KEY ||

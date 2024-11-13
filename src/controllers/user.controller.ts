@@ -3,6 +3,8 @@ import { userSchema } from "../schemas/user.schema";
 import { Controller } from "../types";
 import { firestore } from "../config";
 import { logger } from "../middleware/logging.middleware";
+import type { RequestHandler } from "express";
+import { uploadProfilePicture } from "../services/upload.service";
 
 type UpdateProfileSchema = z.infer<typeof userSchema>;
 export const updateProfile: Controller<UpdateProfileSchema> = async (
@@ -29,4 +31,24 @@ export const updateProfile: Controller<UpdateProfileSchema> = async (
   res
     .status(200)
     .json({ status: "success", message: "User profile updated successfully" });
+};
+
+export const updateProfilePicture: RequestHandler = async (req, res) => {
+  const url = await uploadProfilePicture(req.file!, req.user.id);
+
+  if (!url) {
+    res.status(500).json({
+      status: "error",
+      message: "Failed to upload profile picture",
+    });
+    return;
+  }
+
+  res.json({
+    status: "success",
+    message: "Profile picture updated successfully",
+    data: {
+      url,
+    },
+  });
 };
