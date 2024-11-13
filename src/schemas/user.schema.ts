@@ -1,3 +1,4 @@
+import { firestore } from "@/config";
 import { z } from "zod";
 
 export const userSchema = z.object({
@@ -16,9 +17,35 @@ export const userSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   lastSeen: z.date().optional(),
-  interests: z.array(z.string()).optional(),
+  interests: z
+    .array(z.string())
+    .superRefine(async (interests, ctx) => {
+      try {
+        const subjectsSnapshot = await firestore.collection("subjects").get();
+        const validSubjects = subjectsSnapshot.docs.map((doc) => doc.id);
+
+        const invalidInterests = interests.filter(
+          (interest) => !validSubjects.includes(interest),
+        );
+        if (invalidInterests.length > 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Invalid interests found: ${invalidInterests.join(", ")}`,
+          });
+        }
+      } catch (error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Failed to validate interests due to an internal error",
+        });
+      }
+    })
+    .optional(),
   learningStyle: z
-    .enum(["visual", "auditory", "reading/writing", "kinesthetic"])
+    .enum(["visual", "auditory", "reading/writing", "kinesthetic"], {
+      message:
+        "Learning style must be one of 'visual', 'auditory', 'reading/writing', or 'kinesthetic'",
+    })
     .optional(),
 });
 
@@ -28,7 +55,5 @@ export const updateProfileSchema = z.object({
     createdAt: true,
     updatedAt: true,
     lastSeen: true,
-    interests: true,
-    learningStyle: true,
   }),
 });

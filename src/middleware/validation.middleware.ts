@@ -7,7 +7,7 @@ export const validator =
   (schema: AnyZodObject): RequestHandler =>
   async (req, res, next) => {
     try {
-      const result = schema.parse({
+      const result = await schema.parseAsync({
         body: req.body,
         params: req.params,
         query: req.query,
