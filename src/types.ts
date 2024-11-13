@@ -15,12 +15,22 @@ enum LearningStyle {
   KINESTHETIC = "KINESTHETIC",
 }
 
-interface User {
+export interface User {
   id: string;
   phoneNum?: string;
   city?: string;
   interests?: string[];
   learningStyle?: LearningStyle;
+  createdAt: Date;
+  updatedAt: Date;
+  lastSeen?: Date;
+}
+
+export interface Tutor {
+  id: string;
+  phoneNum?: string;
+  location?: unknown; // not sure now
+  coverageRange: number;
   createdAt: Date;
   updatedAt: Date;
   lastSeen?: Date;
