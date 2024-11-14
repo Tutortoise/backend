@@ -53,6 +53,17 @@ export const tutorSchema = z.object({
   lastSeen: z.date().optional(),
 });
 
+export const updateProfileSchema = z.object({
+  body: tutorSchema.omit({
+    id: true,
+    services: true,
+    coverageRange: true,
+    createdAt: true,
+    updatedAt: true,
+    lastSeen: true,
+  }),
+});
+
 export const tutorServiceSchema = z.object({
   id: z.string(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {

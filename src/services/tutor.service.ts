@@ -2,13 +2,13 @@ import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
-import { updateProfileSchema } from "@schemas/user.schema";
+import { updateProfileSchema } from "@schemas/tutor.schema";
 import firebase from "firebase-admin";
 import { z } from "zod";
 
 const storage = new Storage();
 
-export const updateUserProfile = async (
+export const updateProfile = async (
   userId: string,
   data: z.infer<typeof updateProfileSchema>["body"],
 ) => {
@@ -27,7 +27,7 @@ export const updateUserProfile = async (
 
   try {
     await firestore
-      .collection("users")
+      .collection("tutors")
       .doc(userId)
       .update({
         ...newData,
@@ -39,7 +39,7 @@ export const updateUserProfile = async (
 };
 
 // Upload to: profile-pictures/{uid}.jpg
-export const updateUserProfilePicture = async (
+export const updateProfilePicture = async (
   file: Express.Multer.File,
   userId: string,
 ) => {
