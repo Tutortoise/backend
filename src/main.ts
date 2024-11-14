@@ -1,13 +1,14 @@
 import express from "express";
-import { PORT } from "./config";
-import { morganMiddleware, logger } from "./middleware/logging.middleware";
-import router from "./routes";
+import { PORT } from "@/config";
+import { morganMiddleware, logger } from "@/middleware/logging.middleware";
+import router from "@/routes";
 import {
   helmetMiddleware,
   corsMiddleware,
   rateLimitMiddleware,
   compressionMiddleware,
 } from "@middleware/security.middleware";
+import "reflect-metadata";
 
 const app = express();
 
