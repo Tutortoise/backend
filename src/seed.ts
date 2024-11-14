@@ -59,6 +59,26 @@ export const seedSubjects = async () => {
       name: "Swimming",
       iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/Swimming.png`,
     },
+    {
+      name: "Painting",
+      iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/Painting.png`,
+    },
+    {
+      name: "English",
+      iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/English.png`,
+    },
+    {
+      name: "Tennis",
+      iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/Tennis.png`,
+    },
+    {
+      name: "Chinese",
+      iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/Chinese.png`,
+    },
+    {
+      name: "Chemistry",
+      iconUrl: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/subjects/Chemistry.png`,
+    },
   ];
 
   await firestore
