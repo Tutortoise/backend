@@ -1,28 +1,19 @@
-import { Request, Response } from "express";
-import { registerSchema } from "@schemas/auth.schema";
-import { auth, firestore } from "@/config";
-import { z } from "zod";
 import type { Controller } from "@/types";
-
-export const helloAuth = (_req: Request, res: Response) => {
-  res.json({ message: "hello auth" });
-};
+import { registerSchema } from "@schemas/auth.schema";
+import * as authService from "@services/auth.service";
+import { z } from "zod";
 
 type RegisterSchema = z.infer<typeof registerSchema>;
 export const register: Controller<RegisterSchema> = async (req, res) => {
   try {
-    const { name: displayName, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    const user = await auth.createUser({ displayName, email, password });
-    firestore.collection("users").doc(user.uid).set({
-      name: displayName,
-      createdAt: new Date(),
-    });
+    const result = await authService.registerUser(name, email, password);
 
     res.status(201).json({
       status: "success",
-      message: "register success",
-      data: { userId: user.uid },
+      message: "Registration successful",
+      data: result,
     });
   } catch (error) {
     if (error instanceof Error) {
