@@ -24,7 +24,11 @@ export const validator =
           field: error.path.join("."),
           message: error.message,
         }));
-        res.status(400).json({ status: "fail", errors });
+        res.status(400).json({
+          status: "fail",
+          message: "Validation error",
+          errors,
+        });
       }
     }
   };

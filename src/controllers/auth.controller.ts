@@ -25,14 +25,6 @@ export const register: Controller<RegisterSchema> = async (req, res) => {
       data: { userId: user.uid },
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({
-        status: "fail",
-        message: "validation error",
-        errors: error.message,
-      });
-    }
-
     if (error instanceof Error) {
       res.status(400).json({ status: "fail", message: error.message });
     }
