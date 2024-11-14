@@ -14,6 +14,13 @@ export const tutorSchema = z.object({
       longitude: z.number({ message: "Longitude must be a number" }),
     })
     .optional(),
+  gender: z
+    .enum(["male", "female", "prefer not to say"], {
+      message:
+        "Gender must be one of the following: male, female, or prefer not to say",
+    })
+    .default("prefer not to say")
+    .optional(),
   services: z
     .array(z.string())
     .superRefine(async (services, ctx) => {

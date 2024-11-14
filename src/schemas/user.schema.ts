@@ -14,9 +14,13 @@ export const userSchema = z.object({
       longitude: z.number({ message: "Longitude must be a number" }),
     })
     .optional(),
-  createdAt: z.date(),
-  updatedAt: z.date().optional(),
-  lastSeen: z.date().optional(),
+  gender: z
+    .enum(["male", "female", "prefer not to say"], {
+      message:
+        "Gender must be one of the following: male, female, or prefer not to say",
+    })
+    .default("prefer not to say")
+    .optional(),
   interests: z
     .array(z.string())
     .superRefine(async (interests, ctx) => {
@@ -47,6 +51,9 @@ export const userSchema = z.object({
         "Learning style must be one of 'visual', 'auditory', or 'kinesthetic'",
     })
     .optional(),
+  createdAt: z.date(),
+  updatedAt: z.date().optional(),
+  lastSeen: z.date().optional(),
 });
 
 export const updateProfileSchema = z.object({
