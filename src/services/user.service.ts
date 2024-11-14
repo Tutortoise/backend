@@ -1,4 +1,4 @@
-import { firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
@@ -55,5 +55,15 @@ export const updateUserProfilePicture = async (
     logger.error(`Failed to upload profile picture: ${error}`);
 
     return undefined;
+  }
+};
+
+export const changePassword = async (userId: string, newPassword: string) => {
+  try {
+    await auth.updateUser(userId, {
+      password: newPassword,
+    });
+  } catch (error) {
+    throw new Error(`Failed to change password: ${error}`);
   }
 };

@@ -7,6 +7,7 @@ import {
   validateProfilePictureUpload,
   validator,
 } from "@middleware/validation.middleware";
+import { changePasswordSchema } from "@schemas/auth.schema";
 import { updateProfileSchema } from "@schemas/user.schema";
 import { Router } from "express";
 
@@ -25,6 +26,14 @@ userRouter.put(
   "/profile/picture",
   validateProfilePictureUpload,
   userController.updateProfilePicture,
+);
+
+// TODO: harus validasi dulu password lamanya. Di firebase-admin ga ada kayak compare password
+//       jadi harus di handle di client atau generate password reset link yang dikirim di email
+userRouter.put(
+  "/password",
+  validator(changePasswordSchema),
+  userController.changePassword,
 );
 
 export default userRouter;

@@ -1,6 +1,7 @@
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { updateProfileSchema } from "@schemas/user.schema";
+import { changePasswordSchema } from "@schemas/auth.schema";
 import * as userService from "@services/user.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
@@ -48,6 +49,28 @@ export const updateProfilePicture: RequestHandler = async (req, res) => {
         error instanceof Error
           ? error.message
           : "Failed to upload profile picture",
+    });
+  }
+};
+
+type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
+export const changePassword: Controller<ChangePasswordSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    await userService.changePassword(req.user.id, req.body.newPassword);
+
+    res.json({
+      status: "success",
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to change password: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: "Failed to change password",
     });
   }
 };

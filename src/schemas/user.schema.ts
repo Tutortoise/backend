@@ -19,7 +19,6 @@ export const userSchema = z.object({
       message:
         "Gender must be one of the following: male, female, or prefer not to say",
     })
-    .default("prefer not to say")
     .optional(),
   interests: z
     .array(z.string())

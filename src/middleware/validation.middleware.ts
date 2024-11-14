@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
-import { AnyZodObject, z } from "zod";
+import { z, ZodTypeAny } from "zod";
 import { logger } from "./logging.middleware";
 import { imageUpload } from "./multer.middleware";
 
 export const validator =
-  (schema: AnyZodObject): RequestHandler =>
+  (schema: ZodTypeAny): RequestHandler =>
   async (req, res, next) => {
     try {
       const result = await schema.parseAsync({
