@@ -14,11 +14,9 @@ export const register: Controller<RegisterSchema> = async (req, res) => {
     const { name: displayName, email, password } = req.body;
 
     const user = await auth.createUser({ displayName, email, password });
-    const currentDate = new Date();
     firestore.collection("users").doc(user.uid).set({
       name: displayName,
-      createdAt: currentDate,
-      updatedAt: currentDate,
+      createdAt: new Date(),
     });
 
     res.status(201).json({
