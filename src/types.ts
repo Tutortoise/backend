@@ -1,5 +1,7 @@
 import { tutorSchema, tutorServiceSchema } from "@schemas/tutor.schema";
 import { userSchema } from "@schemas/user.schema";
+import { registerSchema } from "@schemas/auth.schema";
+import { updateProfileSchema } from "@schemas/user.schema";
 import type { RequestHandler } from "express";
 import { z } from "zod";
 
@@ -20,3 +22,6 @@ export interface Subject {
   name: string;
   iconUrl: string;
 }
+
+export type RegisterBody = z.infer<typeof registerSchema>["body"];
+export type UpdateProfileBody = z.infer<typeof updateProfileSchema>["body"];
