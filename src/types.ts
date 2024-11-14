@@ -1,3 +1,4 @@
+import { tutorSchema, tutorServiceSchema } from "@schemas/tutor.schema";
 import { userSchema } from "@schemas/user.schema";
 import type { RequestHandler } from "express";
 import { z } from "zod";
@@ -12,16 +13,8 @@ export interface Controller<T extends RequestData = RequestData>
   extends RequestHandler<T["params"], {}, T["body"], T["query"]> {}
 
 export type User = z.infer<typeof userSchema>;
-
-export interface Tutor {
-  id: string;
-  phoneNum?: string;
-  location?: unknown; // not sure now
-  coverageRange: number;
-  createdAt: Date;
-  updatedAt: Date;
-  lastSeen?: Date;
-}
+export type Tutor = z.infer<typeof tutorSchema>;
+export type Service = z.infer<typeof tutorServiceSchema>;
 
 export interface Subject {
   name: string;

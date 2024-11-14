@@ -15,7 +15,7 @@ export const userSchema = z.object({
     })
     .optional(),
   createdAt: z.date(),
-  updatedAt: z.date(),
+  updatedAt: z.date().optional(),
   lastSeen: z.date().optional(),
   interests: z
     .array(z.string())
