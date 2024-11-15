@@ -6,9 +6,15 @@ import { z } from "zod";
 type RegisterSchema = z.infer<typeof registerSchema>;
 export const register: Controller<RegisterSchema> = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
-    const result = await authService.registerLearner(name, email, password);
+    let result;
+    // TODO: instead of using role, use a separate endpoint for learner and tutor?
+    if (role === "learner") {
+      result = await authService.registerLearner(name, email, password);
+    } else {
+      result = await authService.registerTutor(name, email, password);
+    }
 
     res.status(201).json({
       status: "success",

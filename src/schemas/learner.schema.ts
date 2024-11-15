@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const learnerSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  name: z.string().min(3, "Name must be at least 3 characters").optional(),
   phoneNum: z
     .string()
     .min(10, "Phone number must be at least 10 characters")
