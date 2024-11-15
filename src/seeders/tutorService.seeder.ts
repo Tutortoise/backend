@@ -69,8 +69,8 @@ export const seedServices = async () => {
   tutorServices.forEach((service) => {
     const serviceRef = firestore.collection("tutor_services").doc(service.id!);
     batch.set(serviceRef, {
-      tutorId: service.tutorId,
-      subjectId: service.subjectId,
+      tutorId: firestore.collection("tutors").doc(service.tutorId),
+      subjectId: firestore.collection("subjects").doc(service.subjectId),
       aboutYou: service.aboutYou,
       teachingMethodology: service.teachingMethodology,
       hourlyRate: service.hourlyRate,
