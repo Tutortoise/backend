@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import type { Tutor, User } from "@/types";
+import type { Tutor, Learner } from "@/types";
 import { auth, firestore } from "@/config";
 import { logger } from "./logging.middleware";
 
@@ -17,21 +17,29 @@ export const firebaseAuthMiddleware: RequestHandler = async (
     // Validating the token.
     const user = await auth.verifyIdToken(token);
 
-    // Find out whether the 'user' here is a regular user or tutor
-    const userData = await firestore.collection("users").doc(user.uid).get();
-    const tutorData = await firestore.collection("tutors").doc(user.uid).get();
-
-    if (userData.exists) {
-      req.user = {
-        ...(userData.data() as User),
+    // Find out whether the 'user' here is a learner or tutor
+    const learnerData = await firestore
+      .collection("learners")
+      .doc(user.uid)
+      .get();
+    if (learnerData.exists) {
+      req.learner = {
+        ...(learnerData.data() as Learner),
         id: user.uid,
       };
-    } else if (tutorData.exists) {
+      return;
+    }
+
+    const tutorData = await firestore.collection("tutors").doc(user.uid).get();
+    if (tutorData.exists) {
       req.tutor = {
         ...(tutorData.data() as Tutor),
         id: user.uid,
       };
-    } else {
+      return;
+    }
+
+    if (!learnerData.exists && !tutorData.exists) {
       throw new Error("User not found");
     }
   } catch (error) {
@@ -53,8 +61,8 @@ export const verifyTutor: RequestHandler = (req, res, next) => {
   next();
 };
 
-export const verifyUser: RequestHandler = (req, res, next) => {
-  if (!req.user) {
+export const verifyLearner: RequestHandler = (req, res, next) => {
+  if (!req.learner) {
     res.status(403).json({ status: "fail", message: "Forbidden" });
     return;
   }

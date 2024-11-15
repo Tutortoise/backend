@@ -1,9 +1,9 @@
-import type { User, Tutor } from "./types";
+import type { Learner, Tutor } from "./types";
 
 declare global {
   namespace Express {
     interface Request {
-      user: User;
+      learner: Learner;
       tutor: Tutor;
     }
   }

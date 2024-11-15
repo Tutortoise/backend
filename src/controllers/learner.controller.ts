@@ -1,8 +1,8 @@
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
-import { updateProfileSchema } from "@schemas/user.schema";
+import { updateProfileSchema } from "@schemas/learner.schema";
 import { changePasswordSchema } from "@schemas/auth.schema";
-import * as userService from "@services/user.service";
+import * as learnerService from "@services/learner.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
 
@@ -12,27 +12,27 @@ export const updateProfile: Controller<UpdateProfileSchema> = async (
   res,
 ) => {
   try {
-    await userService.updateUserProfile(req.user.id, req.body);
+    await learnerService.updateLearnerProfile(req.learner.id, req.body);
 
     res.status(200).json({
       status: "success",
-      message: "User profile updated successfully",
+      message: "Learner profile updated successfully",
     });
   } catch (error) {
-    logger.debug(`Failed to update user profile: ${error}`);
+    logger.debug(`Failed to update learner profile: ${error}`);
 
     res.status(500).json({
       status: "error",
-      message: "Failed to update user profile",
+      message: "Failed to update learner profile",
     });
   }
 };
 
 export const updateProfilePicture: RequestHandler = async (req, res) => {
   try {
-    const url = await userService.updateUserProfilePicture(
+    const url = await learnerService.updateLearnerProfilePicture(
       req.file!,
-      req.user.id,
+      req.learner.id,
     );
 
     res.json({
@@ -59,7 +59,7 @@ export const changePassword: Controller<ChangePasswordSchema> = async (
   res,
 ) => {
   try {
-    await userService.changePassword(req.user.id, req.body.newPassword);
+    await learnerService.changePassword(req.learner.id, req.body.newPassword);
 
     res.json({
       status: "success",

@@ -1,7 +1,7 @@
-import { firestore } from "@/config";
+import { validateInterests } from "@services/learner.service";
 import { z } from "zod";
 
-export const userSchema = z.object({
+export const learnerSchema = z.object({
   id: z.string(),
   name: z.string().min(3, "Name must be at least 3 characters"),
   phoneNum: z
@@ -23,23 +23,12 @@ export const userSchema = z.object({
   interests: z
     .array(z.string())
     .superRefine(async (interests, ctx) => {
-      try {
-        const subjectsSnapshot = await firestore.collection("subjects").get();
-        const validSubjects = subjectsSnapshot.docs.map((doc) => doc.id);
+      const isValid = await validateInterests(interests);
 
-        const invalidInterests = interests.filter(
-          (interest) => !validSubjects.includes(interest),
-        );
-        if (invalidInterests.length > 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Invalid interests found: ${invalidInterests.join(", ")}`,
-          });
-        }
-      } catch (error) {
+      if (!isValid) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Failed to validate interests due to an internal error",
+          message: "Invalid interests",
         });
       }
     })
@@ -56,7 +45,7 @@ export const userSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  body: userSchema.omit({
+  body: learnerSchema.omit({
     id: true,
     createdAt: true,
     updatedAt: true,

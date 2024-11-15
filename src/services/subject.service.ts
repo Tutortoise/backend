@@ -18,3 +18,12 @@ export const getAllSubjects = async () => {
     throw new Error(`Error when getting all subjects: ${error}`);
   }
 };
+
+export const checkSubjectExists = async (subjectId: string) => {
+  const subjectSnapshot = await firestore
+    .collection("subjects")
+    .doc(subjectId)
+    .get();
+
+  return subjectSnapshot.exists;
+};

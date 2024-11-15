@@ -67,3 +67,21 @@ export const changePassword = async (userId: string, newPassword: string) => {
     throw new Error(`Failed to change password: ${error}`);
   }
 };
+
+export const checkTutorExists = async (tutorId: string) => {
+  const tutorSnapshot = await firestore.collection("tutors").doc(tutorId).get();
+  return tutorSnapshot.exists;
+};
+
+export const validateServices = async (services: string[]) => {
+  try {
+    const servicesSnapshot = await firestore.collection("tutor_services").get();
+    const validServices = servicesSnapshot.docs.map((doc) => doc.id);
+
+    return services.every((service) => validServices.includes(service));
+  } catch (error) {
+    logger.error(`Failed to validate services: ${error}`);
+
+    return false;
+  }
+};

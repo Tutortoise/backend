@@ -1,39 +1,39 @@
-import * as userController from "@controllers/user.controller";
+import * as learnerController from "@controllers/learner.controller";
 import {
   firebaseAuthMiddleware,
-  verifyUser,
+  verifyLearner,
 } from "@middleware/auth.middleware";
 import {
   validateProfilePictureUpload,
   validator,
 } from "@middleware/validation.middleware";
 import { changePasswordSchema } from "@schemas/auth.schema";
-import { updateProfileSchema } from "@schemas/user.schema";
+import { updateProfileSchema } from "@schemas/learner.schema";
 import { Router } from "express";
 
-// /api/v1/users
-const userRouter = Router();
-userRouter.use(firebaseAuthMiddleware);
-userRouter.use(verifyUser);
+// /api/v1/learners
+const learnerRouter = Router();
+learnerRouter.use(firebaseAuthMiddleware);
+learnerRouter.use(verifyLearner);
 
-userRouter.patch(
+learnerRouter.patch(
   "/profile",
   validator(updateProfileSchema),
-  userController.updateProfile,
+  learnerController.updateProfile,
 );
 
-userRouter.put(
+learnerRouter.put(
   "/profile/picture",
   validateProfilePictureUpload,
-  userController.updateProfilePicture,
+  learnerController.updateProfilePicture,
 );
 
 // TODO: harus validasi dulu password lamanya. Di firebase-admin ga ada kayak compare password
 //       jadi harus di handle di client atau generate password reset link yang dikirim di email
-userRouter.put(
+learnerRouter.put(
   "/password",
   validator(changePasswordSchema),
-  userController.changePassword,
+  learnerController.changePassword,
 );
 
-export default userRouter;
+export default learnerRouter;

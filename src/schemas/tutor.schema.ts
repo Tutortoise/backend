@@ -1,4 +1,5 @@
-import { firestore } from "@/config";
+import { checkSubjectExists } from "@services/subject.service";
+import { checkTutorExists, validateServices } from "@services/tutor.service";
 import { z } from "zod";
 
 export const tutorSchema = z.object({
@@ -23,26 +24,11 @@ export const tutorSchema = z.object({
   services: z
     .array(z.string())
     .superRefine(async (services, ctx) => {
-      // Validate that the services are valid by checking the tutor_services collection
-      try {
-        const servicesSnapshot = await firestore
-          .collection("tutor_services")
-          .get();
-        const validServices = servicesSnapshot.docs.map((doc) => doc.id);
-        const invalidServices = services.filter(
-          (service) => !validServices.includes(service),
-        );
-
-        if (invalidServices.length > 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `Invalid services found: ${invalidServices.join(", ")}`,
-          });
-        }
-      } catch (error) {
+      const isServicesValid = await validateServices(services);
+      if (!isServicesValid) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Failed to validate services due to an internal error",
+          message: "Invalid services",
         });
       }
     })
@@ -67,42 +53,20 @@ export const updateProfileSchema = z.object({
 export const tutorServiceSchema = z.object({
   id: z.string(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    // Validate that the tutor exists by checking the tutors collection
-    try {
-      const tutorSnapshot = await firestore
-        .collection("tutors")
-        .doc(tutorId)
-        .get();
-      if (!tutorSnapshot.exists) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Tutor does not exist",
-        });
-      }
-    } catch (error) {
+    const exists = await checkTutorExists(tutorId);
+    if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Failed to validate tutor due to an internal error",
+        message: "Tutor does not exist",
       });
     }
   }),
   subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    // Validate that the subject exists by checking the subjects collection
-    try {
-      const subjectSnapshot = await firestore
-        .collection("subjects")
-        .doc(subjectId)
-        .get();
-      if (!subjectSnapshot.exists) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Subject does not exist",
-        });
-      }
-    } catch (error) {
+    const exists = await checkSubjectExists(subjectId);
+    if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Failed to validate subject due to an internal error",
+        message: "Subject does not exist",
       });
     }
   }),

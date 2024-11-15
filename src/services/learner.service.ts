@@ -2,13 +2,13 @@ import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
-import { updateProfileSchema } from "@schemas/user.schema";
+import { updateProfileSchema } from "@schemas/learner.schema";
 import firebase from "firebase-admin";
 import { z } from "zod";
 
 const storage = new Storage();
 
-export const updateUserProfile = async (
+export const updateLearnerProfile = async (
   userId: string,
   data: z.infer<typeof updateProfileSchema>["body"],
 ) => {
@@ -27,7 +27,7 @@ export const updateUserProfile = async (
 
   try {
     await firestore
-      .collection("users")
+      .collection("learners")
       .doc(userId)
       .update({
         ...newData,
@@ -39,7 +39,7 @@ export const updateUserProfile = async (
 };
 
 // Upload to: profile-pictures/{uid}.jpg
-export const updateUserProfilePicture = async (
+export const updateLearnerProfilePicture = async (
   file: Express.Multer.File,
   userId: string,
 ) => {
@@ -65,5 +65,18 @@ export const changePassword = async (userId: string, newPassword: string) => {
     });
   } catch (error) {
     throw new Error(`Failed to change password: ${error}`);
+  }
+};
+
+export const validateInterests = async (interests: string[]) => {
+  try {
+    const subjectsSnapshot = await firestore.collection("subjects").get();
+    const validSubjects = subjectsSnapshot.docs.map((doc) => doc.id);
+
+    return interests.every((interest) => validSubjects.includes(interest));
+  } catch (error) {
+    logger.error(`Failed to validate interests: ${error}`);
+
+    return false;
   }
 };
