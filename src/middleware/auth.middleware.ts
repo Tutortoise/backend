@@ -27,7 +27,6 @@ export const firebaseAuthMiddleware: RequestHandler = async (
         ...(learnerData.data() as Learner),
         id: user.uid,
       };
-      return;
     }
 
     const tutorData = await firestore.collection("tutors").doc(user.uid).get();
@@ -36,7 +35,6 @@ export const firebaseAuthMiddleware: RequestHandler = async (
         ...(tutorData.data() as Tutor),
         id: user.uid,
       };
-      return;
     }
 
     if (!learnerData.exists && !tutorData.exists) {
