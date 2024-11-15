@@ -1,5 +1,8 @@
 import { firestore } from "@/config";
-import { createTutorServiceSchema } from "@schemas/tutorService.schema";
+import {
+  createTutorServiceSchema,
+  updateTutorServiceSchema,
+} from "@schemas/tutorService.schema";
 import firebase from "firebase-admin";
 import { z } from "zod";
 
@@ -32,5 +35,22 @@ export const createTutorService = async (
     await batch.commit();
   } catch (error) {
     throw new Error(`Failed to create tutor service: ${error}`);
+  }
+};
+
+export const updateTutorService = async (
+  serviceId: string,
+  data: z.infer<typeof updateTutorServiceSchema>["body"],
+) => {
+  try {
+    firestore
+      .collection("tutor_services")
+      .doc(serviceId)
+      .update({
+        ...data,
+        updatedAt: new Date(),
+      });
+  } catch (error) {
+    throw new Error(`Failed to update tutor service: ${error}`);
   }
 };

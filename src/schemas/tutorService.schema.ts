@@ -47,3 +47,18 @@ export const createTutorServiceSchema = z.object({
     updatedAt: true,
   }),
 });
+
+export const updateTutorServiceSchema = z.object({
+  body: tutorServiceSchema
+    .omit({
+      id: true,
+      tutorId: true,
+      subjectId: true,
+      createdAt: true,
+      updatedAt: true,
+    })
+    .partial(),
+  params: z.object({
+    tutorServiceId: z.string(),
+  }),
+});
