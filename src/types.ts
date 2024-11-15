@@ -1,7 +1,8 @@
-import { tutorSchema, tutorServiceSchema } from "@schemas/tutor.schema";
+import { tutorSchema } from "@schemas/tutor.schema";
 import { learnerSchema } from "@schemas/learner.schema";
 import type { RequestHandler } from "express";
 import { z } from "zod";
+import { tutorServiceSchema } from "@schemas/tutorService.schema";
 
 interface RequestData {
   body?: Record<string, any>;
@@ -14,7 +15,7 @@ export interface Controller<T extends RequestData = RequestData>
 
 export type Learner = z.infer<typeof learnerSchema>;
 export type Tutor = z.infer<typeof tutorSchema>;
-export type Service = z.infer<typeof tutorServiceSchema>;
+export type TutorService = z.infer<typeof tutorServiceSchema>;
 
 export interface Subject {
   name: string;

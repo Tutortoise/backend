@@ -2,7 +2,7 @@ import { validateInterests } from "@services/learner.service";
 import { z } from "zod";
 
 export const learnerSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   name: z.string().min(3, "Name must be at least 3 characters"),
   phoneNum: z
     .string()

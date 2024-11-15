@@ -3,7 +3,7 @@ import { checkTutorExists, validateServices } from "@services/tutor.service";
 import { z } from "zod";
 
 export const tutorSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   name: z.string().min(3, "Name must be at least 3 characters"),
   phoneNum: z
     .string()
@@ -48,33 +48,4 @@ export const updateProfileSchema = z.object({
     updatedAt: true,
     lastSeen: true,
   }),
-});
-
-export const tutorServiceSchema = z.object({
-  id: z.string(),
-  tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    const exists = await checkTutorExists(tutorId);
-    if (!exists) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Tutor does not exist",
-      });
-    }
-  }),
-  subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    const exists = await checkSubjectExists(subjectId);
-    if (!exists) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Subject does not exist",
-      });
-    }
-  }),
-  // About the tutor's experience with the subject
-  aboutYou: z.string().optional(),
-  // Tutor's teaching methodology
-  teachingMethodology: z.string().optional(),
-  hourlyRate: z.number().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date().optional(),
 });
