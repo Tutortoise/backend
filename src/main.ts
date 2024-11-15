@@ -9,7 +9,7 @@ import {
   compressionMiddleware,
 } from "@middleware/security.middleware";
 
-const app = express();
+export const app = express();
 
 // Security middlewares
 app.use(helmetMiddleware);
