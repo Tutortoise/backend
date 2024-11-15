@@ -4,7 +4,10 @@ import {
   verifyTutor,
 } from "@middleware/auth.middleware";
 import { validator } from "@middleware/validation.middleware";
-import { updateTutorServiceSchema } from "@schemas/tutorService.schema";
+import {
+  createTutorServiceSchema,
+  updateTutorServiceSchema,
+} from "@schemas/tutorService.schema";
 import { Router } from "express";
 
 // /api/v1/tutors/services
@@ -12,7 +15,11 @@ const tutorServiceRouter = Router();
 tutorServiceRouter.use(firebaseAuthMiddleware);
 tutorServiceRouter.use(verifyTutor);
 
-tutorServiceRouter.post("/", tutorServiceController.createService);
+tutorServiceRouter.post(
+  "/",
+  validator(createTutorServiceSchema),
+  tutorServiceController.createService,
+);
 tutorServiceRouter.patch(
   "/:tutorServiceId",
   validator(updateTutorServiceSchema),
