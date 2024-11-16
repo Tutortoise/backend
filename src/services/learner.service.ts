@@ -1,4 +1,5 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, GCS_BUCKET_NAME } from "@/config";
+import { learnersCollection, subjectCollection } from "@/config/db";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
@@ -26,13 +27,10 @@ export const updateLearnerProfile = async (
     : restOfData;
 
   try {
-    await firestore
-      .collection("learners")
-      .doc(userId)
-      .update({
-        ...newData,
-        updatedAt: new Date(),
-      });
+    await learnersCollection.doc(userId).update({
+      ...newData,
+      updatedAt: new Date(),
+    });
   } catch (error) {
     throw new Error(`Failed to update profile: ${error}`);
   }
@@ -70,7 +68,7 @@ export const changePassword = async (userId: string, newPassword: string) => {
 
 export const validateInterests = async (interests: string[]) => {
   try {
-    const subjectsSnapshot = await firestore.collection("subjects").get();
+    const subjectsSnapshot = await subjectCollection.get();
     const validSubjects = subjectsSnapshot.docs.map((doc) => doc.id);
 
     return interests.every((interest) => validSubjects.includes(interest));

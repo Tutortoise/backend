@@ -1,4 +1,5 @@
-import { auth, firestore } from "@/config";
+import { auth } from "@/config";
+import { learnersCollection, tutorsCollection } from "@/config/db";
 
 export const registerLearner = async (
   name: string,
@@ -9,7 +10,7 @@ export const registerLearner = async (
 
   await Promise.all([
     auth.setCustomUserClaims(user.uid, { role: "learner" }), // to insert `role` into jwt payload
-    firestore.collection("learners").doc(user.uid).set({
+    learnersCollection.doc(user.uid).set({
       name,
       createdAt: new Date(),
     }),
@@ -27,7 +28,7 @@ export const registerTutor = async (
 
   await Promise.all([
     auth.setCustomUserClaims(user.uid, { role: "tutor" }), // to insert `role` into jwt payload
-    firestore.collection("tutors").doc(user.uid).set({
+    tutorsCollection.doc(user.uid).set({
       name,
       createdAt: new Date(),
     }),

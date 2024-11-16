@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
-import type { Tutor, Learner } from "@/types";
-import { auth, firestore } from "@/config";
+import { auth } from "@/config";
 import { logger } from "./logging.middleware";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
+import { learnersCollection, tutorsCollection } from "@/config/db";
 
 export const firebaseAuthMiddleware: RequestHandler = async (
   req,
@@ -21,26 +21,20 @@ export const firebaseAuthMiddleware: RequestHandler = async (
     };
 
     if (user.role === "learner") {
-      const learnerData = await firestore
-        .collection("learners")
-        .doc(user.uid)
-        .get();
+      const learnerData = await learnersCollection.doc(user.uid).get();
       if (learnerData.exists) {
         req.learner = {
-          ...(learnerData.data() as Learner),
+          ...learnerData.data()!,
           id: user.uid,
         };
       }
     }
 
     if (user.role === "tutor") {
-      const tutorData = await firestore
-        .collection("tutors")
-        .doc(user.uid)
-        .get();
+      const tutorData = await tutorsCollection.doc(user.uid).get();
       if (tutorData.exists) {
         req.tutor = {
-          ...(tutorData.data() as Tutor),
+          ...tutorData.data()!,
           id: user.uid,
         };
       }

@@ -1,4 +1,5 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, GCS_BUCKET_NAME } from "@/config";
+import { tutorsCollection, tutorServicesCollection } from "@/config/db";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
@@ -26,13 +27,10 @@ export const updateProfile = async (
     : restOfData;
 
   try {
-    await firestore
-      .collection("tutors")
-      .doc(userId)
-      .update({
-        ...newData,
-        updatedAt: new Date(),
-      });
+    await tutorsCollection.doc(userId).update({
+      ...newData,
+      updatedAt: new Date(),
+    });
   } catch (error) {
     throw new Error(`Failed to update profile: ${error}`);
   }
@@ -69,13 +67,13 @@ export const changePassword = async (userId: string, newPassword: string) => {
 };
 
 export const checkTutorExists = async (tutorId: string) => {
-  const tutorSnapshot = await firestore.collection("tutors").doc(tutorId).get();
+  const tutorSnapshot = await tutorsCollection.doc(tutorId).get();
   return tutorSnapshot.exists;
 };
 
 export const validateServices = async (services: string[]) => {
   try {
-    const servicesSnapshot = await firestore.collection("tutor_services").get();
+    const servicesSnapshot = await tutorServicesCollection.get();
     const validServices = servicesSnapshot.docs.map((doc) => doc.id);
 
     return services.every((service) => validServices.includes(service));

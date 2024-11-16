@@ -1,9 +1,8 @@
-import { firestore } from "@/config";
+import { subjectCollection } from "@/config/db";
 
 export const getAllSubjects = async () => {
   try {
-    const subjectsRef = firestore.collection("subjects");
-    const snapshot = await subjectsRef.get();
+    const snapshot = await subjectCollection.get();
 
     const subjects = snapshot.docs.map((doc) => {
       return {
@@ -20,10 +19,7 @@ export const getAllSubjects = async () => {
 };
 
 export const checkSubjectExists = async (subjectId: string) => {
-  const subjectSnapshot = await firestore
-    .collection("subjects")
-    .doc(subjectId)
-    .get();
+  const subjectSnapshot = await subjectCollection.doc(subjectId).get();
 
   return subjectSnapshot.exists;
 };

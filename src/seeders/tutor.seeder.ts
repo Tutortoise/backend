@@ -1,4 +1,4 @@
-import { firestore } from "@/config";
+import { tutorsCollection } from "@/config/db";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
 
@@ -17,14 +17,11 @@ export const seedTutors = async () => {
   }
 
   console.log(`Seeding tutors with ${tutors.length} data...`);
-  await firestore
-    .collection("tutors")
-    .get()
-    .then((snapshot) => {
-      if (snapshot.empty) {
-        tutors.forEach((tutor) => {
-          firestore.collection("tutors").add(tutor);
-        });
-      }
-    });
+  await tutorsCollection.get().then((snapshot) => {
+    if (snapshot.empty) {
+      tutors.forEach((tutor) => {
+        tutorsCollection.add(tutor);
+      });
+    }
+  });
 };

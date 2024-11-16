@@ -1,4 +1,5 @@
-import { firestore, GCS_BUCKET_NAME } from "@/config";
+import { GCS_BUCKET_NAME } from "@/config";
+import { subjectCollection } from "@/config/db";
 import { Subject } from "@/types";
 
 export const seedSubjects = async () => {
@@ -82,14 +83,11 @@ export const seedSubjects = async () => {
   ];
 
   console.log(`Seeding subjects with ${subjects.length} data...`);
-  await firestore
-    .collection("subjects")
-    .get()
-    .then((snapshot) => {
-      if (snapshot.empty) {
-        subjects.forEach((subject) => {
-          firestore.collection("subjects").add(subject);
-        });
-      }
-    });
+  await subjectCollection.get().then((snapshot) => {
+    if (snapshot.empty) {
+      subjects.forEach((subject) => {
+        subjectCollection.add(subject);
+      });
+    }
+  });
 };

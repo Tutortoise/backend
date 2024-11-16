@@ -1,5 +1,10 @@
 import { firestore } from "@/config";
 import {
+  subjectCollection,
+  tutorsCollection,
+  tutorServicesCollection,
+} from "@/config/db";
+import {
   createTutorServiceSchema,
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
@@ -15,10 +20,10 @@ export const createTutorService = async (
   try {
     const batch = firestore.batch();
 
-    const tutorRef = firestore.collection("tutors").doc(tutorId);
-    const subjectRef = firestore.collection("subjects").doc(subjectId);
+    const tutorRef = tutorsCollection.doc(tutorId);
+    const subjectRef = subjectCollection.doc(subjectId);
 
-    const newServiceRef = firestore.collection("tutor_services").doc();
+    const newServiceRef = tutorServicesCollection.doc();
     batch.set(newServiceRef, {
       tutorId: tutorRef,
       subjectId: subjectRef,
@@ -28,7 +33,7 @@ export const createTutorService = async (
       createdAt: new Date(),
     });
 
-    batch.update(firestore.collection("tutors").doc(tutorId), {
+    batch.update(tutorsCollection.doc(tutorId), {
       services: firebase.firestore.FieldValue.arrayUnion(newServiceRef),
     });
 
@@ -43,13 +48,10 @@ export const updateTutorService = async (
   data: z.infer<typeof updateTutorServiceSchema>["body"],
 ) => {
   try {
-    firestore
-      .collection("tutor_services")
-      .doc(serviceId)
-      .update({
-        ...data,
-        updatedAt: new Date(),
-      });
+    await tutorServicesCollection.doc(serviceId).update({
+      ...data,
+      updatedAt: new Date(),
+    });
   } catch (error) {
     throw new Error(`Failed to update tutor service: ${error}`);
   }

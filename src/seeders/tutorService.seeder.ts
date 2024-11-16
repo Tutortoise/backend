@@ -1,4 +1,9 @@
 import { firestore } from "@/config";
+import {
+  subjectCollection,
+  tutorsCollection,
+  tutorServicesCollection,
+} from "@/config/db";
 import { TutorService } from "@/types";
 import { faker } from "@faker-js/faker";
 import firebase from "firebase-admin";
@@ -25,8 +30,8 @@ const generateTeachingMethodology = async (subjectName: string) => {
 export const seedServices = async () => {
   const tutorServices: TutorService[] = [];
 
-  const tutorsSnapshot = await firestore.collection("tutors").get();
-  const subjectsSnapshot = await firestore.collection("subjects").get();
+  const tutorsSnapshot = await tutorsCollection.get();
+  const subjectsSnapshot = await subjectCollection.get();
 
   if (tutorsSnapshot.empty || subjectsSnapshot.empty) {
     throw new Error("Tutors or subjects not found");
@@ -67,17 +72,17 @@ export const seedServices = async () => {
   const batch = firestore.batch();
 
   tutorServices.forEach((service) => {
-    const serviceRef = firestore.collection("tutor_services").doc(service.id!);
+    const serviceRef = tutorServicesCollection.doc(service.id!);
     batch.set(serviceRef, {
-      tutorId: firestore.collection("tutors").doc(service.tutorId),
-      subjectId: firestore.collection("subjects").doc(service.subjectId),
+      tutorId: tutorsCollection.doc(service.tutorId),
+      subjectId: subjectCollection.doc(service.subjectId),
       aboutYou: service.aboutYou,
       teachingMethodology: service.teachingMethodology,
       hourlyRate: service.hourlyRate,
       createdAt: service.createdAt,
     });
 
-    const tutorRef = firestore.collection("tutors").doc(service.tutorId);
+    const tutorRef = tutorsCollection.doc(service.tutorId);
     batch.update(tutorRef, {
       services: firebase.firestore.FieldValue.arrayUnion(serviceRef),
     });
