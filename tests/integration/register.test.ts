@@ -21,7 +21,7 @@ describe("Register as learner", () => {
 
 describe("Register as tutor", () => {
   test("should register correctly", async () => {
-    const newLearner = {
+    const newTutor = {
       name: faker.person.fullName(),
       email: faker.internet.email(),
       password: faker.internet.password(),
@@ -30,7 +30,7 @@ describe("Register as tutor", () => {
 
     await supertest(app)
       .post("/api/v1/auth/register")
-      .send(newLearner)
+      .send(newTutor)
       .expect(201);
   });
 });
