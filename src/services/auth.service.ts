@@ -48,11 +48,6 @@ export class AuthService {
       }),
     ]);
 
-    await this.firestore.collection("tutors").doc(user.uid).set({
-      name,
-      createdAt: new Date(),
-    });
-
     return { userId: user.uid };
   }
 }
