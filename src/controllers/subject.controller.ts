@@ -1,6 +1,9 @@
-import * as subjectService from "@/services/subject.service";
+import { firestore } from "@/config";
+import { SubjectService } from "@/services/subject.service";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
+
+const subjectService = new SubjectService({ firestore });
 
 export const getAllSubjects: Controller = async (_req, res) => {
   try {

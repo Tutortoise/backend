@@ -1,10 +1,21 @@
+import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { downscaleImage } from "@/helpers/image.helper";
 import { Controller } from "@/types";
+import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@schemas/auth.schema";
 import { updateProfileSchema } from "@schemas/tutor.schema";
-import * as tutorService from "@services/tutor.service";
+import { TutorService } from "@services/tutor.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
+
+const tutorService = new TutorService({
+  auth,
+  firestore,
+  downscaleImage,
+  GCS_BUCKET_NAME,
+  storage: new Storage(),
+});
 
 type UpdateTutorProfileSchema = z.infer<typeof updateProfileSchema>;
 export const updateProfile: Controller<UpdateTutorProfileSchema> = async (

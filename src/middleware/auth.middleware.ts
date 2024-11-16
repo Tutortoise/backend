@@ -30,6 +30,9 @@ export const firebaseAuthMiddleware: RequestHandler = async (
           ...(learnerData.data() as Learner),
           id: user.uid,
         };
+
+        next();
+        return;
       }
     }
 
@@ -44,6 +47,9 @@ export const firebaseAuthMiddleware: RequestHandler = async (
           id: user.uid,
         };
       }
+
+      next();
+      return;
     }
 
     throw new Error("User not found");
@@ -53,8 +59,6 @@ export const firebaseAuthMiddleware: RequestHandler = async (
     res.status(401).json({ status: "fail", message: "Token is not valid" });
     return;
   }
-
-  next();
 };
 
 export const verifyTutor: RequestHandler = (req, res, next) => {
