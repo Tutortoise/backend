@@ -7,10 +7,13 @@ export const registerLearner = async (
 ) => {
   const user = await auth.createUser({ displayName: name, email, password });
 
-  await firestore.collection("learners").doc(user.uid).set({
-    name,
-    createdAt: new Date(),
-  });
+  await Promise.all([
+    auth.setCustomUserClaims(user.uid, { role: "learner" }), // to insert `role` into jwt payload
+    firestore.collection("learners").doc(user.uid).set({
+      name,
+      createdAt: new Date(),
+    }),
+  ]);
 
   return { userId: user.uid };
 };
@@ -22,10 +25,13 @@ export const registerTutor = async (
 ) => {
   const user = await auth.createUser({ displayName: name, email, password });
 
-  await firestore.collection("tutors").doc(user.uid).set({
-    name,
-    createdAt: new Date(),
-  });
+  await Promise.all([
+    auth.setCustomUserClaims(user.uid, { role: "tutor" }), // to insert `role` into jwt payload
+    firestore.collection("tutors").doc(user.uid).set({
+      name,
+      createdAt: new Date(),
+    }),
+  ]);
 
   return { userId: user.uid };
 };

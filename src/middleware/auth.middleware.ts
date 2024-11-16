@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import type { Tutor, Learner } from "@/types";
 import { auth, firestore } from "@/config";
 import { logger } from "./logging.middleware";
+import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 
 export const firebaseAuthMiddleware: RequestHandler = async (
   req,
@@ -15,31 +16,37 @@ export const firebaseAuthMiddleware: RequestHandler = async (
     const token = authHeader.split("Bearer ")[1];
 
     // Validating the token.
-    const user = await auth.verifyIdToken(token);
+    const user = (await auth.verifyIdToken(token)) as DecodedIdToken & {
+      role: "learner" | "tutor";
+    };
 
-    // Find out whether the 'user' here is a learner or tutor
-    const learnerData = await firestore
-      .collection("learners")
-      .doc(user.uid)
-      .get();
-    if (learnerData.exists) {
-      req.learner = {
-        ...(learnerData.data() as Learner),
-        id: user.uid,
-      };
+    if (user.role === "learner") {
+      const learnerData = await firestore
+        .collection("learners")
+        .doc(user.uid)
+        .get();
+      if (learnerData.exists) {
+        req.learner = {
+          ...(learnerData.data() as Learner),
+          id: user.uid,
+        };
+      }
     }
 
-    const tutorData = await firestore.collection("tutors").doc(user.uid).get();
-    if (tutorData.exists) {
-      req.tutor = {
-        ...(tutorData.data() as Tutor),
-        id: user.uid,
-      };
+    if (user.role === "tutor") {
+      const tutorData = await firestore
+        .collection("tutors")
+        .doc(user.uid)
+        .get();
+      if (tutorData.exists) {
+        req.tutor = {
+          ...(tutorData.data() as Tutor),
+          id: user.uid,
+        };
+      }
     }
 
-    if (!learnerData.exists && !tutorData.exists) {
-      throw new Error("User not found");
-    }
+    throw new Error("User not found");
   } catch (error) {
     logger.debug(`Failed to verify token: ${error}`);
 
