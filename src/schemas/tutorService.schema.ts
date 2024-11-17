@@ -37,18 +37,29 @@ export const tutorServiceSchema = z.object({
     }
   }),
   // About the tutor's experience with the subject
-  // TODO: set max length
-  aboutYou: z.string().min(10, {
-    message:
-      "You must at least write your experience with the subject in 10 characters",
-  }),
+  aboutYou: z
+    .string()
+    .min(10, {
+      message:
+        "You must at least write your experience with the subject in 10 characters",
+    })
+    .max(1500, {
+      message:
+        "You must at most write your experience with the subject in 1500 characters",
+    }),
   // Tutor's teaching methodology
-  // TODO: set max length
-  teachingMethodology: z.string().min(10, {
-    message: "Teaching methodology must be at least 10 characters",
-  }),
-  // TODO: ganti minimum dan maximum price
-  hourlyRate: z.number(),
+  teachingMethodology: z
+    .string()
+    .min(10, {
+      message: "Teaching methodology must be at least 10 characters",
+    })
+    .max(1500, {
+      message: "Teaching methodology must be at most 1500 characters",
+    }),
+  hourlyRate: z
+    .number()
+    .min(10000, { message: "Hourly rate must be at least Rp. 10,000" })
+    .max(1000000, { message: "Hourly rate must be at most Rp. 1,000,000" }),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
 });
