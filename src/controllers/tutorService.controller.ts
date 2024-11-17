@@ -4,6 +4,7 @@ import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import {
   createTutorServiceSchema,
+  deleteTutorServiceSchema,
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
 import { TutorServiceService } from "@services/tutorService.service";
@@ -69,6 +70,44 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
     res.status(500).json({
       status: "error",
       message: `Failed to update tutor service: ${error}`,
+    });
+  }
+};
+
+type DeleteTutorServiceSchema = z.infer<typeof deleteTutorServiceSchema>;
+export const deleteService: Controller<DeleteTutorServiceSchema> = async (
+  req,
+  res,
+) => {
+  const tutorServiceId = req.params.tutorServiceId;
+
+  // Check if the tutor owns the tutor service
+  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+    req.tutor.id,
+    tutorServiceId,
+  );
+
+  if (!isOwner) {
+    res.status(403).json({
+      status: "error",
+      message: "You are not authorized to delete this tutor service",
+    });
+    return;
+  }
+
+  try {
+    await tutorServiceService.deleteTutorService(req.tutor.id, tutorServiceId);
+
+    res.json({
+      status: "success",
+      message: "Tutor service deleted successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to delete tutor service: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to delete tutor service: ${error}`,
     });
   }
 };

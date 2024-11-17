@@ -25,5 +25,9 @@ tutorServiceRouter.patch(
   validator(updateTutorServiceSchema),
   tutorServiceController.updateService,
 );
+tutorServiceRouter.delete(
+  "/:tutorServiceId",
+  tutorServiceController.deleteService,
+);
 
 export default tutorServiceRouter;

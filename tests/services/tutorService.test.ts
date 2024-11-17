@@ -196,4 +196,80 @@ describe("TutorServiceService", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("deleteTutorService", () => {
+    it("should successfully delete a tutor service and remove it from the tutor's services array", async () => {
+      const mockBatch = {
+        delete: vi.fn(),
+        update: vi.fn(),
+        commit: vi.fn(),
+      };
+
+      const tutorId = faker.string.uuid();
+      const serviceId = faker.string.uuid();
+      const serviceDocRef = { id: serviceId };
+      const tutorDocRef = { id: tutorId };
+
+      firestore.batch.mockReturnValue(mockBatch);
+      firestore.collection.mockImplementation((collectionName: string) => {
+        switch (collectionName) {
+          case "tutor_services":
+            return { doc: vi.fn(() => serviceDocRef) };
+          case "tutors":
+            return { doc: vi.fn(() => tutorDocRef) };
+          default:
+            return {};
+        }
+      });
+
+      await service.deleteTutorService(tutorId, serviceId);
+
+      expect(firestore.batch).toHaveBeenCalled();
+      expect(firestore.collection).toHaveBeenCalledWith("tutor_services");
+      expect(firestore.collection).toHaveBeenCalledWith("tutors");
+      expect(mockBatch.delete).toHaveBeenCalledWith(serviceDocRef);
+      expect(mockBatch.update).toHaveBeenCalledWith(tutorDocRef, {
+        services: firebase.firestore.FieldValue.arrayRemove(serviceDocRef),
+      });
+      expect(mockBatch.commit).toHaveBeenCalled();
+    });
+
+    it("should throw an error if batch commit fails", async () => {
+      const mockBatch = {
+        delete: vi.fn(),
+        update: vi.fn(),
+        commit: vi.fn().mockRejectedValue(new Error("Commit failed (test)")),
+      };
+
+      firestore.batch.mockReturnValue(mockBatch);
+
+      const tutorId = faker.string.uuid();
+      const serviceId = faker.string.uuid();
+      const serviceDocRef = { id: serviceId };
+      const tutorDocRef = { id: tutorId };
+
+      firestore.collection.mockImplementation((collectionName: string) => {
+        switch (collectionName) {
+          case "tutor_services":
+            return { doc: vi.fn(() => serviceDocRef) };
+          case "tutors":
+            return { doc: vi.fn(() => tutorDocRef) };
+          default:
+            return {};
+        }
+      });
+
+      await expect(
+        service.deleteTutorService(tutorId, serviceId),
+      ).rejects.toThrow(
+        "Failed to delete tutor service: Error: Commit failed (test)",
+      );
+
+      expect(mockBatch.delete).toHaveBeenCalledWith(serviceDocRef);
+      expect(mockBatch.update).toHaveBeenCalledWith(tutorDocRef, {
+        services: firebase.firestore.FieldValue.arrayRemove(serviceDocRef),
+      });
+      expect(mockBatch.commit).toHaveBeenCalled();
+    });
+  });
 });

@@ -1,3 +1,4 @@
+import { logger } from "@middleware/logging.middleware";
 import {
   createTutorServiceSchema,
   updateTutorServiceSchema,
@@ -66,16 +67,43 @@ export class TutorServiceService {
     }
   }
 
-  async validateTutorServiceOwnership(tutorId: string, serviceId: string) {
-    const tutorServiceRef = this.firestore
-      .collection("tutor_services")
-      .doc(serviceId);
-    const tutorService = await tutorServiceRef.get();
+  async deleteTutorService(tutorId: string, serviceId: string) {
+    try {
+      const batch = this.firestore.batch();
 
-    if (!tutorService.exists) {
+      // delete the service
+      const serviceDocRef = this.firestore
+        .collection("tutor_services")
+        .doc(serviceId);
+      batch.delete(serviceDocRef);
+
+      // delete the service from the tutor's services array
+      const tutorDocRef = this.firestore.collection("tutors").doc(tutorId);
+      batch.update(tutorDocRef, {
+        services: firebase.firestore.FieldValue.arrayRemove(serviceDocRef),
+      });
+
+      await batch.commit();
+    } catch (error) {
+      throw new Error(`Failed to delete tutor service: ${error}`);
+    }
+  }
+
+  async validateTutorServiceOwnership(tutorId: string, serviceId: string) {
+    try {
+      const tutorServiceRef = this.firestore
+        .collection("tutor_services")
+        .doc(serviceId);
+      const tutorService = await tutorServiceRef.get();
+
+      if (!tutorService.exists) {
+        return false;
+      }
+
+      return tutorService.data()!.tutorId.id === tutorId;
+    } catch (error) {
+      logger.error("Error validating tutor service ownership:", error);
       return false;
     }
-
-    return tutorService.data()!.tutorId.id === tutorId;
   }
 }

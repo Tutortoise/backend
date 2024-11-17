@@ -87,3 +87,9 @@ export const updateTutorServiceSchema = z.object({
     tutorServiceId: z.string(),
   }),
 });
+
+export const deleteTutorServiceSchema = z.object({
+  params: z.object({
+    tutorServiceId: z.string(),
+  }),
+});
