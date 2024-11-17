@@ -42,6 +42,20 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
 ) => {
   const tutorServiceId = req.params.tutorServiceId;
 
+  // Check if the tutor owns the tutor service
+  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+    req.tutor.id,
+    tutorServiceId,
+  );
+
+  if (!isOwner) {
+    res.status(403).json({
+      status: "error",
+      message: "You are not authorized to update this tutor service",
+    });
+    return;
+  }
+
   try {
     await tutorServiceService.updateTutorService(tutorServiceId, req.body);
 

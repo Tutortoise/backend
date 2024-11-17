@@ -121,4 +121,79 @@ describe("TutorServiceService", () => {
       });
     });
   });
+
+  describe("validateTutorServiceOwnership", () => {
+    it("should return true if tutor owns the service", async () => {
+      const tutorId = faker.string.uuid();
+      const serviceId = faker.string.uuid();
+      const mockServiceData = {
+        tutorId: { id: tutorId },
+      };
+
+      const mockGet = vi.fn().mockResolvedValue({
+        exists: true,
+        data: vi.fn(() => mockServiceData),
+      });
+
+      firestore.collection.mockReturnValue({
+        doc: vi.fn(() => ({ get: mockGet })),
+      });
+
+      const result = await service.validateTutorServiceOwnership(
+        tutorId,
+        serviceId,
+      );
+
+      expect(firestore.collection).toHaveBeenCalledWith("tutor_services");
+      expect(mockGet).toHaveBeenCalled();
+      expect(result).toBe(true);
+    });
+
+    it("should return false if the service does not exist", async () => {
+      const tutorId = faker.string.uuid();
+      const serviceId = faker.string.uuid();
+
+      const mockGet = vi.fn().mockResolvedValue({ exists: false });
+
+      firestore.collection.mockReturnValue({
+        doc: vi.fn(() => ({ get: mockGet })),
+      });
+
+      const result = await service.validateTutorServiceOwnership(
+        tutorId,
+        serviceId,
+      );
+
+      expect(firestore.collection).toHaveBeenCalledWith("tutor_services");
+      expect(mockGet).toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+
+    it("should return false if the tutor does not own the service", async () => {
+      const tutorId = faker.string.uuid();
+      const serviceId = faker.string.uuid();
+      const anotherTutorId = faker.string.uuid();
+      const mockServiceData = {
+        tutorId: { id: anotherTutorId },
+      };
+
+      const mockGet = vi.fn().mockResolvedValue({
+        exists: true,
+        data: vi.fn(() => mockServiceData),
+      });
+
+      firestore.collection.mockReturnValue({
+        doc: vi.fn(() => ({ get: mockGet })),
+      });
+
+      const result = await service.validateTutorServiceOwnership(
+        tutorId,
+        serviceId,
+      );
+
+      expect(firestore.collection).toHaveBeenCalledWith("tutor_services");
+      expect(mockGet).toHaveBeenCalled();
+      expect(result).toBe(false);
+    });
+  });
 });

@@ -65,4 +65,17 @@ export class TutorServiceService {
       throw new Error(`Failed to update tutor service: ${error}`);
     }
   }
+
+  async validateTutorServiceOwnership(tutorId: string, serviceId: string) {
+    const tutorServiceRef = this.firestore
+      .collection("tutor_services")
+      .doc(serviceId);
+    const tutorService = await tutorServiceRef.get();
+
+    if (!tutorService.exists) {
+      return false;
+    }
+
+    return tutorService.data()!.tutorId.id === tutorId;
+  }
 }
