@@ -26,6 +26,8 @@ app.use(express.json({ limit: "10kb" })); // The request payload should not exce
 // Routes
 app.use(router);
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    logger.info(`Server is running on http://localhost:${PORT}`);
+  });
+}
