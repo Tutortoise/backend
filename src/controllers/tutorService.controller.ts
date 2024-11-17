@@ -1,15 +1,15 @@
 // import * as tutorServiceService from "@services/tutorService.service"; // hell nah
-import {
-  createTutorService,
-  updateTutorService,
-} from "@services/tutorService.service";
+import { firestore } from "@/config";
 import { Controller } from "@/types";
+import { logger } from "@middleware/logging.middleware";
 import {
   createTutorServiceSchema,
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
+import { TutorServiceService } from "@services/tutorService.service";
 import { z } from "zod";
-import { logger } from "@middleware/logging.middleware";
+
+const tutorServiceService = new TutorServiceService({ firestore });
 
 type CreateTutorServiceSchema = z.infer<typeof createTutorServiceSchema>;
 export const createService: Controller<CreateTutorServiceSchema> = async (
@@ -19,7 +19,7 @@ export const createService: Controller<CreateTutorServiceSchema> = async (
   const tutorId = req.tutor.id;
 
   try {
-    await createTutorService(tutorId, req.body);
+    await tutorServiceService.createTutorService(tutorId, req.body);
 
     res.status(201).json({
       status: "success",
@@ -43,7 +43,7 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
   const tutorServiceId = req.params.tutorServiceId;
 
   try {
-    await updateTutorService(tutorServiceId, req.body);
+    await tutorServiceService.updateTutorService(tutorServiceId, req.body);
 
     res.status(200).json({
       status: "success",

@@ -1,5 +1,16 @@
-import { validateInterests } from "@services/learner.service";
+import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { downscaleImage } from "@/helpers/image.helper";
+import { Storage } from "@google-cloud/storage";
+import { LearnerService } from "@services/learner.service";
 import { z } from "zod";
+
+const learnerService = new LearnerService({
+  auth,
+  firestore,
+  downscaleImage,
+  GCS_BUCKET_NAME,
+  storage: new Storage(),
+});
 
 export const learnerSchema = z.object({
   id: z.string().optional(),
@@ -23,7 +34,7 @@ export const learnerSchema = z.object({
   interests: z
     .array(z.string())
     .superRefine(async (interests, ctx) => {
-      const isValid = await validateInterests(interests);
+      const isValid = await learnerService.validateInterests(interests);
 
       if (!isValid) {
         ctx.addIssue({

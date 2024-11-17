@@ -1,11 +1,25 @@
-import { checkSubjectExists } from "@services/subject.service";
-import { checkTutorExists } from "@services/tutor.service";
+import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { downscaleImage } from "@/helpers/image.helper";
+import { Storage } from "@google-cloud/storage";
+import { SubjectService } from "@services/subject.service";
+import { TutorService } from "@services/tutor.service";
 import { z } from "zod";
+
+const subjectService = new SubjectService({
+  firestore,
+});
+const tutorService = new TutorService({
+  firestore,
+  auth,
+  downscaleImage,
+  GCS_BUCKET_NAME,
+  storage: new Storage(),
+});
 
 export const tutorServiceSchema = z.object({
   id: z.string().optional(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    const exists = await checkTutorExists(tutorId);
+    const exists = await tutorService.checkTutorExists(tutorId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -14,7 +28,7 @@ export const tutorServiceSchema = z.object({
     }
   }),
   subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    const exists = await checkSubjectExists(subjectId);
+    const exists = await subjectService.checkSubjectExists(subjectId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

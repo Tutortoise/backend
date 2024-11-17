@@ -1,7 +1,10 @@
+import { auth, firestore } from "@/config";
 import type { Controller } from "@/types";
 import { registerSchema } from "@schemas/auth.schema";
-import * as authService from "@services/auth.service";
+import { AuthService } from "@services/auth.service";
 import { z } from "zod";
+
+const authService = new AuthService({ auth, firestore });
 
 type RegisterSchema = z.infer<typeof registerSchema>;
 export const register: Controller<RegisterSchema> = async (req, res) => {

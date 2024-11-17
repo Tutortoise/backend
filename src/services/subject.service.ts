@@ -1,29 +1,40 @@
-import { firestore } from "@/config";
+import { Firestore } from "firebase-admin/firestore";
 
-export const getAllSubjects = async () => {
-  try {
-    const subjectsRef = firestore.collection("subjects");
-    const snapshot = await subjectsRef.get();
+export interface SubjectServiceDependencies {
+  firestore: Firestore;
+}
 
-    const subjects = snapshot.docs.map((doc) => {
-      return {
-        id: doc.id,
-        name: doc.data().name,
-        iconUrl: doc.data().iconUrl,
-      };
-    });
+export class SubjectService {
+  private firestore: Firestore;
 
-    return subjects;
-  } catch (error) {
-    throw new Error(`Error when getting all subjects: ${error}`);
+  constructor({ firestore }: SubjectServiceDependencies) {
+    this.firestore = firestore;
   }
-};
 
-export const checkSubjectExists = async (subjectId: string) => {
-  const subjectSnapshot = await firestore
-    .collection("subjects")
-    .doc(subjectId)
-    .get();
+  public async getAllSubjects() {
+    try {
+      const subjectsRef = this.firestore.collection("subjects");
+      const snapshot = await subjectsRef.get();
+      const subjects = snapshot.docs.map((doc) => {
+        return {
+          id: doc.id,
+          name: doc.data().name,
+          iconUrl: doc.data().iconUrl,
+        };
+      });
 
-  return subjectSnapshot.exists;
-};
+      return subjects;
+    } catch (error) {
+      throw new Error(`Error when getting all subjects: ${error}`);
+    }
+  }
+
+  public async checkSubjectExists(subjectId: string) {
+    const subjectSnapshot = await this.firestore
+      .collection("subjects")
+      .doc(subjectId)
+      .get();
+
+    return subjectSnapshot.exists;
+  }
+}
