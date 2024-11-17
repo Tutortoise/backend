@@ -29,6 +29,7 @@ describe("TutorServiceService", () => {
         hourlyRate: faker.helpers.arrayElement([
           50_000, 100_000, 150_000, 200_000,
         ]),
+        typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       };
 
       const tutorRef = { id: tutorId };
@@ -62,6 +63,7 @@ describe("TutorServiceService", () => {
         teachingMethodology: mockData.teachingMethodology,
         hourlyRate: mockData.hourlyRate,
         createdAt: expect.any(Date),
+        typeLesson: mockData.typeLesson,
       });
       expect(mockBatch.update).toHaveBeenCalledWith(tutorRef, {
         services: firebase.firestore.FieldValue.arrayUnion(newServiceRef),
@@ -86,6 +88,7 @@ describe("TutorServiceService", () => {
         hourlyRate: faker.helpers.arrayElement([
           50_000, 100_000, 150_000, 200_000,
         ]),
+        typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       };
 
       await expect(

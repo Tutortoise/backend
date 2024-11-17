@@ -56,9 +56,8 @@ export const seedServices = async () => {
       createdAt: new Date(),
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: subjectTeachingMethodology,
-      hourlyRate: faker.helpers.arrayElement([
-        50_000, 100_000, 150_000, 200_000,
-      ]),
+      hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000, 200000]),
+      typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
     });
   }
 
