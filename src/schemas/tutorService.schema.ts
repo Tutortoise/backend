@@ -60,6 +60,10 @@ export const tutorServiceSchema = z.object({
     .number()
     .min(10000, { message: "Hourly rate must be at least Rp. 10,000" })
     .max(1000000, { message: "Hourly rate must be at most Rp. 1,000,000" }),
+  // Tutor's teaching mode (online, offline, or both)
+  typeLesson: z.enum(["online", "offline", "both"], {
+    message: "Teaching type must be either 'online', 'offline', or 'both'",
+  }),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
 });

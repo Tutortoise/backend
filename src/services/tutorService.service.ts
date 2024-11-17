@@ -22,7 +22,8 @@ export class TutorServiceService {
     tutorId: string,
     data: z.infer<typeof createTutorServiceSchema>["body"],
   ) {
-    const { subjectId, aboutYou, teachingMethodology, hourlyRate } = data;
+    const { subjectId, aboutYou, teachingMethodology, hourlyRate, typeLesson } =
+      data;
 
     try {
       const batch = this.firestore.batch();
@@ -37,6 +38,7 @@ export class TutorServiceService {
         aboutYou,
         teachingMethodology,
         hourlyRate,
+        typeLesson,
         createdAt: new Date(),
       });
 
