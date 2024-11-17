@@ -15,6 +15,7 @@ type GetTutorServicesFilters = {
   subjectId?: string | null;
   minHourlyRate?: number | null;
   maxHourlyRate?: number | null;
+  typeLesson?: string | null;
 };
 
 export class TutorServiceService {
@@ -28,6 +29,7 @@ export class TutorServiceService {
     subjectId = null,
     minHourlyRate = null,
     maxHourlyRate = null,
+    typeLesson = null,
   }: GetTutorServicesFilters = {}) {
     try {
       let query = this.firestore.collection(
@@ -47,6 +49,10 @@ export class TutorServiceService {
       }
       if (maxHourlyRate !== null) {
         query = query.where("hourlyRate", "<=", maxHourlyRate);
+      }
+
+      if (typeLesson !== null) {
+        query = query.where("typeLesson", "==", typeLesson);
       }
 
       const tutorServicesSnapshot = await query.get();

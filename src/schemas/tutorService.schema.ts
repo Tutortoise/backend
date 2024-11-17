@@ -74,6 +74,11 @@ export const getServicesSchema = z.object({
     minHourlyRate: z.string().optional(),
     maxHourlyRate: z.string().optional(),
     minRating: z.string().optional(),
+    typeLesson: z
+      .enum(["online", "offline", "both"], {
+        message: "Teaching type must be either 'online', 'offline', or 'both'",
+      })
+      .optional(),
   }),
 });
 
