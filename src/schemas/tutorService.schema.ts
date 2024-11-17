@@ -68,6 +68,15 @@ export const tutorServiceSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
+export const getServicesSchema = z.object({
+  query: z.object({
+    subjectId: z.string().optional(),
+    minHourlyRate: z.string().optional(),
+    maxHourlyRate: z.string().optional(),
+    minRating: z.string().optional(),
+  }),
+});
+
 export const createTutorServiceSchema = z.object({
   body: tutorServiceSchema.omit({
     id: true,

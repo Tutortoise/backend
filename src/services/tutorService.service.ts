@@ -4,18 +4,79 @@ import {
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
 import firebase from "firebase-admin";
-import { Firestore } from "firebase-admin/firestore";
+import { DocumentData, Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
 
 export interface TutorServiceServiceDependencies {
   firestore: Firestore;
 }
 
+type GetTutorServicesFilters = {
+  subjectId?: string | null;
+  minHourlyRate?: number | null;
+  maxHourlyRate?: number | null;
+};
+
 export class TutorServiceService {
   private firestore: Firestore;
 
   constructor({ firestore }: TutorServiceServiceDependencies) {
     this.firestore = firestore;
+  }
+
+  async getTutorServices({
+    subjectId = null,
+    minHourlyRate = null,
+    maxHourlyRate = null,
+  }: GetTutorServicesFilters = {}) {
+    try {
+      let query = this.firestore.collection(
+        "tutor_services",
+      ) as FirebaseFirestore.Query<DocumentData>;
+
+      if (subjectId) {
+        query = query.where(
+          "subjectId",
+          "==",
+          this.firestore.doc(`/subjects/${subjectId}`),
+        );
+      }
+
+      if (minHourlyRate !== null) {
+        query = query.where("hourlyRate", ">=", minHourlyRate);
+      }
+      if (maxHourlyRate !== null) {
+        query = query.where("hourlyRate", "<=", maxHourlyRate);
+      }
+
+      const tutorServicesSnapshot = await query.get();
+
+      const tutorServices = await Promise.all(
+        tutorServicesSnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+
+          const subjectDoc = await data.subjectId.get();
+          const tutorDoc = await data.tutorId.get();
+
+          // TODO: avg rating from review here
+          // const rating = 0;
+          // TODO: check if tutor is star tutor
+          // const isStarTutor = false;
+
+          return {
+            id: doc.id,
+            tutorName: tutorDoc.data().name,
+            subjectName: subjectDoc.data().name,
+            hourlyRate: data.hourlyRate,
+            typeLesson: data.typeLesson,
+          };
+        }),
+      );
+
+      return tutorServices.filter((service) => service !== null);
+    } catch (error) {
+      throw new Error(`Failed to get tutor services: ${error}`);
+    }
   }
 
   async createTutorService(

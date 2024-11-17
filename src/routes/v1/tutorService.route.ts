@@ -13,6 +13,9 @@ import { Router } from "express";
 // /api/v1/tutors/services
 const tutorServiceRouter = Router();
 tutorServiceRouter.use(firebaseAuthMiddleware);
+
+tutorServiceRouter.get("/", tutorServiceController.getServices);
+
 tutorServiceRouter.use(verifyTutor);
 
 tutorServiceRouter.post(

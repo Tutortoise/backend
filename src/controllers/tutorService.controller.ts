@@ -5,12 +5,41 @@ import { logger } from "@middleware/logging.middleware";
 import {
   createTutorServiceSchema,
   deleteTutorServiceSchema,
+  getServicesSchema,
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
 import { TutorServiceService } from "@services/tutorService.service";
 import { z } from "zod";
 
 const tutorServiceService = new TutorServiceService({ firestore });
+
+type GetServicesSchema = z.infer<typeof getServicesSchema>;
+export const getServices: Controller<GetServicesSchema> = async (req, res) => {
+  const { subjectId, minHourlyRate, maxHourlyRate } = req.query;
+
+  const filters = {
+    subjectId: subjectId || null,
+    minHourlyRate: minHourlyRate ? parseInt(minHourlyRate as string) : null,
+    maxHourlyRate: maxHourlyRate ? parseInt(maxHourlyRate as string) : null,
+    // minRating: minRating ? parseFloat(minRating as string) : null,
+  };
+
+  try {
+    const services = await tutorServiceService.getTutorServices(filters);
+
+    res.json({
+      status: "success",
+      data: services,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor services: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor services`,
+    });
+  }
+};
 
 type CreateTutorServiceSchema = z.infer<typeof createTutorServiceSchema>;
 export const createService: Controller<CreateTutorServiceSchema> = async (
