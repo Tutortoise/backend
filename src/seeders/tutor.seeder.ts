@@ -1,6 +1,28 @@
-import { firestore } from "@/config";
+import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { downscaleImage } from "@/helpers/image.helper";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
+import { TutorService } from "@services/tutor.service";
+import { Storage } from "@google-cloud/storage";
+import { AuthService } from "@services/auth.service";
+
+const authService = new AuthService({ firestore, auth });
+const tutorService = new TutorService({
+  firestore,
+  auth,
+  downscaleImage,
+  GCS_BUCKET_NAME,
+  storage: new Storage(),
+});
+
+// https://www.latlong.net/category/cities-103-15.html
+function generateRandomLocation(): { latitude: number; longitude: number } {
+  return faker.helpers.arrayElement([
+    { latitude: -7.250445, longitude: 112.768845 }, // Surabaya
+    { latitude: -0.502106, longitude: 117.153709 }, // Samarinda
+    { latitude: -6.2, longitude: 106.816666 }, // Jakarta
+  ]);
+}
 
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
@@ -16,15 +38,20 @@ export const seedTutors = async () => {
     });
   }
 
+  const tutorSnapshot = await firestore.collection("tutors").get();
+  if (!tutorSnapshot.empty) {
+    return;
+  }
+
   console.log(`Seeding tutors with ${tutors.length} data...`);
-  await firestore
-    .collection("tutors")
-    .get()
-    .then((snapshot) => {
-      if (snapshot.empty) {
-        tutors.forEach((tutor) => {
-          firestore.collection("tutors").add(tutor);
-        });
-      }
+  for (const tutor of tutors) {
+    const { userId } = await authService.registerTutor(
+      tutor.name!,
+      faker.internet.email(),
+      "12345678",
+    );
+    tutorService.updateProfile(userId, {
+      location: generateRandomLocation(),
     });
+  }
 };
