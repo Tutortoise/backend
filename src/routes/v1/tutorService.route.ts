@@ -15,6 +15,7 @@ const tutorServiceRouter = Router();
 tutorServiceRouter.use(firebaseAuthMiddleware);
 
 tutorServiceRouter.get("/", tutorServiceController.getServices);
+tutorServiceRouter.get("/:tutorServiceId", tutorServiceController.getService);
 
 tutorServiceRouter.use(verifyTutor);
 

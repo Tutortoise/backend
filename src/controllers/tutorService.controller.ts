@@ -5,6 +5,7 @@ import { logger } from "@middleware/logging.middleware";
 import {
   createTutorServiceSchema,
   deleteTutorServiceSchema,
+  getServiceSchema,
   getServicesSchema,
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
@@ -39,6 +40,36 @@ export const getServices: Controller<GetServicesSchema> = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: `Failed to get tutor services`,
+    });
+  }
+};
+
+type GetServiceSchema = z.infer<typeof getServiceSchema>;
+export const getService: Controller<GetServiceSchema> = async (req, res) => {
+  const tutorServiceId = req.params.tutorServiceId;
+
+  try {
+    const service =
+      await tutorServiceService.getTutorServiceDetail(tutorServiceId);
+
+    if (!service) {
+      res.status(404).json({
+        status: "error",
+        message: "Tutor service not found",
+      });
+      return;
+    }
+
+    res.json({
+      status: "success",
+      data: service,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor service: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor service`,
     });
   }
 };

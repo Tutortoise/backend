@@ -97,6 +97,40 @@ export class TutorServiceService {
     }
   }
 
+  async getTutorServiceDetail(serviceId: string) {
+    try {
+      const tutorServiceDoc = await this.firestore
+        .collection("tutor_services")
+        .doc(serviceId)
+        .get();
+
+      if (!tutorServiceDoc.exists) {
+        return null;
+      }
+
+      const data = tutorServiceDoc.data()!;
+
+      const subjectDoc = await data.subjectId.get();
+      const tutorDoc = await data.tutorId.get();
+
+      // TODO: also teaches
+      // TODO: location
+      // TODO: reviews
+
+      return {
+        id: tutorServiceDoc.id,
+        tutorName: tutorDoc.data().name,
+        subjectName: subjectDoc.data().name,
+        hourlyRate: data.hourlyRate,
+        typeLesson: data.typeLesson,
+        aboutYou: data.aboutYou,
+        teachingMethodology: data.teachingMethodology,
+      };
+    } catch (error) {
+      throw new Error(`Failed to get tutor service detail: ${error}`);
+    }
+  }
+
   async createTutorService(
     tutorId: string,
     data: z.infer<typeof createTutorServiceSchema>["body"],

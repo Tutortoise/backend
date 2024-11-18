@@ -83,6 +83,12 @@ export const getServicesSchema = z.object({
   }),
 });
 
+export const getServiceSchema = z.object({
+  params: z.object({
+    tutorServiceId: z.string(),
+  }),
+});
+
 export const createTutorServiceSchema = z.object({
   body: tutorServiceSchema.omit({
     id: true,
