@@ -15,9 +15,10 @@ const tutorServiceService = new TutorServiceService({ firestore });
 
 type GetServicesSchema = z.infer<typeof getServicesSchema>;
 export const getServices: Controller<GetServicesSchema> = async (req, res) => {
-  const { subjectId, minHourlyRate, maxHourlyRate, typeLesson } = req.query;
+  const { q, subjectId, minHourlyRate, maxHourlyRate, typeLesson } = req.query;
 
   const filters = {
+    q: q || null,
     subjectId: subjectId || null,
     minHourlyRate: minHourlyRate ? parseInt(minHourlyRate as string) : null,
     maxHourlyRate: maxHourlyRate ? parseInt(maxHourlyRate as string) : null,

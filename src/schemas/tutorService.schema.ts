@@ -70,6 +70,7 @@ export const tutorServiceSchema = z.object({
 
 export const getServicesSchema = z.object({
   query: z.object({
+    q: z.string().optional(), // search query
     subjectId: z.string().optional(),
     minHourlyRate: z.string().optional(),
     maxHourlyRate: z.string().optional(),

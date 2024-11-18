@@ -12,6 +12,7 @@ export interface TutorServiceServiceDependencies {
 }
 
 type GetTutorServicesFilters = {
+  q?: string | null;
   subjectId?: string | null;
   minHourlyRate?: number | null;
   maxHourlyRate?: number | null;
@@ -26,6 +27,7 @@ export class TutorServiceService {
   }
 
   async getTutorServices({
+    q = null,
     subjectId = null,
     minHourlyRate = null,
     maxHourlyRate = null,
@@ -63,11 +65,21 @@ export class TutorServiceService {
 
           const subjectDoc = await data.subjectId.get();
           const tutorDoc = await data.tutorId.get();
+          const tutorName = tutorDoc.data()?.name.toLowerCase();
+          const subjectName = subjectDoc.data()?.name.toLowerCase();
 
           // TODO: avg rating from review here
           // const rating = 0;
           // TODO: check if tutor is star tutor
           // const isStarTutor = false;
+
+          // filter the tutor services in memory instead of querying the database
+          if (q) {
+            const query = q.toLowerCase();
+            if (!tutorName.includes(query) && !subjectName.includes(query)) {
+              return null;
+            }
+          }
 
           return {
             id: doc.id,
