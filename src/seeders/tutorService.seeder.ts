@@ -32,15 +32,24 @@ export const seedServices = async () => {
     throw new Error("Tutors or subjects not found");
   }
 
-  const tutors = tutorsSnapshot.docs.map((doc) => doc.id);
+  const tutors = tutorsSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    name: doc.data().name,
+  }));
+
   const subjects = subjectsSnapshot.docs.map((doc) => ({
     id: doc.id,
     name: doc.data().name,
   }));
 
-  for (let i = 0; i < 25; i++) {
-    const randomTutorId = faker.helpers.arrayElement(tutors);
+  if (subjects.length === 0) {
+    throw new Error("No subjects available for seeding services.");
+  }
+
+  for (const tutor of tutors) {
     const randomSubject = faker.helpers.arrayElement(subjects);
+
+    // Generate teaching methodology for the subject
     const subjectTeachingMethodology = await generateTeachingMethodology(
       randomSubject.name,
     );
@@ -51,7 +60,7 @@ export const seedServices = async () => {
 
     tutorServices.push({
       id: firebase.firestore().collection("tmp").doc().id,
-      tutorId: randomTutorId,
+      tutorId: tutor.id,
       subjectId: randomSubject.id,
       createdAt: new Date(),
       aboutYou: faker.lorem.paragraph(),
@@ -61,8 +70,9 @@ export const seedServices = async () => {
     });
   }
 
-  console.log(`Seeding services with ${tutorServices.length} data...`);
+  console.log(`Seeding ${tutorServices.length} tutor services...`);
 
+  // Batch write to Firestore
   const batch = firestore.batch();
 
   tutorServices.forEach((service) => {
