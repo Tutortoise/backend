@@ -34,9 +34,8 @@ export class TutorServiceService {
     typeLesson = null,
   }: GetTutorServicesFilters = {}) {
     try {
-      let query = this.firestore.collection(
-        "tutor_services",
-      ) as FirebaseFirestore.Query<DocumentData>;
+      let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
+        this.firestore.collection("tutor_services");
 
       if (subjectId) {
         query = query.where(
@@ -46,52 +45,100 @@ export class TutorServiceService {
         );
       }
 
-      if (minHourlyRate !== null) {
+      if (minHourlyRate !== null && maxHourlyRate !== null) {
+        query = query
+          .where("hourlyRate", ">=", minHourlyRate)
+          .where("hourlyRate", "<=", maxHourlyRate)
+          .orderBy("hourlyRate");
+      } else if (minHourlyRate !== null) {
         query = query.where("hourlyRate", ">=", minHourlyRate);
-      }
-      if (maxHourlyRate !== null) {
+      } else if (maxHourlyRate !== null) {
         query = query.where("hourlyRate", "<=", maxHourlyRate);
       }
 
-      if (typeLesson !== null) {
+      if (typeLesson) {
         query = query.where("typeLesson", "==", typeLesson);
       }
 
       const tutorServicesSnapshot = await query.get();
 
-      const tutorServices = await Promise.all(
-        tutorServicesSnapshot.docs.map(async (doc) => {
-          const data = doc.data();
+      const tutorIds = new Set<string>();
+      const subjectIds = new Set<string>();
 
-          const subjectDoc = await data.subjectId.get();
-          const tutorDoc = await data.tutorId.get();
-          const tutorName = tutorDoc.data()?.name.toLowerCase();
-          const subjectName = subjectDoc.data()?.name.toLowerCase();
+      tutorServicesSnapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (data.tutorId?.id && data.subjectId?.id) {
+          tutorIds.add(data.tutorId.id);
+          subjectIds.add(data.subjectId.id);
+        }
+      });
 
-          // TODO: avg rating from review here
-          // const rating = 0;
-          // TODO: check if tutor is star tutor
-          // const isStarTutor = false;
+      if (tutorIds.size === 0 || subjectIds.size === 0) {
+        return [];
+      }
 
-          // filter the tutor services in memory instead of querying the database
-          if (q) {
-            const query = q.toLowerCase();
-            if (!tutorName.includes(query) && !subjectName.includes(query)) {
-              return null;
-            }
-          }
+      const [tutorsSnapshot, subjectsSnapshot] = await Promise.all([
+        this.firestore
+          .collection("tutors")
+          .where(
+            firebase.firestore.FieldPath.documentId(),
+            "in",
+            Array.from(tutorIds),
+          )
+          .get(),
+        this.firestore
+          .collection("subjects")
+          .where(
+            firebase.firestore.FieldPath.documentId(),
+            "in",
+            Array.from(subjectIds),
+          )
+          .get(),
+      ]);
 
-          return {
-            id: doc.id,
-            tutorName: tutorDoc.data().name,
-            subjectName: subjectDoc.data().name,
-            hourlyRate: data.hourlyRate,
-            typeLesson: data.typeLesson,
-          };
-        }),
+      const tutorMap = new Map(
+        tutorsSnapshot.docs.map((doc) => [doc.id, doc.data()]),
+      );
+      const subjectMap = new Map(
+        subjectsSnapshot.docs.map((doc) => [doc.id, doc.data()]),
       );
 
-      return tutorServices.filter((service) => service !== null);
+      const tutorServices = tutorServicesSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        const tutorData = tutorMap.get(data.tutorId?.id);
+        const subjectData = subjectMap.get(data.subjectId?.id);
+
+        if (!tutorData?.name || !subjectData?.name) {
+          return null;
+        }
+
+        const tutorName = tutorData.name;
+        const subjectName = subjectData.name;
+
+        if (q) {
+          const query = q.toLowerCase();
+          if (
+            !tutorName.toLowerCase().includes(query) &&
+            !subjectName.toLowerCase().includes(query)
+          ) {
+            return null;
+          }
+        }
+
+        return {
+          id: doc.id,
+          tutorName,
+          subjectName,
+          hourlyRate: data.hourlyRate,
+          typeLesson: data.typeLesson,
+          // TODO: avg rating from review here
+          // TODO: check if tutor is star tutor
+        };
+      });
+
+      return tutorServices.filter(
+        (service): service is NonNullable<typeof service> => service !== null,
+      );
     } catch (error) {
       throw new Error(`Failed to get tutor services: ${error}`);
     }
@@ -108,10 +155,26 @@ export class TutorServiceService {
         return null;
       }
 
-      const data = tutorServiceDoc.data()!;
+      const data = tutorServiceDoc.data();
+      if (!data) {
+        return null;
+      }
 
-      const subjectDoc = await data.subjectId.get();
-      const tutorDoc = await data.tutorId.get();
+      const [subjectDoc, tutorDoc] = await Promise.all([
+        data.subjectId?.get(),
+        data.tutorId?.get(),
+      ]);
+
+      if (!subjectDoc?.exists || !tutorDoc?.exists) {
+        return null;
+      }
+
+      const subjectData = subjectDoc.data();
+      const tutorData = tutorDoc.data();
+
+      if (!subjectData || !tutorData) {
+        return null;
+      }
 
       // TODO: also teaches
       // TODO: location
@@ -119,8 +182,8 @@ export class TutorServiceService {
 
       return {
         id: tutorServiceDoc.id,
-        tutorName: tutorDoc.data().name,
-        subjectName: subjectDoc.data().name,
+        tutorName: tutorData.name,
+        subjectName: subjectData.name,
         hourlyRate: data.hourlyRate,
         typeLesson: data.typeLesson,
         aboutYou: data.aboutYou,
