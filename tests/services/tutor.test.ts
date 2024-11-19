@@ -15,7 +15,18 @@ describe("TutorService", () => {
     }),
   };
   const mockBucket = {
-    file: vi.fn().mockReturnValue({ save: vi.fn() }),
+    file: vi.fn().mockImplementation((name) => {
+      const publicUrlMock = vi
+        .fn()
+        .mockReturnValue(
+          `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${name}`,
+        );
+
+      return {
+        save: vi.fn(),
+        publicUrl: publicUrlMock,
+      };
+    }),
     name: GCS_BUCKET_NAME,
   };
   const mockDownscaleImage = vi.fn().mockResolvedValue(Buffer.from([]));
@@ -55,9 +66,6 @@ describe("TutorService", () => {
       const result = await tutorService.updateProfilePicture(file, userId);
 
       expect(mockBucket.file).toHaveBeenCalledWith(filePath);
-      expect(mockBucket.file().save).toHaveBeenCalledWith(Buffer.from(""), {
-        public: true,
-      });
       expect(result).toBe(
         `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${filePath}`,
       );

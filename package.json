@@ -10,7 +10,7 @@
     "lint": "prettier --check .",
     "format": "prettier --write .",
     "seed": "tsx src/seed.ts",
-    "test": "NODE_ENV=test firebase emulators:exec --only auth,firestore --project tutortoise-test 'vitest'"
+    "test": "NODE_ENV=test firebase emulators:exec --only auth,storage,firestore --project tutortoise-test 'vitest'"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",

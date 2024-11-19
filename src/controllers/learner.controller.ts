@@ -50,14 +50,11 @@ export const updateProfilePicture: RequestHandler = async (req, res) => {
       data: { url },
     });
   } catch (error) {
-    logger.debug("Failed to upload profile picture", error);
+    logger.error(`Failed to upload profile picture: ${error}`);
 
     res.status(500).json({
       status: "error",
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to upload profile picture",
+      message: "Failed to upload profile picture",
     });
   }
 };

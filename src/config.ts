@@ -40,4 +40,7 @@ admin.initializeApp(options);
 export const auth = admin.auth();
 export const firestore = admin.firestore();
 export const messaging = admin.messaging();
-export const bucket = new Storage().bucket(GCS_BUCKET_NAME);
+export const bucket =
+  process.env.NODE_ENV === "test"
+    ? admin.storage().bucket(GCS_BUCKET_NAME) // use the firebase storage emulator
+    : new Storage().bucket(GCS_BUCKET_NAME);

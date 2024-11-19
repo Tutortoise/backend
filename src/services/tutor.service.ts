@@ -62,18 +62,13 @@ export class TutorService {
   }
 
   async updateProfilePicture(file: Express.Multer.File, userId: string) {
-    try {
-      const name = `profile-pictures/${userId}.jpg`;
+    const name = `profile-pictures/${userId}.jpg`;
 
-      const image = await this.downscaleImage(file.buffer);
-      const bucketFile = this.bucket.file(name);
-      await bucketFile.save(image, { public: true });
+    const image = await this.downscaleImage(file.buffer);
+    const bucketFile = this.bucket.file(name);
+    await bucketFile.save(image, { public: true });
 
-      return `https://storage.googleapis.com/${this.bucket.name}/${name}`;
-    } catch (error) {
-      logger.error(`Failed to upload profile picture: ${error}`);
-      return undefined;
-    }
+    return bucketFile.publicUrl();
   }
 
   async changePassword(userId: string, newPassword: string) {

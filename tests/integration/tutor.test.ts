@@ -106,6 +106,41 @@ describe("Update tutor profile", async () => {
   });
 });
 
+describe("Update tutor profile picture", async () => {
+  let idToken: string;
+
+  beforeAll(async () => {
+    const { idToken: token } = await registerTutor();
+    idToken = token;
+  });
+
+  test("should be able to update tutor profile picture", async () => {
+    const res = await supertest(app)
+      .put(`/api/v1/tutors/profile/picture`)
+      .set("Authorization", `Bearer ${idToken}`)
+      .attach("picture", "tests/integration/pictures/bocchi.png")
+      .expect(200);
+
+    const url = `http://${process.env.FIREBASE_STORAGE_EMULATOR_HOST}/${process.env.GCS_BUCKET_NAME}`;
+    expect(res.body.data.url).toMatch(url);
+  });
+
+  test("should not be able to update tutor profile picture with invalid token", async () => {
+    await supertest(app)
+      .put(`/api/v1/tutors/profile/picture`)
+      .attach("picture", "tests/integration/pictures/bocchi.png")
+      .expect(401);
+  });
+
+  test("should not be able to update tutor profile picture with invalid data", async () => {
+    await supertest(app).put(`/api/v1/tutors/profile/picture`).expect(401);
+    await supertest(app)
+      .put(`/api/v1/tutors/profile/picture`)
+      .attach("picture", "package.json")
+      .expect(401);
+  });
+});
+
 describe("Update tutor password", async () => {
   let idToken: string;
 
