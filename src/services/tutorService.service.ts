@@ -4,7 +4,7 @@ import {
   updateTutorServiceSchema,
 } from "@schemas/tutorService.schema";
 import firebase from "firebase-admin";
-import { DocumentData, Firestore } from "firebase-admin/firestore";
+import { Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
 
 export interface TutorServiceServiceDependencies {
