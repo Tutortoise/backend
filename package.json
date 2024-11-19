@@ -10,7 +10,8 @@
     "lint": "prettier --check .",
     "format": "prettier --write .",
     "seed": "tsx src/seed.ts",
-    "test": "NODE_ENV=test firebase emulators:exec --only auth,storage,firestore --project tutortoise-test 'vitest'"
+    "test": "NODE_ENV=test firebase emulators:exec --only auth,storage,firestore --project tutortoise-test 'vitest'",
+    "prepare": "husky"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
@@ -37,6 +38,8 @@
     "@types/multer": "^1.4.12",
     "@types/supertest": "^6.0.2",
     "firebase": "^11.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "supertest": "^7.0.0",
     "tsc-alias": "^1.8.10",
