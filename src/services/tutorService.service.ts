@@ -96,30 +96,60 @@ export class TutorServiceService {
         return [];
       }
 
-      const [tutorsSnapshot, subjectsSnapshot] = await Promise.all([
-        this.firestore
-          .collection("tutors")
-          .where(
-            firebase.firestore.FieldPath.documentId(),
-            "in",
-            Array.from(tutorIds),
-          )
-          .get(),
-        this.firestore
-          .collection("subjects")
-          .where(
-            firebase.firestore.FieldPath.documentId(),
-            "in",
-            Array.from(subjectIds),
-          )
-          .get(),
+      const batchSize = 25;
+      const tutorIdBatches = Array.from(tutorIds).reduce<string[][]>(
+        (batches, id, i) => {
+          const batchIndex = Math.floor(i / batchSize);
+          if (!batches[batchIndex]) {
+            batches[batchIndex] = [];
+          }
+          batches[batchIndex].push(id);
+          return batches;
+        },
+        [],
+      );
+
+      const subjectIdBatches = Array.from(subjectIds).reduce<string[][]>(
+        (batches, id, i) => {
+          const batchIndex = Math.floor(i / batchSize);
+          if (!batches[batchIndex]) {
+            batches[batchIndex] = [];
+          }
+          batches[batchIndex].push(id);
+          return batches;
+        },
+        [],
+      );
+
+      const [tutorsData, subjectsData] = await Promise.all([
+        Promise.all(
+          tutorIdBatches.map((batch) =>
+            this.firestore
+              .collection("tutors")
+              .where(firebase.firestore.FieldPath.documentId(), "in", batch)
+              .get(),
+          ),
+        ),
+        Promise.all(
+          subjectIdBatches.map((batch) =>
+            this.firestore
+              .collection("subjects")
+              .where(firebase.firestore.FieldPath.documentId(), "in", batch)
+              .get(),
+          ),
+        ),
       ]);
 
       const tutorMap = new Map(
-        tutorsSnapshot.docs.map((doc) => [doc.id, doc.data()]),
+        tutorsData.flatMap((snapshot) =>
+          snapshot.docs.map((doc) => [doc.id, doc.data()]),
+        ),
       );
+
       const subjectMap = new Map(
-        subjectsSnapshot.docs.map((doc) => [doc.id, doc.data()]),
+        subjectsData.flatMap((snapshot) =>
+          snapshot.docs.map((doc) => [doc.id, doc.data()]),
+        ),
       );
 
       const tutorServices = tutorServicesSnapshot.docs.map((doc) => {
