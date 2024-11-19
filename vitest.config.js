@@ -15,4 +15,7 @@ export default {
   env: {
     ...config({ path: ".env.test.local" }).parsed,
   },
+  test: {
+    hookTimeout: 120_000,
+  },
 };

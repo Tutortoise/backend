@@ -1,7 +1,8 @@
-import { auth } from "@/config";
+import { auth, firestore } from "@/config";
 import { app } from "@/main";
 import { seedSubjects } from "@/seeders/subject.seeder";
 import { faker } from "@faker-js/faker";
+import { SubjectService } from "@services/subject.service";
 import { initializeApp } from "firebase/app";
 import {
   connectAuthEmulator,
@@ -18,6 +19,8 @@ const firebaseApp = initializeApp({
 });
 const clientAuth = getAuth(firebaseApp);
 connectAuthEmulator(clientAuth, "http://localhost:9099");
+
+const subjectService = new SubjectService({ firestore });
 
 async function getIdToken(userId: string) {
   const customToken = await auth.createCustomToken(userId);
@@ -56,11 +59,14 @@ describe("Update learner profile", async () => {
     const { idToken: token } = await registerLearner();
     idToken = token;
 
+    const subjects = await subjectService.getAllSubjects();
+
     const updatedProfile = {
       name: faker.person.fullName(),
       phoneNum: "+62812121212",
       gender: "male",
       learningStyle: "visual",
+      interests: [subjects[0].id, subjects[1].id],
     };
 
     await supertest(app)

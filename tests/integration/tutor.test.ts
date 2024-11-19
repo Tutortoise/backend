@@ -1,5 +1,6 @@
 import { auth } from "@/config";
 import { app } from "@/main";
+import { seedTutors } from "@/seeders/tutor.seeder";
 import { faker } from "@faker-js/faker";
 import { initializeApp } from "firebase/app";
 import {
@@ -9,6 +10,10 @@ import {
 } from "firebase/auth";
 import supertest from "supertest";
 import { beforeAll, describe, expect, test } from "vitest";
+
+beforeAll(async () => {
+  await seedTutors();
+});
 
 const firebaseApp = initializeApp({
   apiKey: "test-api-key",
