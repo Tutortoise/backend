@@ -56,7 +56,7 @@ const generateRandomAvailability = () => {
   return availability;
 };
 
-export const seedServices = async () => {
+export const seedServices = async ({ randomTeachingMethodology = false }) => {
   const tutorServices: TutorService[] = [];
 
   const tutorsSnapshot = await firestore.collection("tutors").get();
@@ -85,10 +85,16 @@ export const seedServices = async () => {
 
     const randomAvailability = generateRandomAvailability();
 
-    // Generate teaching methodology for the subject
-    const subjectTeachingMethodology = await generateTeachingMethodology(
-      randomSubject.name,
-    );
+    let subjectTeachingMethodology;
+
+    if (randomTeachingMethodology) {
+      subjectTeachingMethodology = faker.lorem.paragraph();
+    } else {
+      // Generate teaching methodology for the subject
+      subjectTeachingMethodology = await generateTeachingMethodology(
+        randomSubject.name,
+      );
+    }
 
     if (!subjectTeachingMethodology) {
       throw new Error("Failed to generate teaching methodology");

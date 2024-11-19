@@ -7,7 +7,7 @@ export const runSeeder = async () => {
   await seedSubjects();
   await seedLearners();
   await seedTutors();
-  await seedServices();
+  await seedServices({ randomTeachingMethodology: false });
 };
 
 runSeeder();
