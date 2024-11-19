@@ -99,6 +99,229 @@ describe("TutorServiceService", () => {
     });
   });
 
+  describe("getTutorServices", () => {
+    it("should return filtered tutor services", async () => {
+      const mockServices = [
+        {
+          id: "service1",
+          tutorId: { id: "tutor1" },
+          subjectId: { id: "subject1" },
+          hourlyRate: 100000,
+          typeLesson: "online",
+        },
+        {
+          id: "service2",
+          tutorId: { id: "tutor2" },
+          subjectId: { id: "subject2" },
+          hourlyRate: 150000,
+          typeLesson: "offline",
+        },
+      ];
+
+      const mockTutors = [
+        { id: "tutor1", name: "John Doe" },
+        { id: "tutor2", name: "Jane Smith" },
+      ];
+
+      const mockSubjects = [
+        { id: "subject1", name: "Mathematics" },
+        { id: "subject2", name: "Physics" },
+      ];
+
+      const mockQuery = {
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue({
+          docs: mockServices.map((service) => ({
+            id: service.id,
+            data: () => service,
+          })),
+        }),
+      };
+
+      const mockDoc = vi.fn().mockReturnValue({
+        id: "subject1",
+      });
+
+      firestore.collection.mockImplementation((collection: string) => {
+        switch (collection) {
+          case "tutor_services":
+            return {
+              ...mockQuery,
+              doc: mockDoc,
+            };
+          case "tutors":
+            return {
+              where: vi.fn().mockReturnThis(),
+              get: vi.fn().mockResolvedValue({
+                docs: mockTutors.map((tutor) => ({
+                  id: tutor.id,
+                  data: () => ({ name: tutor.name }),
+                })),
+              }),
+            };
+          case "subjects":
+            return {
+              where: vi.fn().mockReturnThis(),
+              get: vi.fn().mockResolvedValue({
+                docs: mockSubjects.map((subject) => ({
+                  id: subject.id,
+                  data: () => ({ name: subject.name }),
+                })),
+              }),
+              doc: mockDoc,
+            };
+          default:
+            return {};
+        }
+      });
+      firestore.doc = mockDoc;
+
+      const filters = {
+        q: "john",
+        subjectId: "subject1",
+        minHourlyRate: 50000,
+        maxHourlyRate: 200000,
+        typeLesson: "online",
+      };
+
+      const result = await service.getTutorServices(filters);
+
+      expect(mockQuery.where).toHaveBeenCalled();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          id: "service1",
+          tutorName: "John Doe",
+          subjectName: "Mathematics",
+        }),
+      );
+
+      expect(mockDoc).toHaveBeenCalledWith(`/subjects/${filters.subjectId}`);
+    });
+
+    it("should handle empty results", async () => {
+      firestore.collection.mockReturnValue({
+        where: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue({ docs: [] }),
+      });
+
+      const result = await service.getTutorServices({});
+      expect(result).toHaveLength(0);
+    });
+
+    it("should handle invalid data", async () => {
+      const mockServices = [
+        {
+          id: "service1",
+          tutorId: { id: "nonexistent" },
+          subjectId: { id: "nonexistent" },
+        },
+      ];
+
+      firestore.collection.mockImplementation((collection: string) => {
+        if (collection === "tutor_services") {
+          return {
+            get: vi.fn().mockResolvedValue({
+              docs: mockServices.map((service) => ({
+                id: service.id,
+                data: () => service,
+              })),
+            }),
+          };
+        }
+        return {
+          where: vi.fn().mockReturnThis(),
+          get: vi.fn().mockResolvedValue({ docs: [] }),
+        };
+      });
+
+      const result = await service.getTutorServices({});
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("getTutorServiceDetail", () => {
+    it("should return detailed service information", async () => {
+      const serviceId = faker.string.uuid();
+      const mockService = {
+        tutorId: { id: "tutor1", get: vi.fn() },
+        subjectId: { id: "subject1", get: vi.fn() },
+        hourlyRate: 100000,
+        typeLesson: "online",
+        aboutYou: "About me",
+        teachingMethodology: "My methodology",
+      };
+
+      const mockTutor = {
+        exists: true,
+        data: () => ({ name: "John Doe" }),
+      };
+
+      const mockSubject = {
+        exists: true,
+        data: () => ({ name: "Mathematics" }),
+      };
+
+      mockService.tutorId.get.mockResolvedValue(mockTutor);
+      mockService.subjectId.get.mockResolvedValue(mockSubject);
+
+      firestore.collection.mockReturnValue({
+        doc: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            exists: true,
+            id: serviceId,
+            data: () => mockService,
+          }),
+        }),
+      });
+
+      const result = await service.getTutorServiceDetail(serviceId);
+
+      expect(result).toEqual({
+        id: serviceId,
+        tutorName: "John Doe",
+        subjectName: "Mathematics",
+        hourlyRate: 100000,
+        typeLesson: "online",
+        aboutYou: "About me",
+        teachingMethodology: "My methodology",
+      });
+    });
+
+    it("should handle nonexistent service", async () => {
+      firestore.collection.mockReturnValue({
+        doc: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            exists: false,
+          }),
+        }),
+      });
+
+      const result = await service.getTutorServiceDetail("nonexistent");
+      expect(result).toBeNull();
+    });
+
+    it("should handle missing related data", async () => {
+      const mockService = {
+        tutorId: { get: vi.fn().mockResolvedValue({ exists: false }) },
+        subjectId: { get: vi.fn().mockResolvedValue({ exists: false }) },
+      };
+
+      firestore.collection.mockReturnValue({
+        doc: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            exists: true,
+            data: () => mockService,
+          }),
+        }),
+      });
+
+      const result = await service.getTutorServiceDetail("invalid");
+      expect(result).toBeNull();
+    });
+  });
+
   describe("updateTutorService", () => {
     it("should successfully update a tutor service", async () => {
       const serviceId = faker.string.uuid();
