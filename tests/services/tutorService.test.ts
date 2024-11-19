@@ -30,6 +30,7 @@ describe("TutorServiceService", () => {
           50_000, 100_000, 150_000, 200_000,
         ]),
         typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
+        availability: { monday: ["08:00", "10:00"] },
       };
 
       const tutorRef = { id: tutorId };
@@ -64,6 +65,7 @@ describe("TutorServiceService", () => {
         hourlyRate: mockData.hourlyRate,
         createdAt: expect.any(Date),
         typeLesson: mockData.typeLesson,
+        availability: mockData.availability,
       });
       expect(mockBatch.update).toHaveBeenCalledWith(tutorRef, {
         services: firebase.firestore.FieldValue.arrayUnion(newServiceRef),
@@ -89,6 +91,7 @@ describe("TutorServiceService", () => {
           50_000, 100_000, 150_000, 200_000,
         ]),
         typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
+        availability: { monday: ["08:00", "10:00"] },
       };
 
       await expect(
@@ -331,6 +334,7 @@ describe("TutorServiceService", () => {
         hourlyRate: faker.helpers.arrayElement([
           50_000, 100_000, 150_000, 200_000,
         ]),
+        availability: { sunday: ["10:00"] },
       };
 
       const updateMock = vi.fn().mockResolvedValue({});
