@@ -6,6 +6,7 @@ import {
 import firebase from "firebase-admin";
 import { Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
+import { getDayOfWeek } from "@/helpers/day.helper";
 
 export interface TutorServiceServiceDependencies {
   firestore: Firestore;
@@ -241,6 +242,55 @@ export class TutorServiceService {
     } catch (error) {
       throw new Error(`Failed to get tutor service detail: ${error}`);
     }
+  }
+
+  async getTutorServiceAvailability(serviceId: string) {
+    try {
+      const tutorServiceDoc = await this.firestore
+        .collection("tutor_services")
+        .doc(serviceId)
+        .get();
+
+      const tutorService = tutorServiceDoc.data();
+      if (!tutorService) {
+        throw new Error("Tutor service not found");
+      }
+
+      const { availability } = tutorService;
+
+      const today = new Date();
+      const next7DaysAvailability: Date[] = [];
+
+      // TODO: handle when there is already order that has status 'scheduled'
+      //       remove the time from availability
+
+      // Calculate availability for the next 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const dayOfWeek = getDayOfWeek(date);
+        const times = availability[dayOfWeek] || [];
+
+        times.forEach((time: string) => {
+          const [hours, minutes] = time.split(":").map(Number);
+
+          const datetime = new Date(
+            Date.UTC(
+              date.getUTCFullYear(),
+              date.getUTCMonth(),
+              date.getUTCDate(),
+              hours,
+              minutes,
+            ),
+          );
+
+          next7DaysAvailability.push(datetime);
+        });
+      }
+
+      console.log(next7DaysAvailability);
+    } catch (error) {}
   }
 
   async createTutorService(

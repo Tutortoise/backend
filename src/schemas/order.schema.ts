@@ -11,7 +11,7 @@ const learnerService = new LearnerService({
   bucket,
 });
 
-const tutorServiceService = new TutorServiceService({
+const tsService = new TutorServiceService({
   firestore,
 });
 
@@ -27,7 +27,7 @@ export const orderSchema = z.object({
     }
   }),
   tutorServiceId: z.string().superRefine(async (serviceId, ctx) => {
-    const exists = await tutorServiceService.checkServiceExists(serviceId);
+    const exists = await tsService.checkServiceExists(serviceId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

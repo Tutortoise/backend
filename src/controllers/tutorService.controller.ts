@@ -1,4 +1,3 @@
-// import * as tutorServiceService from "@services/tutorService.service"; // hell nah
 import { firestore } from "@/config";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
@@ -12,7 +11,7 @@ import {
 import { TutorServiceService } from "@services/tutorService.service";
 import { z } from "zod";
 
-const tutorServiceService = new TutorServiceService({ firestore });
+const tsService = new TutorServiceService({ firestore });
 
 type GetServicesSchema = z.infer<typeof getServicesSchema>;
 export const getServices: Controller<GetServicesSchema> = async (req, res) => {
@@ -28,7 +27,7 @@ export const getServices: Controller<GetServicesSchema> = async (req, res) => {
   };
 
   try {
-    const services = await tutorServiceService.getTutorServices(filters);
+    const services = await tsService.getTutorServices(filters);
 
     res.json({
       status: "success",
@@ -58,8 +57,7 @@ export const getService: Controller<GetServiceSchema> = async (
   }
 
   try {
-    const service =
-      await tutorServiceService.getTutorServiceDetail(tutorServiceId);
+    const service = await tsService.getTutorServiceDetail(tutorServiceId);
 
     if (!service) {
       res.status(404).json({
@@ -83,11 +81,35 @@ export const getService: Controller<GetServiceSchema> = async (
   }
 };
 
+export const getServiceAvailability: Controller<GetServiceSchema> = async (
+  req,
+  res,
+) => {
+  const tutorServiceId = req.params.tutorServiceId;
+
+  try {
+    const availability =
+      await tsService.getTutorServiceAvailability(tutorServiceId);
+
+    res.json({
+      status: "success",
+      data: availability,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor service availability: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor service availability`,
+    });
+  }
+};
+
 export const getMyServices: Controller = async (req, res) => {
   const tutorId = req.tutor.id;
 
   try {
-    const services = await tutorServiceService.getTutorServices({
+    const services = await tsService.getTutorServices({
       tutorId,
     });
 
@@ -113,7 +135,7 @@ export const createService: Controller<CreateTutorServiceSchema> = async (
   const tutorId = req.tutor.id;
 
   try {
-    await tutorServiceService.createTutorService(tutorId, req.body);
+    await tsService.createTutorService(tutorId, req.body);
 
     res.status(201).json({
       status: "success",
@@ -137,7 +159,7 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
   const tutorServiceId = req.params.tutorServiceId;
 
   // Check if the tutor owns the tutor service
-  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+  const isOwner = await tsService.validateTutorServiceOwnership(
     req.tutor.id,
     tutorServiceId,
   );
@@ -151,7 +173,7 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
   }
 
   try {
-    await tutorServiceService.updateTutorService(tutorServiceId, req.body);
+    await tsService.updateTutorService(tutorServiceId, req.body);
 
     res.status(200).json({
       status: "success",
@@ -175,7 +197,7 @@ export const deleteService: Controller<DeleteTutorServiceSchema> = async (
   const tutorServiceId = req.params.tutorServiceId;
 
   // Check if the tutor owns the tutor service
-  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+  const isOwner = await tsService.validateTutorServiceOwnership(
     req.tutor.id,
     tutorServiceId,
   );
@@ -189,7 +211,7 @@ export const deleteService: Controller<DeleteTutorServiceSchema> = async (
   }
 
   try {
-    await tutorServiceService.deleteTutorService(req.tutor.id, tutorServiceId);
+    await tsService.deleteTutorService(req.tutor.id, tutorServiceId);
 
     res.json({
       status: "success",
