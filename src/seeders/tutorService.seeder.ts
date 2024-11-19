@@ -4,11 +4,10 @@ import { faker } from "@faker-js/faker";
 import firebase from "firebase-admin";
 import Groq from "groq-sdk";
 
-const client = new Groq({
-  apiKey: process.env["GROQ_KEY"],
-});
-
-const generateTeachingMethodology = async (subjectName: string) => {
+const generateTeachingMethodology = async (
+  client: Groq,
+  subjectName: string,
+) => {
   const chatCompletion = await client.chat.completions.create({
     messages: [
       {
@@ -92,6 +91,9 @@ export const seedServices = async ({ randomTeachingMethodology = false }) => {
     } else {
       // Generate teaching methodology for the subject
       subjectTeachingMethodology = await generateTeachingMethodology(
+        new Groq({
+          apiKey: process.env["GROQ_KEY"],
+        }),
         randomSubject.name,
       );
     }
