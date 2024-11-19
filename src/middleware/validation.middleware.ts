@@ -29,7 +29,9 @@ export const validator =
           message: "Validation error",
           errors,
         });
+        return;
       }
+      next(error);
     }
   };
 
@@ -65,4 +67,30 @@ export const validateProfilePictureUpload: RequestHandler = (
       next();
     }
   });
+};
+
+export const validateChatImageUpload: RequestHandler = (req, res, next) => {
+  if (req.body.type === "image") {
+    const base64Regex = /^data:image\/(jpeg|png);base64,/;
+    if (!base64Regex.test(req.body.content)) {
+      res.status(400).json({
+        status: "fail",
+        message: "Invalid image format. Must be base64 encoded JPEG or PNG",
+      });
+      return;
+    }
+
+    const sizeInBytes = Buffer.from(
+      req.body.content.split(",")[1],
+      "base64",
+    ).length;
+    if (sizeInBytes > 5 * 1024 * 1024) {
+      res.status(400).json({
+        status: "fail",
+        message: "Image size too large. Maximum size is 5MB",
+      });
+      return;
+    }
+  }
+  next();
 };
