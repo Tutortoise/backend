@@ -90,6 +90,15 @@ export class LearnerService {
     }
   }
 
+  async checkLearnerExists(learnerId: string) {
+    const learnerSnapshot = await this.firestore
+      .collection("learners")
+      .doc(learnerId)
+      .get();
+
+    return learnerSnapshot.exists;
+  }
+
   async validateInterests(interests: string[]) {
     try {
       const subjectsSnapshot = await this.firestore

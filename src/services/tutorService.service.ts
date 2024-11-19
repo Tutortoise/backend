@@ -221,4 +221,18 @@ export class TutorServiceService {
       return false;
     }
   }
+
+  async checkServiceExists(serviceId: string) {
+    try {
+      const tutorServiceRef = this.firestore
+        .collection("tutor_services")
+        .doc(serviceId);
+      const tutorService = await tutorServiceRef.get();
+
+      return tutorService.exists;
+    } catch (error) {
+      logger.error("Error checking if tutor service exists:", error);
+      return false;
+    }
+  }
 }
