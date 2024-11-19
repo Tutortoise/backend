@@ -285,12 +285,16 @@ export class TutorServiceService {
             ),
           );
 
-          next7DaysAvailability.push(datetime);
+          if (datetime > today) {
+            next7DaysAvailability.push(datetime);
+          }
         });
       }
 
-      console.log(next7DaysAvailability);
-    } catch (error) {}
+      return next7DaysAvailability;
+    } catch (error) {
+      throw new Error(`Failed to get tutor service availability: ${error}`);
+    }
   }
 
   async createTutorService(
