@@ -1,16 +1,9 @@
 import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { LearnerService } from "@services/learner.service";
-import { TutorService } from "@services/tutor.service";
 import { TutorServiceService } from "@services/tutorService.service";
 import { z } from "zod";
 
-const tutorService = new TutorService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-});
 const learnerService = new LearnerService({
   firestore,
   auth,
@@ -33,15 +26,6 @@ export const orderSchema = z.object({
       });
     }
   }),
-  tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    const exists = await tutorService.checkTutorExists(tutorId);
-    if (!exists) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Tutor does not exist",
-      });
-    }
-  }),
   tutorServiceId: z.string().superRefine(async (serviceId, ctx) => {
     const exists = await tutorServiceService.checkServiceExists(serviceId);
     if (!exists) {
@@ -51,6 +35,7 @@ export const orderSchema = z.object({
       });
     }
   }),
+  sessionTime: z.string(),
   totalHours: z
     .number()
     .min(1, { message: "Total hours must be at least 1" })
@@ -59,6 +44,17 @@ export const orderSchema = z.object({
     .string()
     .max(1000, { message: "Note must be at most 1000 characters" })
     .optional(),
+  status: z.enum(["pending", "declined", "scheduled", "completed"]),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
+});
+
+export const createOrderSchema = z.object({
+  body: orderSchema.omit({
+    id: true,
+    status: true,
+    learnerId: true, // Get learnerId from req.learner
+    createdAt: true,
+    updatedAt: true,
+  }),
 });
