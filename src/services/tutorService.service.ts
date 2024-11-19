@@ -17,6 +17,7 @@ type GetTutorServicesFilters = {
   minHourlyRate?: number | null;
   maxHourlyRate?: number | null;
   typeLesson?: string | null;
+  tutorId?: string | null;
 };
 
 export class TutorServiceService {
@@ -198,8 +199,14 @@ export class TutorServiceService {
     tutorId: string,
     data: z.infer<typeof createTutorServiceSchema>["body"],
   ) {
-    const { subjectId, aboutYou, teachingMethodology, hourlyRate, typeLesson } =
-      data;
+    const {
+      subjectId,
+      aboutYou,
+      teachingMethodology,
+      hourlyRate,
+      typeLesson,
+      availability,
+    } = data;
 
     try {
       const batch = this.firestore.batch();
@@ -215,6 +222,7 @@ export class TutorServiceService {
         teachingMethodology,
         hourlyRate,
         typeLesson,
+        availability,
         createdAt: new Date(),
       });
 
