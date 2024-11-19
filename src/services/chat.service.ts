@@ -31,6 +31,16 @@ interface ChatMessage {
   isRead: boolean;
 }
 
+// TODO: Implement realtime updates using Firebase Realtime Database or Firestore's onSnapshot
+// - Convert chat room and message listeners to realtime subscriptions
+// - Update client immediately when new messages arrive
+// - Show typing indicators in real-time
+// - Show online/offline status
+
+// TODO: Implement FCM push notifications for chat
+// - Send push notification when receiving new messages while app is in background
+// - Include sender name, message preview in notification
+// - Deep link notification to specific chat room
 export class ChatService {
   private firestore: Firestore;
   private bucket: Bucket;

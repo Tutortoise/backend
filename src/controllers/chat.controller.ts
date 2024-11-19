@@ -9,6 +9,16 @@ import {
 import { ChatService } from "@services/chat.service";
 import { z } from "zod";
 
+// TODO: Implement FCM token management
+// - Store FCM tokens when users login/register
+// - Update tokens when they change
+// - Remove tokens on logout
+// - Group tokens by user for multi-device support
+
+// TODO: Add realtime presence system
+// - Track when users enter/leave chat rooms
+// - Show typing indicators
+// - Display online/offline status
 const chatService = new ChatService({ firestore, bucket });
 
 type CreateRoomSchema = z.infer<typeof createRoomSchema>;

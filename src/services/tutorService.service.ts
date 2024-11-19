@@ -27,6 +27,15 @@ export class TutorServiceService {
     this.firestore = firestore;
   }
 
+  // TODO: Implement realtime updates for tutor service availability
+  // - Use Realtime Database to track tutor online status
+  // - Show real-time booking availability
+  // - Update tutor's current location for nearby search
+
+  // TODO: Add FCM notifications for service updates
+  // - Notify learners when tutor services they're interested in change
+  // - Send booking confirmation notifications
+  // - Alert tutors of new booking requests
   async getTutorServices({
     q = null,
     subjectId = null,
