@@ -1,4 +1,4 @@
-import { Storage } from "@google-cloud/storage";
+import { Bucket } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
 import { updateProfileSchema } from "@schemas/learner.schema";
 import firebase from "firebase-admin";
@@ -9,29 +9,25 @@ import { z } from "zod";
 export interface LearnerServiceDependencies {
   auth: Auth;
   firestore: Firestore;
-  storage: Storage;
-  GCS_BUCKET_NAME: string;
+  bucket: Bucket;
   downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
 }
 
 export class LearnerService {
   private auth: Auth;
   private firestore: Firestore;
-  private storage: Storage;
-  private GCS_BUCKET_NAME: string;
+  private bucket: Bucket;
   private downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
 
   constructor({
     auth,
     firestore,
-    storage,
-    GCS_BUCKET_NAME,
+    bucket,
     downscaleImage,
   }: LearnerServiceDependencies) {
     this.auth = auth;
     this.firestore = firestore;
-    this.storage = storage;
-    this.GCS_BUCKET_NAME = GCS_BUCKET_NAME;
+    this.bucket = bucket;
     this.downscaleImage = downscaleImage;
   }
 
@@ -70,11 +66,10 @@ export class LearnerService {
       const name = `profile-pictures/${userId}.jpg`;
 
       const image = await this.downscaleImage(file.buffer);
-      const bucket = this.storage.bucket(this.GCS_BUCKET_NAME);
-      const bucketFile = bucket.file(name);
+      const bucketFile = this.bucket.file(name);
       await bucketFile.save(image, { public: true });
 
-      return `https://storage.googleapis.com/${this.GCS_BUCKET_NAME}/${name}`;
+      return `https://storage.googleapis.com/${this.bucket.name}/${name}`;
     } catch (error) {
       logger.error(`Failed to upload profile picture: ${error}`);
 

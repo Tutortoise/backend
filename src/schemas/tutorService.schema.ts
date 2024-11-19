@@ -1,6 +1,5 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
-import { Storage } from "@google-cloud/storage";
 import { SubjectService } from "@services/subject.service";
 import { TutorService } from "@services/tutor.service";
 import { z } from "zod";
@@ -12,8 +11,7 @@ const tutorService = new TutorService({
   firestore,
   auth,
   downscaleImage,
-  GCS_BUCKET_NAME,
-  storage: new Storage(),
+  bucket,
 });
 
 export const tutorServiceSchema = z.object({

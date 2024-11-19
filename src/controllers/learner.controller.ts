@@ -1,7 +1,6 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Controller } from "@/types";
-import { Storage } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@schemas/auth.schema";
 import { updateProfileSchema } from "@schemas/learner.schema";
@@ -12,9 +11,8 @@ import { z } from "zod";
 const learnerService = new LearnerService({
   auth,
   firestore,
-  storage: new Storage(),
-  GCS_BUCKET_NAME,
-  downscaleImage: downscaleImage,
+  bucket,
+  downscaleImage,
 });
 
 type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;

@@ -1,3 +1,4 @@
+import { Storage } from "@google-cloud/storage";
 import "dotenv/config";
 import admin from "firebase-admin";
 
@@ -39,3 +40,4 @@ admin.initializeApp(options);
 export const auth = admin.auth();
 export const firestore = admin.firestore();
 export const messaging = admin.messaging();
+export const bucket = new Storage().bucket(GCS_BUCKET_NAME);

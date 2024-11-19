@@ -3,26 +3,24 @@ import { LearnerService } from "@services/learner.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("LearnerService", () => {
+  const GCS_BUCKET_NAME = "mockBucket";
+
   const mockAuth = { updateUser: vi.fn() };
   const mockFirestore = {
     collection: vi.fn().mockReturnValue({
       doc: vi.fn().mockReturnValue({ update: vi.fn(), set: vi.fn() }),
     }),
   };
-  const mockStorage = {
-    bucket: vi.fn().mockReturnValue({
-      file: vi
-        .fn()
-        .mockReturnValue({ save: vi.fn().mockResolvedValueOnce(undefined) }),
-    }),
+  const mockBucket = {
+    file: vi.fn().mockReturnValue({ save: vi.fn() }),
+    name: GCS_BUCKET_NAME,
   };
   const mockDownscaleImage = vi.fn().mockResolvedValue(Buffer.from([]));
 
   const dependencies = {
     auth: mockAuth as any,
     firestore: mockFirestore as any,
-    storage: mockStorage as any,
-    GCS_BUCKET_NAME: "mockBucket",
+    bucket: mockBucket as any,
     downscaleImage: mockDownscaleImage,
   };
 
@@ -58,14 +56,12 @@ describe("LearnerService", () => {
         userId,
       );
 
-      expect(mockStorage.bucket).toHaveBeenCalledWith("mockBucket");
-      expect(mockStorage.bucket().file).toHaveBeenCalledWith(filePath);
-      expect(mockStorage.bucket().file().save).toHaveBeenCalledWith(
-        Buffer.from(""),
-        { public: true },
-      );
+      expect(mockBucket.file).toHaveBeenCalledWith(filePath);
+      expect(mockBucket.file().save).toHaveBeenCalledWith(Buffer.from(""), {
+        public: true,
+      });
       expect(result).toBe(
-        `https://storage.googleapis.com/mockBucket/${filePath}`,
+        `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${filePath}`,
       );
     });
   });

@@ -14,18 +14,16 @@ describe("TutorService", () => {
       get: vi.fn(),
     }),
   };
-  const mockStorage = {
-    bucket: vi.fn().mockReturnValue({
-      file: vi.fn().mockReturnValue({ save: vi.fn() }),
-    }),
+  const mockBucket = {
+    file: vi.fn().mockReturnValue({ save: vi.fn() }),
+    name: GCS_BUCKET_NAME,
   };
   const mockDownscaleImage = vi.fn().mockResolvedValue(Buffer.from([]));
 
   const tutorService = new TutorService({
     auth: mockAuth as any,
     firestore: mockFirestore as any,
-    storage: mockStorage as any,
-    GCS_BUCKET_NAME,
+    bucket: mockBucket as any,
     downscaleImage: mockDownscaleImage as any,
   });
 
@@ -56,12 +54,10 @@ describe("TutorService", () => {
 
       const result = await tutorService.updateProfilePicture(file, userId);
 
-      expect(mockStorage.bucket).toHaveBeenCalledWith(GCS_BUCKET_NAME);
-      expect(mockStorage.bucket().file).toHaveBeenCalledWith(filePath);
-      expect(mockStorage.bucket().file().save).toHaveBeenCalledWith(
-        Buffer.from(""),
-        { public: true },
-      );
+      expect(mockBucket.file).toHaveBeenCalledWith(filePath);
+      expect(mockBucket.file().save).toHaveBeenCalledWith(Buffer.from(""), {
+        public: true,
+      });
       expect(result).toBe(
         `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${filePath}`,
       );

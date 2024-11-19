@@ -1,6 +1,5 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
-import { Storage } from "@google-cloud/storage";
 import { LearnerService } from "@services/learner.service";
 import { TutorService } from "@services/tutor.service";
 import { TutorServiceService } from "@services/tutorService.service";
@@ -10,15 +9,13 @@ const tutorService = new TutorService({
   firestore,
   auth,
   downscaleImage,
-  GCS_BUCKET_NAME,
-  storage: new Storage(),
+  bucket,
 });
 const learnerService = new LearnerService({
   firestore,
   auth,
   downscaleImage,
-  GCS_BUCKET_NAME,
-  storage: new Storage(),
+  bucket,
 });
 
 const tutorServiceService = new TutorServiceService({

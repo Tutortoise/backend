@@ -1,18 +1,16 @@
-import { auth, firestore, GCS_BUCKET_NAME } from "@/config";
+import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
-import { TutorService } from "@services/tutor.service";
-import { Storage } from "@google-cloud/storage";
 import { AuthService } from "@services/auth.service";
+import { TutorService } from "@services/tutor.service";
 
 const authService = new AuthService({ firestore, auth });
 const tutorService = new TutorService({
   firestore,
   auth,
   downscaleImage,
-  GCS_BUCKET_NAME,
-  storage: new Storage(),
+  bucket,
 });
 
 // https://www.latlong.net/category/cities-103-15.html
