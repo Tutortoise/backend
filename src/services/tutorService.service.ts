@@ -42,6 +42,7 @@ export class TutorServiceService {
     minHourlyRate = null,
     maxHourlyRate = null,
     typeLesson = null,
+    tutorId = null,
   }: GetTutorServicesFilters = {}) {
     try {
       let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
@@ -52,6 +53,14 @@ export class TutorServiceService {
           "subjectId",
           "==",
           this.firestore.doc(`/subjects/${subjectId}`),
+        );
+      }
+
+      if (tutorId) {
+        query = query.where(
+          "tutorId",
+          "==",
+          this.firestore.doc(`/tutors/${tutorId}`),
         );
       }
 

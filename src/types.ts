@@ -3,7 +3,7 @@ import { learnerSchema } from "@schemas/learner.schema";
 import { z } from "zod";
 import { tutorServiceSchema } from "@schemas/tutorService.schema";
 import { ParsedQs } from "qs";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 interface RequestData {
   body?: unknown;
@@ -15,6 +15,7 @@ export interface Controller<T extends RequestData = RequestData> {
   (
     req: Request<T["params"], unknown, T["body"], T["query"]>,
     res: Response,
+    next: NextFunction,
   ): Promise<void>;
 }
 

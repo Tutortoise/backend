@@ -19,6 +19,8 @@ tutorServiceRouter.get("/:tutorServiceId", tutorServiceController.getService);
 
 tutorServiceRouter.use(verifyTutor);
 
+tutorServiceRouter.get("/me", tutorServiceController.getMyServices);
+
 tutorServiceRouter.post(
   "/",
   validator(createTutorServiceSchema),

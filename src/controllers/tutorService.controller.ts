@@ -45,8 +45,17 @@ export const getServices: Controller<GetServicesSchema> = async (req, res) => {
 };
 
 type GetServiceSchema = z.infer<typeof getServiceSchema>;
-export const getService: Controller<GetServiceSchema> = async (req, res) => {
+export const getService: Controller<GetServiceSchema> = async (
+  req,
+  res,
+  next,
+) => {
   const tutorServiceId = req.params.tutorServiceId;
+
+  if (tutorServiceId === "me") {
+    next();
+    return;
+  }
 
   try {
     const service =
@@ -70,6 +79,28 @@ export const getService: Controller<GetServiceSchema> = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: `Failed to get tutor service`,
+    });
+  }
+};
+
+export const getMyServices: Controller = async (req, res) => {
+  const tutorId = req.tutor.id;
+
+  try {
+    const services = await tutorServiceService.getTutorServices({
+      tutorId,
+    });
+
+    res.json({
+      status: "success",
+      data: services,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor services: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor services`,
     });
   }
 };
