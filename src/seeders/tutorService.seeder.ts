@@ -22,6 +22,40 @@ const generateTeachingMethodology = async (subjectName: string) => {
   return chatCompletion.choices[0].message.content;
 };
 
+const generateRandomAvailability = () => {
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ] as const;
+
+  const timeSlots = [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+  ];
+
+  const availability = {} as { [K in (typeof days)[number]]: string[] };
+
+  for (const day of days) {
+    if (faker.datatype.boolean()) {
+      availability[day] = faker.helpers.arrayElements(timeSlots);
+    }
+  }
+
+  return availability;
+};
+
 export const seedServices = async () => {
   const tutorServices: TutorService[] = [];
 
@@ -49,6 +83,8 @@ export const seedServices = async () => {
   for (const tutor of tutors) {
     const randomSubject = faker.helpers.arrayElement(subjects);
 
+    const randomAvailability = generateRandomAvailability();
+
     // Generate teaching methodology for the subject
     const subjectTeachingMethodology = await generateTeachingMethodology(
       randomSubject.name,
@@ -67,6 +103,7 @@ export const seedServices = async () => {
       teachingMethodology: subjectTeachingMethodology,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000, 200000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
+      availability: randomAvailability,
     });
   }
 
