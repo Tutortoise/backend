@@ -35,7 +35,10 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
 
 let options: admin.AppOptions;
 if (process.env.NODE_ENV === "test") {
-  options = { projectId: "tutortoise-test" };
+  options = {
+    projectId: "tutortoise-test",
+    databaseURL: `http://${process.env.FIREBASE_DATABASE_EMULATOR_HOST}?ns=tutortoise-test`,
+  };
 } else {
   options = {
     credential: admin.credential.cert(serviceAccount),
