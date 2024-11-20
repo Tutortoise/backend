@@ -58,6 +58,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -66,7 +67,7 @@ jobs:
         with:
           service: '${{ env.SERVICE }}'
           region: '${{ env.REGION }}'
-          image: '${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ steps.meta.outputs.tags }}'
+          image: ${{ steps.meta.outputs.tags }}
 
       # If required, use the Cloud Run URL output in later steps
       - name: 'Show output'
