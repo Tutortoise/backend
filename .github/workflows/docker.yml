@@ -51,7 +51,7 @@ jobs:
         with:
           images: ${{ env.AR_URL }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=true
+            latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
