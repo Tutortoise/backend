@@ -1,10 +1,12 @@
 import { Bucket } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
 import { Firestore } from "firebase-admin/firestore";
+import { PresenceService } from "./presence.service";
 
 interface ChatServiceDependencies {
   firestore: Firestore;
   bucket: Bucket;
+  presenceService: PresenceService;
 }
 
 interface ChatRoom {
@@ -31,23 +33,20 @@ interface ChatMessage {
   isRead: boolean;
 }
 
-// TODO: Implement realtime updates using Firebase Realtime Database or Firestore's onSnapshot
-// - Convert chat room and message listeners to realtime subscriptions
-// - Update client immediately when new messages arrive
-// - Show typing indicators in real-time
-// - Show online/offline status
-
 // TODO: Implement FCM push notifications for chat
 // - Send push notification when receiving new messages while app is in background
 // - Include sender name, message preview in notification
 // - Deep link notification to specific chat room
+
 export class ChatService {
   private firestore: Firestore;
   private bucket: Bucket;
+  public presenceService: PresenceService;
 
-  constructor({ firestore, bucket }: ChatServiceDependencies) {
+  constructor({ firestore, bucket, presenceService }: ChatServiceDependencies) {
     this.firestore = firestore;
     this.bucket = bucket;
+    this.presenceService = presenceService;
   }
 
   async createRoom(learnerId: string, tutorId: string): Promise<ChatRoom> {
@@ -248,9 +247,39 @@ export class ChatService {
       });
     });
 
+    await this.presenceService.updateUserPresence(senderId, {
+      isOnline: true,
+      currentChatRoom: roomId,
+    });
+
     return {
       id: messageId,
       ...messageData,
     };
+  }
+  subscribeToRoomMessages(
+    roomId: string,
+    callback: (message: ChatMessage) => void,
+  ): () => void {
+    const messagesRef = this.firestore
+      .collection("chat_messages")
+      .where("roomId", "==", roomId)
+      .orderBy("sentAt", "desc")
+      .limit(1);
+
+    const unsubscribe = messagesRef.onSnapshot((snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const message = {
+            id: change.doc.id,
+            ...change.doc.data(),
+            sentAt: change.doc.data().sentAt.toDate(),
+          } as ChatMessage;
+          callback(message);
+        }
+      });
+    });
+
+    return unsubscribe;
   }
 }

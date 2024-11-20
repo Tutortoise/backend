@@ -2,6 +2,7 @@ import { Storage } from "@google-cloud/storage";
 import { Client } from "@googlemaps/google-maps-services-js";
 import "dotenv/config";
 import admin from "firebase-admin";
+import { getDatabase } from "firebase-admin/database";
 
 export const PORT = process.env.PORT || 8080;
 
@@ -47,6 +48,8 @@ admin.initializeApp(options);
 export const auth = admin.auth();
 export const firestore = admin.firestore();
 export const messaging = admin.messaging();
+export const realtimeDb = getDatabase();
+
 export const bucket =
   process.env.NODE_ENV === "test"
     ? admin.storage().bucket(GCS_BUCKET_NAME) // use the firebase storage emulator

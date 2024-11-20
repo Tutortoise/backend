@@ -10,6 +10,7 @@ import {
   getRoomMessagesSchema,
   sendMessageSchema,
 } from "@schemas/chat.schema";
+import { z } from "zod";
 
 const chatRouter = Router();
 
@@ -31,6 +32,33 @@ chatRouter.post(
   validator(sendMessageSchema),
   validateChatImageUpload,
   chatController.sendMessage,
+);
+
+chatRouter.post(
+  "/rooms/:roomId/typing",
+  validator(
+    z.object({
+      params: z.object({
+        roomId: z.string(),
+      }),
+      body: z.object({
+        isTyping: z.boolean(),
+      }),
+    }),
+  ), // I would prefer to use inline validation for this time (re: less abstraction)
+  chatController.updateTypingStatus,
+);
+
+chatRouter.get(
+  "/rooms/:roomId/presence",
+  validator(
+    z.object({
+      params: z.object({
+        roomId: z.string(),
+      }),
+    }),
+  ), // same here
+  chatController.getRoomPresence,
 );
 
 export default chatRouter;

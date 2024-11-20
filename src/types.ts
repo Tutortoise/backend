@@ -27,3 +27,16 @@ export interface Subject {
   name: string;
   iconUrl: string;
 }
+
+export interface UserPresence {
+  isOnline: boolean;
+  lastSeen: number;
+  currentChatRoom?: string;
+}
+
+export interface ChatRoomPresence {
+  [userId: string]: {
+    isTyping: boolean;
+    lastTypingAt: number;
+  };
+}

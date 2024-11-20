@@ -1,4 +1,4 @@
-import { firestore, bucket } from "@/config";
+import { realtimeDb, firestore, bucket } from "@/config";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import {
@@ -7,6 +7,7 @@ import {
   sendMessageSchema,
 } from "@schemas/chat.schema";
 import { ChatService } from "@services/chat.service";
+import { PresenceService } from "@services/presence.service";
 import { z } from "zod";
 
 // TODO: Implement FCM token management
@@ -15,11 +16,26 @@ import { z } from "zod";
 // - Remove tokens on logout
 // - Group tokens by user for multi-device support
 
-// TODO: Add realtime presence system
-// - Track when users enter/leave chat rooms
-// - Show typing indicators
-// - Display online/offline status
-const chatService = new ChatService({ firestore, bucket });
+const typingStatusSchema = z.object({
+  params: z.object({
+    roomId: z.string(),
+  }),
+  body: z.object({
+    isTyping: z.boolean(),
+  }),
+});
+
+const roomPresenceSchema = z.object({
+  params: z.object({
+    roomId: z.string(),
+  }),
+});
+
+type TypingStatusSchema = z.infer<typeof typingStatusSchema>;
+type RoomPresenceSchema = z.infer<typeof roomPresenceSchema>;
+
+const presenceService = new PresenceService({ realtimeDb });
+const chatService = new ChatService({ firestore, bucket, presenceService });
 
 type CreateRoomSchema = z.infer<typeof createRoomSchema>;
 export const createRoom: Controller<CreateRoomSchema> = async (req, res) => {
@@ -103,11 +119,14 @@ export const getRoomMessages: Controller<GetRoomMessagesSchema> = async (
       return;
     }
 
+    const { roomId } = req.params;
+    const { before, limit } = req.query;
+
     const messages = await chatService.getRoomMessages(
-      req.params.roomId,
+      roomId,
       userId,
-      req.query.before ? new Date(req.query.before as string) : undefined,
-      req.query.limit as string,
+      before ? new Date(before as string) : undefined,
+      limit as string,
     );
 
     res.json({
@@ -137,8 +156,9 @@ export const sendMessage: Controller<SendMessageSchema> = async (req, res) => {
       return;
     }
 
+    const { roomId } = req.params;
     const message = await chatService.sendMessage(
-      req.params.roomId,
+      roomId,
       userId,
       userRole,
       req.body,
@@ -153,6 +173,60 @@ export const sendMessage: Controller<SendMessageSchema> = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Failed to send message",
+    });
+  }
+};
+
+export const updateTypingStatus: Controller<TypingStatusSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    const userId = req.learner?.id || req.tutor?.id;
+    if (!userId) {
+      res.status(401).json({
+        status: "error",
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    const { roomId } = req.params;
+    const { isTyping } = req.body;
+
+    await chatService.presenceService.updateTypingStatus(
+      userId,
+      roomId,
+      isTyping,
+    );
+
+    res.json({ status: "success" });
+  } catch (error) {
+    logger.error(`Failed to update typing status: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to update typing status",
+    });
+  }
+};
+
+export const getRoomPresence: Controller<RoomPresenceSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    const { roomId } = req.params;
+    const presence = await chatService.presenceService.getRoomPresence(roomId);
+
+    res.json({
+      status: "success",
+      data: presence,
+    });
+  } catch (error) {
+    logger.error(`Failed to get room presence: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to get room presence",
     });
   }
 };
