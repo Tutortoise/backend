@@ -8,10 +8,11 @@ on:
       - "v*"
 
 env:
+  IMAGE_NAME: tutortoise-backend
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
   REGION: asia-southeast2
-  REGISTRY: asia-southeast2-docker.pkg.dev
-  SERVICE: tutortoise-backend
+  AR_URL: ${{ secrets.AR_URL }}
+  SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
   WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
 
 jobs:
@@ -32,21 +33,23 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
+          token_format: access_token
           project_id: ${{ env.PROJECT_ID }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
           workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: '${{ env.REGION }}-docker.pkg.dev'
           username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.auth_token }}
+          password: ${{ steps.auth.outputs.access_token }}
 
       - name: Extract metadata for docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
+          images: ${{ env.AR_URL }}/${{ env.IMAGE_NAME }}
           flavor: |
             latest=true
           tags: |
@@ -65,7 +68,7 @@ jobs:
       - name: 'Deploy to Cloud Run'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: '${{ env.SERVICE }}'
+          service: '${{ env.IMAGE_NAME }}'
           region: '${{ env.REGION }}'
           image: ${{ steps.meta.outputs.tags }}
 
