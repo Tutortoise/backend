@@ -1,0 +1,11 @@
+name: tutortoise
+services:
+  backend:
+    ports:
+      - 8080:8080
+    build: .
+    environment:
+      - FIREBASE_SERVICE_ACCOUNT_KEY=
+      - FIREBASE_DATABASE_URL=
+      - GCS_BUCKET_NAME=
+    restart: on-failure:5
