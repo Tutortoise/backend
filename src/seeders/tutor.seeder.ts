@@ -1,5 +1,6 @@
 import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
+import { getCityName } from "@/helpers/location.helper";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
 import { AuthService } from "@services/auth.service";
@@ -11,6 +12,7 @@ const tutorService = new TutorService({
   auth,
   downscaleImage,
   bucket,
+  getCityName,
 });
 
 // https://www.latlong.net/category/cities-103-15.html

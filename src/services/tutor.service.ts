@@ -10,6 +10,10 @@ export interface TutorServiceDependencies {
   auth: Auth;
   firestore: Firestore;
   bucket: Bucket;
+  getCityName: (location: {
+    latitude: number;
+    longitude: number;
+  }) => Promise<string>;
   downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
 }
 
@@ -18,17 +22,23 @@ export class TutorService {
   private firestore: Firestore;
   private bucket: Bucket;
   private downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
+  private getCityName: (location: {
+    latitude: number;
+    longitude: number;
+  }) => Promise<string>;
 
   constructor({
     auth,
     firestore,
     bucket,
     downscaleImage,
+    getCityName,
   }: TutorServiceDependencies) {
     this.auth = auth;
     this.firestore = firestore;
     this.bucket = bucket;
     this.downscaleImage = downscaleImage;
+    this.getCityName = getCityName;
   }
 
   async updateProfile(
@@ -45,6 +55,7 @@ export class TutorService {
             location.latitude,
             location.longitude,
           ),
+          city: await this.getCityName(location),
         }
       : restOfData;
 

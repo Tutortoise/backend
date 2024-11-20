@@ -30,12 +30,14 @@ describe("TutorService", () => {
     name: GCS_BUCKET_NAME,
   };
   const mockDownscaleImage = vi.fn().mockResolvedValue(Buffer.from([]));
+  const mockGetCityName = vi.fn().mockResolvedValue("Samarinda");
 
   const tutorService = new TutorService({
     auth: mockAuth as any,
     firestore: mockFirestore as any,
     bucket: mockBucket as any,
     downscaleImage: mockDownscaleImage as any,
+    getCityName: mockGetCityName as any,
   });
 
   describe("updateProfile", () => {

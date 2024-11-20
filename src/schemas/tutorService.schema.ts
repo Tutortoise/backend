@@ -1,5 +1,6 @@
 import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
+import { getCityName } from "@/helpers/location.helper";
 import { SubjectService } from "@services/subject.service";
 import { TutorService } from "@services/tutor.service";
 import { z } from "zod";
@@ -12,6 +13,7 @@ const tutorService = new TutorService({
   auth,
   downscaleImage,
   bucket,
+  getCityName,
 });
 
 const zodTimesArray = z

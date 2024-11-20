@@ -1,5 +1,6 @@
 import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
+import { getCityName } from "@/helpers/location.helper";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@schemas/auth.schema";
@@ -13,6 +14,7 @@ const tutorService = new TutorService({
   firestore,
   downscaleImage,
   bucket,
+  getCityName,
 });
 
 type UpdateTutorProfileSchema = z.infer<typeof updateProfileSchema>;

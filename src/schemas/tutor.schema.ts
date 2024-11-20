@@ -1,5 +1,6 @@
 import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
+import { getCityName } from "@/helpers/location.helper";
 import { TutorService } from "@services/tutor.service";
 import { z } from "zod";
 
@@ -8,6 +9,7 @@ const tutorService = new TutorService({
   auth,
   downscaleImage,
   bucket,
+  getCityName,
 });
 
 export const tutorSchema = z.object({
@@ -23,6 +25,7 @@ export const tutorSchema = z.object({
       longitude: z.number({ message: "Longitude must be a number" }),
     })
     .optional(),
+  city: z.string().optional(),
   gender: z
     .enum(["male", "female", "prefer not to say"], {
       message:
@@ -52,6 +55,7 @@ export const updateProfileSchema = z.object({
     id: true,
     services: true,
     coverageRange: true,
+    city: true,
     createdAt: true,
     updatedAt: true,
     lastSeen: true,

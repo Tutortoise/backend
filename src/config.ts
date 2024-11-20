@@ -1,4 +1,5 @@
 import { Storage } from "@google-cloud/storage";
+import { Client } from "@googlemaps/google-maps-services-js";
 import "dotenv/config";
 import admin from "firebase-admin";
 
@@ -7,6 +8,12 @@ export const PORT = process.env.PORT || 8080;
 export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
 export const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME!;
+
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
+
+if (!GOOGLE_MAPS_API_KEY) {
+  throw new Error("Missing Google Maps API Key");
+}
 
 if (!GCS_BUCKET_NAME) {
   throw new Error("Missing Google Cloud Storage Bucket Name");
@@ -44,3 +51,5 @@ export const bucket =
   process.env.NODE_ENV === "test"
     ? admin.storage().bucket(GCS_BUCKET_NAME) // use the firebase storage emulator
     : new Storage().bucket(GCS_BUCKET_NAME);
+
+export const googleMapsClient = new Client();
