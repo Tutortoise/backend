@@ -11,7 +11,7 @@ export const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME!;
 
 export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 
-if (!GOOGLE_MAPS_API_KEY) {
+if (!GOOGLE_MAPS_API_KEY && process.env.NODE_ENV !== "test") {
   throw new Error("Missing Google Maps API Key");
 }
 
