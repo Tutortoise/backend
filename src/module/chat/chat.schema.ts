@@ -8,11 +8,25 @@ export const createRoomSchema = z.object({
   }),
 });
 
-export const sendMessageSchema = z.object({
+export const sendTextMessageSchema = z.object({
   body: z.object({
     content: z.string().min(1, "Message cannot be empty"),
-    type: z.enum(["text", "image"]),
   }),
+  params: z.object({
+    roomId: z.string(),
+  }),
+});
+
+export const sendMessageSchema = z.object({
+  body: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("text"),
+      content: z.string().min(1, "Message cannot be empty"),
+    }),
+    z.object({
+      type: z.literal("image"),
+    }),
+  ]),
   params: z.object({
     roomId: z.string(),
   }),
@@ -29,7 +43,7 @@ export const getRoomMessagesSchema = z.object({
 });
 
 export type CreateRoomSchema = z.infer<typeof createRoomSchema>;
-export type SendMessageSchema = z.infer<typeof sendMessageSchema>;
+export type SendTextMessageSchema = z.infer<typeof sendTextMessageSchema>;
 export type GetRoomMessagesSchema = {
   params: { roomId: string };
   query: ParsedQs;

@@ -4,3 +4,7 @@ import sharp from "sharp";
 export const downscaleImage = async (buffer: Buffer) => {
   return sharp(buffer).resize(1024, 1024).jpeg({ quality: 80 }).toBuffer();
 };
+
+export const convertToJpg = async (buffer: Buffer, quality = 80) => {
+  return sharp(buffer).jpeg({ quality: quality }).toBuffer();
+};

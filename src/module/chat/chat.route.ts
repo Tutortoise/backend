@@ -8,7 +8,7 @@ import {
 import {
   createRoomSchema,
   getRoomMessagesSchema,
-  sendMessageSchema,
+  sendTextMessageSchema,
 } from "@/module/chat/chat.schema";
 import { z } from "zod";
 
@@ -27,9 +27,16 @@ chatRouter.get(
   validator(getRoomMessagesSchema),
   chatController.getRoomMessages,
 );
+
+// TODO: instead of using different routes for text and image messages, use a single route
+// - For now i seperate it because of issue in zod that can't validate the request body properly
 chatRouter.post(
-  "/rooms/:roomId/messages",
-  validator(sendMessageSchema),
+  "/rooms/:roomId/messages/text",
+  validator(sendTextMessageSchema),
+  chatController.sendMessage,
+);
+chatRouter.post(
+  "/rooms/:roomId/messages/image",
   validateChatImageUpload,
   chatController.sendMessage,
 );

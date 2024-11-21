@@ -70,27 +70,47 @@ export const validateProfilePictureUpload: RequestHandler = (
 };
 
 export const validateChatImageUpload: RequestHandler = (req, res, next) => {
-  if (req.body.type === "image") {
-    const base64Regex = /^data:image\/(jpeg|png);base64,/;
-    if (!base64Regex.test(req.body.content)) {
-      res.status(400).json({
-        status: "fail",
-        message: "Invalid image format. Must be base64 encoded JPEG or PNG",
-      });
-      return;
-    }
+  imageUpload.single("image")(req, res, (error) => {
+    try {
+      if (error) {
+        logger.debug("Image upload error:", error);
 
-    const sizeInBytes = Buffer.from(
-      req.body.content.split(",")[1],
-      "base64",
-    ).length;
-    if (sizeInBytes > 5 * 1024 * 1024) {
-      res.status(400).json({
-        status: "fail",
-        message: "Image size too large. Maximum size is 5MB",
-      });
-      return;
+        switch (error.code) {
+          case "LIMIT_FILE_SIZE":
+            res.status(400).json({
+              status: "fail",
+              message: "File size is too large. Max size is 5MB",
+            });
+            return;
+
+          case "LIMIT_UNEXPECTED_FILE":
+            res.status(400).json({
+              status: "fail",
+              message: "Invalid file type. Only JPEG and PNG files are allowed",
+            });
+            return;
+        }
+
+        logger.debug(`Failed to upload image: ${error}`);
+        res.status(400).json({
+          status: "fail",
+          message: "Failed to upload image",
+        });
+        return;
+      }
+
+      if (!req.file) {
+        res.status(400).json({
+          status: "fail",
+          message: "No image file provided",
+        });
+        return;
+      }
+
+      next();
+    } catch (err) {
+      logger.error("Error in validateChatImageUpload:", err);
+      next(err);
     }
-  }
-  next();
+  });
 };

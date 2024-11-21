@@ -2,6 +2,7 @@ import { Bucket } from "@google-cloud/storage";
 import { logger } from "@middleware/logging.middleware";
 import { Firestore } from "firebase-admin/firestore";
 import { PresenceService } from "@/module/chat/presence.service";
+import { convertToJpg } from "@/helpers/image.helper";
 
 interface ChatServiceDependencies {
   firestore: Firestore;
@@ -33,6 +34,11 @@ interface ChatMessage {
   isRead: boolean;
 }
 
+interface MessageData {
+  content: string;
+  type: "text" | "image";
+}
+
 // TODO: Implement FCM push notifications for chat
 // - Send push notification when receiving new messages while app is in background
 // - Include sender name, message preview in notification
@@ -55,19 +61,14 @@ export class ChatService {
       this.firestore.collection("tutors").doc(tutorId).get(),
     ]);
 
-    if (!learnerDoc.exists) {
-      throw new Error("Learner not found");
-    }
-
-    if (!tutorDoc.exists) {
-      throw new Error("Tutor not found");
+    if (!learnerDoc.exists || !tutorDoc.exists) {
+      throw new Error("Learner or tutor not found");
     }
 
     const existingRoom = await this.firestore
       .collection("chat_rooms")
       .where("learnerId", "==", learnerId)
       .where("tutorId", "==", tutorId)
-      .limit(1)
       .get();
 
     if (!existingRoom.empty) {
@@ -78,22 +79,19 @@ export class ChatService {
       } as ChatRoom;
     }
 
-    const roomRef = this.firestore.collection("chat_rooms").doc();
-    const roomId = roomRef.id;
-
     const roomData = {
       learnerId,
       tutorId,
-      learnerName: learnerDoc.data()?.name || "Unknown Learner",
-      tutorName: tutorDoc.data()?.name || "Unknown Tutor",
+      learnerName: learnerDoc.data()?.name,
+      tutorName: tutorDoc.data()?.name,
       createdAt: new Date(),
       lastMessageAt: new Date(),
     };
 
-    await roomRef.set(roomData);
+    const roomRef = await this.firestore.collection("chat_rooms").add(roomData);
 
     return {
-      id: roomId,
+      id: roomRef.id,
       ...roomData,
     };
   }
@@ -132,6 +130,7 @@ export class ChatService {
       .collection("chat_rooms")
       .doc(roomId)
       .get();
+
     if (!room.exists) {
       throw new Error("Room not found");
     }
@@ -144,12 +143,13 @@ export class ChatService {
     let query = this.firestore
       .collection("chat_messages")
       .where("roomId", "==", roomId)
-      .orderBy("sentAt", "desc")
-      .limit(limitNum);
+      .orderBy("sentAt", "desc");
 
     if (before) {
-      query = query.where("sentAt", "<", before);
+      query = query.startAfter(before);
     }
+
+    query = query.limit(limitNum);
 
     const messages = await query.get();
 
@@ -176,12 +176,13 @@ export class ChatService {
     roomId: string,
     senderId: string,
     senderRole: "learner" | "tutor",
-    message: { content: string; type: "text" | "image" },
+    message: MessageData,
   ): Promise<ChatMessage> {
     const room = await this.firestore
       .collection("chat_rooms")
       .doc(roomId)
       .get();
+
     if (!room.exists) {
       throw new Error("Chat room not found");
     }
@@ -193,29 +194,22 @@ export class ChatService {
         : roomData.tutorId === senderId;
 
     if (!isParticipant) {
-      throw new Error("Unauthorized to send message in this chat room");
+      throw new Error("Not authorized to send messages in this room");
     }
-
-    const messageRef = this.firestore.collection("chat_messages").doc();
-    const messageId = messageRef.id;
 
     const now = new Date();
     let finalContent = message.content;
 
     if (message.type === "image") {
       try {
-        const imageBuffer = Buffer.from(
-          message.content.replace(/^data:image\/\w+;base64,/, ""),
-          "base64",
-        );
-
-        const imagePath = `chat-images/${roomId}/${messageId}.jpg`;
+        const imageBuffer = Buffer.from(message.content, "base64");
+        const downgradedImage = await convertToJpg(imageBuffer);
+        const imagePath = `chat-images/${roomId}/${now.getTime()}.jpg`;
         const file = this.bucket.file(imagePath);
 
-        await file.save(imageBuffer, {
-          metadata: {
-            contentType: "image/jpeg",
-          },
+        await file.save(downgradedImage, {
+          contentType: "image/jpeg",
+          public: true,
         });
 
         finalContent = file.publicUrl();
@@ -225,7 +219,7 @@ export class ChatService {
       }
     }
 
-    const messageData = {
+    const messageData: Omit<ChatMessage, "id"> = {
       roomId,
       senderId,
       senderRole,
@@ -235,28 +229,27 @@ export class ChatService {
       isRead: false,
     };
 
-    await this.firestore.runTransaction(async (transaction) => {
-      transaction.set(messageRef, messageData);
+    const messageRef = await this.firestore
+      .collection("chat_messages")
+      .add(messageData);
 
-      transaction.update(this.firestore.collection("chat_rooms").doc(roomId), {
+    await this.firestore
+      .collection("chat_rooms")
+      .doc(roomId)
+      .update({
         lastMessageAt: now,
         lastMessage: {
           content: finalContent,
           type: message.type,
         },
       });
-    });
-
-    await this.presenceService.updateUserPresence(senderId, {
-      isOnline: true,
-      currentChatRoom: roomId,
-    });
 
     return {
-      id: messageId,
+      id: messageRef.id,
       ...messageData,
     };
   }
+
   subscribeToRoomMessages(
     roomId: string,
     callback: (message: ChatMessage) => void,

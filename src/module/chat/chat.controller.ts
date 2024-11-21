@@ -4,7 +4,7 @@ import { logger } from "@middleware/logging.middleware";
 import {
   createRoomSchema,
   getRoomMessagesSchema,
-  sendMessageSchema,
+  sendTextMessageSchema,
 } from "@/module/chat/chat.schema";
 import { ChatService } from "@/module/chat/chat.service";
 import { PresenceService } from "@/module/chat/presence.service";
@@ -142,8 +142,11 @@ export const getRoomMessages: Controller<GetRoomMessagesSchema> = async (
   }
 };
 
-type SendMessageSchema = z.infer<typeof sendMessageSchema>;
-export const sendMessage: Controller<SendMessageSchema> = async (req, res) => {
+type SendTextMessageSchema = z.infer<typeof sendTextMessageSchema>;
+export const sendMessage: Controller<SendTextMessageSchema> = async (
+  req,
+  res,
+) => {
   try {
     const userId = req.learner?.id || req.tutor?.id;
     const userRole = req.learner ? "learner" : "tutor";
@@ -157,12 +160,17 @@ export const sendMessage: Controller<SendMessageSchema> = async (req, res) => {
     }
 
     const { roomId } = req.params;
-    const message = await chatService.sendMessage(
-      roomId,
-      userId,
-      userRole,
-      req.body,
-    );
+
+    const messageType = req.file ? "image" : "text";
+    const content =
+      messageType === "image"
+        ? req.file!.buffer.toString("base64")
+        : req.body.content;
+
+    const message = await chatService.sendMessage(roomId, userId, userRole, {
+      content,
+      type: messageType,
+    });
 
     res.status(201).json({
       status: "success",
