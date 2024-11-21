@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { AuthService } from "@services/auth.service";
+import { AuthService } from "@/module/auth/auth.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("AuthService", () => {

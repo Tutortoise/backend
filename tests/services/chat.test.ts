@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { ChatService } from "@services/chat.service";
+import { ChatService } from "@/module/chat/chat.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("ChatService", () => {

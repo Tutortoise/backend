@@ -1,4 +1,4 @@
-import { SubjectService } from "@services/subject.service";
+import { SubjectService } from "@/module/subject/subject.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("SubjectService", () => {

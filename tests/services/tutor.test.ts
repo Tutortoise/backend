@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { TutorService } from "@services/tutor.service";
+import { TutorService } from "@/module/tutor/tutor.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("TutorService", () => {

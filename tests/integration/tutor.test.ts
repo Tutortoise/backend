@@ -1,6 +1,6 @@
 import { auth } from "@/config";
 import { app } from "@/main";
-import { seedTutors } from "@/seeders/tutor.seeder";
+import { seedTutors } from "@/module/tutor/tutor.seeder";
 import { faker } from "@faker-js/faker";
 import { initializeApp } from "firebase/app";
 import {

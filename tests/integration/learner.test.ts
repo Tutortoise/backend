@@ -1,8 +1,8 @@
 import { auth, firestore } from "@/config";
 import { app } from "@/main";
-import { seedSubjects } from "@/seeders/subject.seeder";
+import { seedSubjects } from "@/module/subject/subject.seeder";
 import { faker } from "@faker-js/faker";
-import { SubjectService } from "@services/subject.service";
+import { SubjectService } from "@/module/subject/subject.service";
 import { initializeApp } from "firebase/app";
 import {
   connectAuthEmulator,
