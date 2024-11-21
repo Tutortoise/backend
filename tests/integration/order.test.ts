@@ -1,10 +1,10 @@
 import { auth, firestore } from "@/config";
 import { app } from "@/main";
-import { seedLearners } from "@/seeders/learner.seeder";
-import { seedTutors } from "@/seeders/tutor.seeder";
-import { seedServices } from "@/seeders/tutorService.seeder";
+import { seedLearners } from "@/module/learner/learner.seeder";
+import { seedTutors } from "@/module/tutor/tutor.seeder";
+import { seedServices } from "@/module/tutor-service/tutorService.seeder";
 import { faker } from "@faker-js/faker";
-import { TutorServiceService } from "@services/tutorService.service";
+import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
 import { initializeApp } from "firebase/app";
 import {
   connectAuthEmulator,

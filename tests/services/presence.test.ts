@@ -1,4 +1,4 @@
-import { PresenceService } from "@services/presence.service";
+import { PresenceService } from "@/module/chat/presence.service";
 import { describe, expect, it, vi } from "vitest";
 import { faker } from "@faker-js/faker";
 

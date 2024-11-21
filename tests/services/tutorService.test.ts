@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { TutorServiceService } from "@services/tutorService.service";
+import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
 import firebase from "firebase-admin";
 import { describe, expect, it, vi } from "vitest";
 

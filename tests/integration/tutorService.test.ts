@@ -1,6 +1,6 @@
 import { app } from "@/main";
-import { seedTutors } from "@/seeders/tutor.seeder";
-import { seedServices } from "@/seeders/tutorService.seeder";
+import { seedTutors } from "@/module/tutor/tutor.seeder";
+import { seedServices } from "@/module/tutor-service/tutorService.seeder";
 import supertest from "supertest";
 import { beforeAll, describe, test } from "vitest";
 

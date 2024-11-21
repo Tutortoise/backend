@@ -1,11 +1,11 @@
 import { Router } from "express";
-import authRouter from "./auth.route";
-import subjectRouter from "./subject.route";
-import learnerRouter from "./learner.route";
-import tutorRouter from "./tutor.route";
-import tutorServiceRouter from "./tutorService.route";
-import orderRouter from "./order.route";
-import chatRouter from "./chat.route";
+import authRouter from "@/module/auth/auth.route";
+import subjectRouter from "@/module/subject/subject.route";
+import learnerRouter from "@/module/learner/learner.route";
+import tutorRouter from "@/module/tutor/tutor.route";
+import tutorServiceRouter from "@/module/tutor-service/tutorService.route";
+import orderRouter from "@/module/order/order.route";
+import chatRouter from "@/module/chat/chat.route";
 
 const v1Router = Router();
 

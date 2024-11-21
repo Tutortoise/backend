@@ -1,7 +1,7 @@
-import { tutorSchema } from "@schemas/tutor.schema";
-import { learnerSchema } from "@schemas/learner.schema";
+import { tutorSchema } from "@/module/tutor/tutor.schema";
+import { learnerSchema } from "@/module/learner/learner.schema";
 import { z } from "zod";
-import { tutorServiceSchema } from "@schemas/tutorService.schema";
+import { tutorServiceSchema } from "@/module/tutor-service/tutorService.schema";
 import { ParsedQs } from "qs";
 import { NextFunction, Request, Response } from "express";
 

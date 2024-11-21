@@ -1,5 +1,5 @@
 import { app } from "@/main";
-import { seedSubjects } from "@/seeders/subject.seeder";
+import { seedSubjects } from "@/module/subject/subject.seeder";
 import supertest from "supertest";
 import { beforeAll, describe, expect, test } from "vitest";
 
