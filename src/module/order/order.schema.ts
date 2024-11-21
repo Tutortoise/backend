@@ -100,3 +100,31 @@ export const cancelOrderSchema = z.object({
     }),
   }),
 });
+
+export const acceptOrderSchema = z.object({
+  params: z.object({
+    orderId: z.string().superRefine(async (orderId, ctx) => {
+      const exists = await orderService.checkOrderExists(orderId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Order does not exist",
+        });
+      }
+    }),
+  }),
+});
+
+export const declineOrderSchema = z.object({
+  params: z.object({
+    orderId: z.string().superRefine(async (orderId, ctx) => {
+      const exists = await orderService.checkOrderExists(orderId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Order does not exist",
+        });
+      }
+    }),
+  }),
+});

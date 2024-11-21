@@ -6,8 +6,10 @@ import {
 } from "@/module/auth/auth.middleware";
 import { validator } from "@middleware/validation.middleware";
 import {
+  acceptOrderSchema,
   cancelOrderSchema,
   createOrderSchema,
+  declineOrderSchema,
 } from "@/module/order/order.schema";
 import { Router } from "express";
 
@@ -27,6 +29,20 @@ orderRouter.post(
   verifyTutor,
   validator(cancelOrderSchema),
   orderController.cancelOrder,
+);
+
+orderRouter.post(
+  "/:orderId/accept",
+  verifyTutor,
+  validator(acceptOrderSchema),
+  orderController.acceptOrder,
+);
+
+orderRouter.post(
+  "/:orderId/decline",
+  verifyTutor,
+  validator(declineOrderSchema),
+  orderController.declineOrder,
 );
 
 export default orderRouter;

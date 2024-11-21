@@ -39,6 +39,26 @@ export class OrderService {
     }
   }
 
+  async acceptOrder(orderId: string) {
+    try {
+      this.firestore.collection("orders").doc(orderId).update({
+        status: "scheduled",
+      });
+    } catch (error) {
+      throw new Error(`Failed to accept order: ${error}`);
+    }
+  }
+
+  async declineOrder(orderId: string) {
+    try {
+      this.firestore.collection("orders").doc(orderId).update({
+        status: "declined",
+      });
+    } catch (error) {
+      throw new Error(`Failed to decline order: ${error}`);
+    }
+  }
+
   async checkOrderExists(orderId: string) {
     try {
       const order = await this.firestore
