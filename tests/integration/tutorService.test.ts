@@ -1,8 +1,6 @@
 import { app } from "@/main";
-import { seedTutors } from "@/module/tutor/tutor.seeder";
-import { seedServices } from "@/module/tutor-service/tutorService.seeder";
 import supertest from "supertest";
-import { beforeAll, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { faker } from "@faker-js/faker";
 import { auth, firestore } from "@/config";
 import {
@@ -49,11 +47,6 @@ async function registerLearner() {
   return { idToken, userId };
 }
 
-beforeAll(async () => {
-  await seedTutors();
-  await seedServices({ randomTeachingMethodology: true });
-});
-
 describe("Get tutor services", async () => {
   test("Get all tutor services without token", async () => {
     await supertest(app).get("/api/v1/tutors/services").expect(401);
@@ -86,7 +79,6 @@ describe("Get tutor service availability", async () => {
       .set("Authorization", `Bearer ${idToken}`)
       .expect(200);
 
-    console.log(res.body.data);
     expect(res.body.data).toBeTruthy();
   });
 });

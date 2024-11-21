@@ -1,11 +1,6 @@
 import { app } from "@/main";
-import { seedSubjects } from "@/module/subject/subject.seeder";
 import supertest from "supertest";
-import { beforeAll, describe, expect, test } from "vitest";
-
-beforeAll(async () => {
-  await seedSubjects();
-});
+import { describe, expect, test } from "vitest";
 
 describe("Get all subjects", () => {
   test("It should return all subjects", async () => {

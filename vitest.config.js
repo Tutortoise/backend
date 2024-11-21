@@ -17,5 +17,6 @@ export default {
   },
   test: {
     hookTimeout: 120_000,
+    globalSetup: ["./globalSetup.ts"],
   },
 };

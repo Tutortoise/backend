@@ -28,10 +28,6 @@ async function getIdToken(userId: string) {
   return user.getIdToken();
 }
 
-beforeAll(async () => {
-  await seedSubjects();
-});
-
 async function registerLearner() {
   const newLearner = {
     name: faker.person.fullName(),

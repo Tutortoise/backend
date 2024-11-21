@@ -22,12 +22,6 @@ const firebaseApp = initializeApp({
 const clientAuth = getAuth(firebaseApp);
 connectAuthEmulator(clientAuth, "http://localhost:9099");
 
-beforeAll(async () => {
-  await seedTutors();
-  await seedLearners();
-  await seedServices({ randomTeachingMethodology: true });
-});
-
 const tsService = new TutorServiceService({ firestore });
 
 async function getIdToken(userId: string) {
