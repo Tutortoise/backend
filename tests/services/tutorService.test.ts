@@ -266,15 +266,66 @@ describe("TutorServiceService", () => {
         data: () => ({ name: "Mathematics" }),
       };
 
+      const mockServiceDoc = {
+        exists: true,
+        id: serviceId,
+        data: () => mockService,
+      };
+
+      const mockAlsoTeaches = [
+        {
+          id: "service2",
+          subjectName: "Physics",
+          hourlyRate: 120000,
+          typeLesson: "offline",
+        },
+        {
+          id: "service3",
+          subjectName: "Chemistry",
+          hourlyRate: 110000,
+          typeLesson: "hybrid",
+        },
+      ];
+
       mockService.tutorId.get.mockResolvedValue(mockTutor);
       mockService.subjectId.get.mockResolvedValue(mockSubject);
 
       firestore.collection.mockReturnValue({
         doc: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue(mockServiceDoc),
+        }),
+        where: vi.fn().mockReturnValue({
           get: vi.fn().mockResolvedValue({
-            exists: true,
-            id: serviceId,
-            data: () => mockService,
+            docs: [
+              {
+                id: "service2",
+                data: () => ({
+                  tutorId: mockTutor,
+                  subjectId: {
+                    get: vi.fn().mockResolvedValue({
+                      exists: true,
+                      data: () => ({ name: "Physics" }),
+                    }),
+                  },
+                  hourlyRate: 120000,
+                  typeLesson: "offline",
+                }),
+              },
+              {
+                id: "service3",
+                data: () => ({
+                  tutorId: mockTutor,
+                  subjectId: {
+                    get: vi.fn().mockResolvedValue({
+                      exists: true,
+                      data: () => ({ name: "Chemistry" }),
+                    }),
+                  },
+                  hourlyRate: 110000,
+                  typeLesson: "hybrid",
+                }),
+              },
+            ],
           }),
         }),
       });
@@ -289,6 +340,7 @@ describe("TutorServiceService", () => {
         typeLesson: "online",
         aboutYou: "About me",
         teachingMethodology: "My methodology",
+        alsoTeaches: mockAlsoTeaches,
       });
     });
 

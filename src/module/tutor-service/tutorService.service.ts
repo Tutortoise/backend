@@ -233,8 +233,30 @@ export class TutorServiceService {
         return null;
       }
 
-      // TODO: also teaches
       // TODO: reviews
+
+      // Fetch all services by the same tutor, excluding the current serviceId
+      const tutorServicesQuery = await this.firestore
+        .collection("tutor_services")
+        .where("tutorId", "==", tutorDoc.ref)
+        .get();
+
+      const alsoTeaches = await Promise.all(
+        tutorServicesQuery.docs
+          .filter((doc) => doc.id !== serviceId)
+          .map(async (doc) => {
+            const serviceData = doc.data();
+
+            const subjectDoc = await serviceData.subjectId?.get();
+
+            return {
+              id: doc.id,
+              subjectName: subjectDoc.data()?.name,
+              hourlyRate: serviceData.hourlyRate,
+              typeLesson: serviceData.typeLesson,
+            };
+          }),
+      );
 
       return {
         id: tutorServiceDoc.id,
@@ -245,6 +267,7 @@ export class TutorServiceService {
         aboutYou: data.aboutYou,
         teachingMethodology: data.teachingMethodology,
         location: tutorData.city,
+        alsoTeaches,
       };
     } catch (error) {
       throw new Error(`Failed to get tutor service detail: ${error}`);
