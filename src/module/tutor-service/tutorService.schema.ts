@@ -70,13 +70,13 @@ export const tutorServiceSchema = z.object({
   }),
   availability: z
     .object({
-      sunday: zodTimesArray,
-      monday: zodTimesArray,
-      tuesday: zodTimesArray,
-      wednesday: zodTimesArray,
-      thursday: zodTimesArray,
-      friday: zodTimesArray,
-      saturday: zodTimesArray,
+      0: zodTimesArray,
+      1: zodTimesArray,
+      2: zodTimesArray,
+      3: zodTimesArray,
+      4: zodTimesArray,
+      5: zodTimesArray,
+      6: zodTimesArray,
     })
     .refine(
       (availability) => {

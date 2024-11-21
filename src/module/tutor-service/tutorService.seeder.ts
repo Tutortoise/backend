@@ -22,15 +22,7 @@ const generateTeachingMethodology = async (
 };
 
 const generateRandomAvailability = () => {
-  const days = [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ] as const;
+  const days = [0, 1, 2, 3, 4, 5, 6] as const;
 
   const timeSlots = [
     "09:00",

@@ -251,6 +251,63 @@ export class TutorServiceService {
     }
   }
 
+  async getTutorServiceAvailability(serviceId: string) {
+    try {
+      const tutorServiceDoc = await this.firestore
+        .collection("tutor_services")
+        .doc(serviceId)
+        .get();
+
+      const tutorService = tutorServiceDoc.data();
+      if (!tutorService) {
+        throw new Error("Tutor service not found");
+      }
+
+      const { availability } = tutorService;
+
+      const today = new Date();
+      const next7DaysAvailability: Date[] = [];
+
+      // TODO: handle when there is already order that has status 'scheduled'
+      //       remove the time from availability
+
+      // Calculate availability for the next 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        // 0: Sunday .. 6: Saturday
+        const dayIndex = date.getUTCDay();
+        const times = availability[dayIndex] || [];
+
+        times.forEach((time: string) => {
+          const [hours, minutes] = time.split(":").map(Number);
+
+          const datetime = new Date(
+            Date.UTC(
+              date.getUTCFullYear(),
+              date.getUTCMonth(),
+              date.getUTCDate(),
+              hours,
+              minutes,
+            ),
+          );
+
+          // Skip past times
+          if (datetime < today) {
+            return;
+          }
+
+          next7DaysAvailability.push(datetime);
+        });
+      }
+
+      return next7DaysAvailability;
+    } catch (error) {
+      throw new Error(`Failed to get tutor service availability: ${error}`);
+    }
+  }
+
   async createTutorService(
     tutorId: string,
     data: z.infer<typeof createTutorServiceSchema>["body"],

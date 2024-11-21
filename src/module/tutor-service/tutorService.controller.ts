@@ -85,6 +85,30 @@ export const getService: Controller<GetServiceSchema> = async (
   }
 };
 
+export const getServiceAvailability: Controller<GetServiceSchema> = async (
+  req,
+  res,
+) => {
+  const tutorServiceId = req.params.tutorServiceId;
+
+  try {
+    const availability =
+      await tutorServiceService.getTutorServiceAvailability(tutorServiceId);
+
+    res.json({
+      status: "success",
+      data: availability,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor service availability: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor service availability`,
+    });
+  }
+};
+
 export const getMyServices: Controller = async (req, res) => {
   const tutorId = req.tutor.id;
 

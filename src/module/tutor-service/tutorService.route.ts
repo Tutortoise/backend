@@ -16,6 +16,10 @@ tutorServiceRouter.use(firebaseAuthMiddleware);
 
 tutorServiceRouter.get("/", tutorServiceController.getServices);
 tutorServiceRouter.get("/:tutorServiceId", tutorServiceController.getService);
+tutorServiceRouter.get(
+  "/:tutorServiceId/availability",
+  tutorServiceController.getServiceAvailability,
+);
 
 tutorServiceRouter.use(verifyTutor);
 
