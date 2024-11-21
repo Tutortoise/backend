@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "seed": "tsx src/seed.ts",
     "test": "NODE_ENV=test firebase emulators:exec --only auth,storage,database,firestore --project tutortoise-test 'vitest'",
-    "test:ui": "NODE_ENV=test firebase emulators:exec --only auth,storage,database,firestore --ui --project tutortoise-test 'vitest'"
+    "test:ui": "NODE_ENV=test firebase emulators:exec --only auth,storage,database,firestore --ui --project tutortoise-test 'vitest'",
+    "lint-staged": "pnpm lint && NODE_ENV=test firebase emulators:exec --only auth,storage,database,firestore --project tutortoise-test 'vitest run'"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
