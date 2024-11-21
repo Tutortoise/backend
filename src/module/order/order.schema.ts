@@ -3,6 +3,7 @@ import { downscaleImage } from "@/helpers/image.helper";
 import { LearnerService } from "@/module/learner/learner.service";
 import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
 import { z, ZodIssueCode } from "zod";
+import { OrderService } from "./order.service";
 
 const learnerService = new LearnerService({
   firestore,
@@ -12,6 +13,10 @@ const learnerService = new LearnerService({
 });
 
 const tutorServiceService = new TutorServiceService({
+  firestore,
+});
+
+const orderService = new OrderService({
   firestore,
 });
 
@@ -51,7 +56,7 @@ export const orderSchema = z.object({
     .string()
     .max(1000, { message: "Note must be at most 1000 characters" })
     .optional(),
-  status: z.enum(["pending", "declined", "scheduled", "completed"]),
+  status: z.enum(["pending", "declined", "canceled", "scheduled", "completed"]),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 });
@@ -81,3 +86,17 @@ export const createOrderSchema = z
       });
     }
   });
+
+export const cancelOrderSchema = z.object({
+  params: z.object({
+    orderId: z.string().superRefine(async (orderId, ctx) => {
+      const exists = await orderService.checkOrderExists(orderId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Order does not exist",
+        });
+      }
+    }),
+  }),
+});

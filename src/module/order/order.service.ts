@@ -28,4 +28,26 @@ export class OrderService {
       throw new Error(`Failed to create order: ${error}`);
     }
   }
+
+  async cancelOrder(orderId: string) {
+    try {
+      this.firestore.collection("orders").doc(orderId).update({
+        status: "canceled",
+      });
+    } catch (error) {
+      throw new Error(`Failed to cancel order: ${error}`);
+    }
+  }
+
+  async checkOrderExists(orderId: string) {
+    try {
+      const order = await this.firestore
+        .collection("orders")
+        .doc(orderId)
+        .get();
+      return order.exists && order.data()?.status === "pending";
+    } catch (error) {
+      throw new Error(`Failed to check order exists: ${error}`);
+    }
+  }
 }
