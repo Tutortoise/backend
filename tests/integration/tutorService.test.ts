@@ -2,30 +2,11 @@ import { app } from "@/main";
 import supertest from "supertest";
 import { describe, expect, test } from "vitest";
 import { faker } from "@faker-js/faker";
-import { auth, firestore } from "@/config";
-import {
-  connectAuthEmulator,
-  getAuth,
-  signInWithCustomToken,
-} from "firebase/auth";
-import { initializeApp } from "firebase/app";
+import { firestore } from "@/config";
 import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
+import { login } from "@tests/helpers/client.helper";
 
 const tutorServiceService = new TutorServiceService({ firestore });
-
-const firebaseApp = initializeApp({
-  apiKey: "test-api-key",
-  authDomain: "localhost",
-  projectId: "tutortoise-test",
-});
-const clientAuth = getAuth(firebaseApp);
-connectAuthEmulator(clientAuth, "http://localhost:9099");
-
-async function getIdToken(userId: string) {
-  const customToken = await auth.createCustomToken(userId);
-  const { user } = await signInWithCustomToken(clientAuth, customToken);
-  return user.getIdToken();
-}
 
 async function registerLearner() {
   const newLearner = {
@@ -43,7 +24,7 @@ async function registerLearner() {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await getIdToken(userId);
+  const idToken = await login(userId);
   return { idToken, userId };
 }
 

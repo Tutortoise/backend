@@ -1,28 +1,9 @@
 import { app } from "@/main";
-import { auth, firestore } from "@/config";
+import { firestore } from "@/config";
 import { faker } from "@faker-js/faker";
-import { initializeApp } from "firebase/app";
-import {
-  connectAuthEmulator,
-  getAuth,
-  signInWithCustomToken,
-} from "firebase/auth";
 import supertest from "supertest";
 import { describe, expect, test } from "vitest";
-
-const firebaseApp = initializeApp({
-  apiKey: "test-api-key",
-  authDomain: "localhost",
-  projectId: "tutortoise-test",
-});
-const clientAuth = getAuth(firebaseApp);
-connectAuthEmulator(clientAuth, "http://localhost:9099");
-
-async function getIdToken(userId: string) {
-  const customToken = await auth.createCustomToken(userId);
-  const { user } = await signInWithCustomToken(clientAuth, customToken);
-  return user.getIdToken();
-}
+import { login } from "@tests/helpers/client.helper";
 
 // async function cleanupCollections() {
 //   const collections = ["user_fcm_tokens", "learners", "tutors"];
@@ -52,7 +33,7 @@ async function registerUser(role: "learner" | "tutor") {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await getIdToken(userId);
+  const idToken = await login(userId);
   return { userId, token: idToken };
 }
 

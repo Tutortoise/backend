@@ -1,33 +1,8 @@
-import { auth } from "@/config";
 import { app } from "@/main";
-import { seedTutors } from "@/module/tutor/tutor.seeder";
 import { faker } from "@faker-js/faker";
-import { initializeApp } from "firebase/app";
-import {
-  connectAuthEmulator,
-  getAuth,
-  signInWithCustomToken,
-} from "firebase/auth";
+import { login } from "@tests/helpers/client.helper";
 import supertest from "supertest";
 import { beforeAll, describe, expect, test } from "vitest";
-
-beforeAll(async () => {
-  await seedTutors();
-});
-
-const firebaseApp = initializeApp({
-  apiKey: "test-api-key",
-  authDomain: "localhost",
-  projectId: "tutortoise-test",
-});
-const clientAuth = getAuth(firebaseApp);
-connectAuthEmulator(clientAuth, "http://localhost:9099");
-
-async function getIdToken(userId: string) {
-  const customToken = await auth.createCustomToken(userId);
-  const { user } = await signInWithCustomToken(clientAuth, customToken);
-  return user.getIdToken();
-}
 
 async function registerTutor() {
   const newTutor = {
@@ -45,7 +20,7 @@ async function registerTutor() {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await getIdToken(userId);
+  const idToken = await login(userId);
   return { idToken, userId };
 }
 

@@ -2,18 +2,13 @@ import { auth, firestore, bucket, realtimeDb } from "@/config";
 import { beforeEach } from "vitest";
 import { app } from "@/main";
 import { faker } from "@faker-js/faker";
-import { initializeApp } from "firebase/app";
-import {
-  connectAuthEmulator,
-  getAuth,
-  signInWithCustomToken,
-} from "firebase/auth";
 import supertest from "supertest";
 import { beforeAll, describe, expect, test } from "vitest";
 import { ChatService } from "@/module/chat/chat.service";
 import { PresenceService } from "@/module/chat/presence.service";
 import { AuthService } from "@/module/auth/auth.service";
 import { FCMService } from "@/common/fcm.service";
+import { login } from "@tests/helpers/client.helper";
 
 const presenceService = new PresenceService({ realtimeDb });
 const fcmService = new FCMService({ firestore });
@@ -36,20 +31,6 @@ const authService = new AuthService({ auth, firestore, fcmService });
 //     await batch.commit();
 //   }
 // }
-
-const firebaseApp = initializeApp({
-  apiKey: "test-api-key",
-  authDomain: "localhost",
-  projectId: "tutortoise-test",
-});
-const clientAuth = getAuth(firebaseApp);
-connectAuthEmulator(clientAuth, "http://localhost:9099");
-
-async function getIdToken(userId: string) {
-  const customToken = await auth.createCustomToken(userId);
-  const { user } = await signInWithCustomToken(clientAuth, customToken);
-  return user.getIdToken();
-}
 
 async function createTestUser(role: "learner" | "tutor") {
   const userData = {
@@ -90,7 +71,7 @@ async function createTestUser(role: "learner" | "tutor") {
       }
     }
 
-    const idToken = await getIdToken(result.userId);
+    const idToken = await login(result.userId);
     return { id: result.userId, token: idToken, name: userData.name };
   } catch (error) {
     console.error(`Failed to create ${role}:`, error);

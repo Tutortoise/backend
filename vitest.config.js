@@ -6,8 +6,8 @@ export default {
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@routes": path.resolve(__dirname, "./src/routes"),
-      "@schemas": path.resolve(__dirname, "./src/schemas"),
       "@middleware": path.resolve(__dirname, "./src/middleware"),
+      "@tests": path.resolve(__dirname, "./tests"),
     },
   },
   env: {
