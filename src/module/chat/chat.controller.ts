@@ -9,12 +9,7 @@ import {
 import { ChatService } from "@/module/chat/chat.service";
 import { PresenceService } from "@/module/chat/presence.service";
 import { z } from "zod";
-
-// TODO: Implement FCM token management
-// - Store FCM tokens when users login/register
-// - Update tokens when they change
-// - Remove tokens on logout
-// - Group tokens by user for multi-device support
+import { FCMService } from "@/common/fcm.service";
 
 const typingStatusSchema = z.object({
   params: z.object({
@@ -34,8 +29,14 @@ const roomPresenceSchema = z.object({
 type TypingStatusSchema = z.infer<typeof typingStatusSchema>;
 type RoomPresenceSchema = z.infer<typeof roomPresenceSchema>;
 
+const fcmService = new FCMService({ firestore });
 const presenceService = new PresenceService({ realtimeDb });
-const chatService = new ChatService({ firestore, bucket, presenceService });
+const chatService = new ChatService({
+  firestore,
+  bucket,
+  presenceService,
+  fcmService,
+});
 
 type CreateRoomSchema = z.infer<typeof createRoomSchema>;
 export const createRoom: Controller<CreateRoomSchema> = async (req, res) => {

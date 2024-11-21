@@ -3,11 +3,13 @@ import { logger } from "@middleware/logging.middleware";
 import { Firestore } from "firebase-admin/firestore";
 import { PresenceService } from "@/module/chat/presence.service";
 import { convertToJpg } from "@/helpers/image.helper";
+import { FCMService } from "@/common/fcm.service";
 
 interface ChatServiceDependencies {
   firestore: Firestore;
   bucket: Bucket;
   presenceService: PresenceService;
+  fcmService: FCMService;
 }
 
 interface ChatRoom {
@@ -39,20 +41,22 @@ interface MessageData {
   type: "text" | "image";
 }
 
-// TODO: Implement FCM push notifications for chat
-// - Send push notification when receiving new messages while app is in background
-// - Include sender name, message preview in notification
-// - Deep link notification to specific chat room
-
 export class ChatService {
   private firestore: Firestore;
   private bucket: Bucket;
   public presenceService: PresenceService;
+  private fcmService: FCMService;
 
-  constructor({ firestore, bucket, presenceService }: ChatServiceDependencies) {
+  constructor({
+    firestore,
+    bucket,
+    presenceService,
+    fcmService,
+  }: ChatServiceDependencies) {
     this.firestore = firestore;
     this.bucket = bucket;
     this.presenceService = presenceService;
+    this.fcmService = fcmService;
   }
 
   async createRoom(learnerId: string, tutorId: string): Promise<ChatRoom> {
@@ -243,6 +247,25 @@ export class ChatService {
           type: message.type,
         },
       });
+
+    const recipientId =
+      senderRole === "learner" ? roomData.tutorId : roomData.learnerId;
+    const senderName =
+      senderRole === "learner" ? roomData.learnerName : roomData.tutorName;
+
+    try {
+      await this.fcmService.sendChatNotification(
+        recipientId,
+        senderName,
+        {
+          content: message.type === "image" ? "📷 Image" : finalContent,
+          type: message.type,
+        },
+        roomId,
+      );
+    } catch (error) {
+      logger.error(`Failed to send FCM notification: ${error}`);
+    }
 
     return {
       id: messageRef.id,
