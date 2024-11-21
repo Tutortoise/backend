@@ -101,6 +101,7 @@ export const getServicesSchema = z.object({
         message: "Teaching type must be either 'online', 'offline', or 'both'",
       })
       .optional(),
+    city: z.string().optional(),
   }),
 });
 

@@ -18,6 +18,7 @@ type GetTutorServicesFilters = {
   maxHourlyRate?: number | null;
   typeLesson?: string | null;
   tutorId?: string | null;
+  city?: string | null;
 };
 
 export class TutorServiceService {
@@ -43,6 +44,7 @@ export class TutorServiceService {
     maxHourlyRate = null,
     typeLesson = null,
     tutorId = null,
+    city = null,
   }: GetTutorServicesFilters = {}) {
     try {
       let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
@@ -170,6 +172,12 @@ export class TutorServiceService {
             !tutorName.toLowerCase().includes(query) &&
             !subjectName.toLowerCase().includes(query)
           ) {
+            return null;
+          }
+        }
+
+        if (city) {
+          if (!tutorData.city?.toLowerCase().includes(city.toLowerCase())) {
             return null;
           }
         }
