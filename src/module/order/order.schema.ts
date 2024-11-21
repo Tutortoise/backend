@@ -2,7 +2,7 @@ import { auth, bucket, firestore } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { LearnerService } from "@/module/learner/learner.service";
 import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
-import { z } from "zod";
+import { z, ZodIssueCode } from "zod";
 
 const learnerService = new LearnerService({
   firestore,
@@ -35,7 +35,14 @@ export const orderSchema = z.object({
       });
     }
   }),
-  sessionTime: z.string(),
+  sessionTime: z.string().superRefine((sessionTime, ctx) => {
+    if (new Date(sessionTime) < new Date()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Session time must be in the future",
+      });
+    }
+  }),
   totalHours: z
     .number()
     .min(1, { message: "Total hours must be at least 1" })
@@ -49,12 +56,28 @@ export const orderSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
-export const createOrderSchema = z.object({
-  body: orderSchema.omit({
-    id: true,
-    status: true,
-    learnerId: true, // Get learnerId from req.learner
-    createdAt: true,
-    updatedAt: true,
-  }),
-});
+export const createOrderSchema = z
+  .object({
+    body: orderSchema.omit({
+      id: true,
+      status: true,
+      learnerId: true, // Get learnerId from req.learner
+      createdAt: true,
+      updatedAt: true,
+    }),
+  })
+  .superRefine(async (data, ctx) => {
+    const availabilityList =
+      await tutorServiceService.getTutorServiceAvailability(
+        data.body.tutorServiceId,
+      );
+
+    const sessionDate = new Date(data.body.sessionTime);
+    if (!availabilityList.includes(sessionDate.toISOString())) {
+      ctx.addIssue({
+        code: ZodIssueCode.custom,
+        message: "Tutor is not available at this time",
+        path: ["body", "sessionTime"],
+      });
+    }
+  });
