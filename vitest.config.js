@@ -5,11 +5,9 @@ export default {
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@controllers": path.resolve(__dirname, "./src/controllers"),
       "@routes": path.resolve(__dirname, "./src/routes"),
       "@schemas": path.resolve(__dirname, "./src/schemas"),
       "@middleware": path.resolve(__dirname, "./src/middleware"),
-      "@services": path.resolve(__dirname, "./src/services"),
     },
   },
   env: {
