@@ -8,7 +8,7 @@ import {
   signInWithCustomToken,
 } from "firebase/auth";
 import supertest from "supertest";
-import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 const firebaseApp = initializeApp({
   apiKey: "test-api-key",
@@ -24,17 +24,17 @@ async function getIdToken(userId: string) {
   return user.getIdToken();
 }
 
-async function cleanupCollections() {
-  const collections = ["user_fcm_tokens", "learners", "tutors"];
-  for (const collection of collections) {
-    const snapshot = await firestore.collection(collection).get();
-    const batch = firestore.batch();
-    snapshot.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-  }
-}
+// async function cleanupCollections() {
+//   const collections = ["user_fcm_tokens", "learners", "tutors"];
+//   for (const collection of collections) {
+//     const snapshot = await firestore.collection(collection).get();
+//     const batch = firestore.batch();
+//     snapshot.docs.forEach((doc) => {
+//       batch.delete(doc.ref);
+//     });
+//     await batch.commit();
+//   }
+// }
 
 async function registerUser(role: "learner" | "tutor") {
   const userData = {
@@ -57,13 +57,13 @@ async function registerUser(role: "learner" | "tutor") {
 }
 
 describe("FCM Token Management", () => {
-  beforeAll(async () => {
-    await cleanupCollections();
-  });
+  // beforeAll(async () => {
+  //   await cleanupCollections();
+  // });
 
-  beforeEach(async () => {
-    await cleanupCollections();
-  });
+  // beforeEach(async () => {
+  //   await cleanupCollections();
+  // });
 
   describe("Store FCM Token", () => {
     test("should store FCM token for authenticated user", async () => {

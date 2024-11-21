@@ -1,5 +1,5 @@
 import { auth, firestore, bucket, realtimeDb } from "@/config";
-import { beforeEach, afterAll, vi } from "vitest";
+import { beforeEach } from "vitest";
 import { app } from "@/main";
 import { faker } from "@faker-js/faker";
 import { initializeApp } from "firebase/app";
@@ -25,17 +25,17 @@ const chatService = new ChatService({
 });
 const authService = new AuthService({ auth, firestore, fcmService });
 
-async function cleanupCollections() {
-  const collections = ["chat_rooms", "chat_messages", "learners", "tutors"];
-  for (const collection of collections) {
-    const snapshot = await firestore.collection(collection).get();
-    const batch = firestore.batch();
-    snapshot.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-  }
-}
+// async function cleanupCollections() {
+//   const collections = ["chat_rooms", "chat_messages", "learners", "tutors"];
+//   for (const collection of collections) {
+//     const snapshot = await firestore.collection(collection).get();
+//     const batch = firestore.batch();
+//     snapshot.docs.forEach((doc) => {
+//       batch.delete(doc.ref);
+//     });
+//     await batch.commit();
+//   }
+// }
 
 const firebaseApp = initializeApp({
   apiKey: "test-api-key",
@@ -104,8 +104,8 @@ describe("Chat Features", () => {
   let roomId: string;
 
   beforeAll(async () => {
-    await cleanupCollections();
-
+    //   await cleanupCollections();
+    //
     [learner, tutor] = await Promise.all([
       createTestUser("learner"),
       createTestUser("tutor"),
@@ -122,9 +122,9 @@ describe("Chat Features", () => {
     }
   });
 
-  afterAll(async () => {
-    await cleanupCollections();
-  });
+  // afterAll(async () => {
+  //   await cleanupCollections();
+  // });
 
   describe("Create chat room", () => {
     test("should create a new chat room", async () => {
