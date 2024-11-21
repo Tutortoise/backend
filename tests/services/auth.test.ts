@@ -16,9 +16,16 @@ describe("AuthService", () => {
     }),
   };
 
+  const mockFCMService = {
+    storeUserToken: vi.fn(),
+    removeUserToken: vi.fn(),
+    sendChatNotification: vi.fn(),
+  };
+
   const authService = new AuthService({
     auth: mockAuth as any,
     firestore: mockFirestore as any,
+    fcmService: mockFCMService as any,
   });
 
   describe("registerLearner", () => {

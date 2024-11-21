@@ -6,6 +6,7 @@ describe("ChatService", () => {
   let mockFirestore: any;
   let mockBucket: any;
   let mockPresenceService: any;
+  let mockFCMService: any;
   let chatService: ChatService;
 
   beforeEach(() => {
@@ -47,10 +48,18 @@ describe("ChatService", () => {
       getRoomPresence: vi.fn(),
     };
 
+    mockFCMService = {
+      storeUserToken: vi.fn(),
+      removeUserToken: vi.fn(),
+      sendChatNotification: vi.fn(),
+      removeInvalidTokens: vi.fn(),
+    };
+
     chatService = new ChatService({
       firestore: mockFirestore,
       bucket: mockBucket,
       presenceService: mockPresenceService,
+      fcmService: mockFCMService,
     });
   });
 

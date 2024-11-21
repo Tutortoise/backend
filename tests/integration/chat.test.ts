@@ -13,10 +13,17 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { ChatService } from "@/module/chat/chat.service";
 import { PresenceService } from "@/module/chat/presence.service";
 import { AuthService } from "@/module/auth/auth.service";
+import { FCMService } from "@/common/fcm.service";
 
 const presenceService = new PresenceService({ realtimeDb });
-const chatService = new ChatService({ firestore, bucket, presenceService });
-const authService = new AuthService({ auth, firestore });
+const fcmService = new FCMService({ firestore });
+const chatService = new ChatService({
+  firestore,
+  bucket,
+  presenceService,
+  fcmService,
+});
+const authService = new AuthService({ auth, firestore, fcmService });
 
 async function cleanupCollections() {
   const collections = ["chat_rooms", "chat_messages", "learners", "tutors"];

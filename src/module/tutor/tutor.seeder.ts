@@ -5,8 +5,10 @@ import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
 import { AuthService } from "@/module/auth/auth.service";
 import { TutorService } from "@/module/tutor/tutor.service";
+import { FCMService } from "@/common/fcm.service";
 
-const authService = new AuthService({ firestore, auth });
+const fcmService = new FCMService({ firestore });
+const authService = new AuthService({ firestore, auth, fcmService });
 const tutorService = new TutorService({
   firestore,
   auth,
