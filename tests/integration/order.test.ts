@@ -28,11 +28,15 @@ async function registerLearner() {
   return { idToken, userId };
 }
 
-describe("Order a service", () => {
-  test("Learner can order a service", async () => {
-    const { idToken, userId } = await registerLearner();
+describe("Order a service", async () => {
+  const { idToken, userId } = await registerLearner();
 
-    const services = await tsService.getTutorServices();
+  const services = await tsService.getTutorServices();
+
+  test("Learner can order a service", async () => {
+    const availability = await tsService.getTutorServiceAvailability(
+      services[0].id,
+    );
 
     await supertest(app)
       .post("/api/v1/orders")
@@ -40,10 +44,33 @@ describe("Order a service", () => {
       .send({
         learnerId: userId,
         tutorServiceId: services[0].id,
-        sessionTime: new Date(),
+        sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
       })
       .expect(201);
+  });
+
+  test("Learner cannot order a service with invalid session time", async () => {
+    const res = await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${idToken}`)
+      .send({
+        learnerId: userId,
+        tutorServiceId: services[0].id,
+        sessionTime: new Date().toISOString(),
+        totalHours: 1,
+        notes: "I want to learn more",
+      })
+      .expect(400);
+
+    expect(res.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: "body.sessionTime",
+          message: "Tutor is not available at this time",
+        }),
+      ]),
+    );
   });
 });
