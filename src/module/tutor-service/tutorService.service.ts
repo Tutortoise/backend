@@ -388,6 +388,22 @@ export class TutorServiceService {
     }
   }
 
+  async getOrders(serviceId: string) {
+    try {
+      const ordersSnapshot = await this.firestore
+        .collection("orders")
+        .where("tutorServiceId", "==", serviceId)
+        .get();
+
+      return ordersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+    } catch (error) {
+      throw new Error(`Failed to get orders: ${error}`);
+    }
+  }
+
   async validateTutorServiceOwnership(tutorId: string, serviceId: string) {
     try {
       const tutorServiceRef = this.firestore

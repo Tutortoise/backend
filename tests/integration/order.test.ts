@@ -4,7 +4,7 @@ import { TutorServiceService } from "@/module/tutor-service/tutorService.service
 import { faker } from "@faker-js/faker";
 import { login } from "@tests/helpers/client.helper";
 import supertest from "supertest";
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test } from "vitest";
 
 const tsService = new TutorServiceService({ firestore });
 
@@ -32,6 +32,15 @@ describe("Order a service", async () => {
   const { idToken, userId } = await registerLearner();
 
   const services = await tsService.getTutorServices();
+
+  afterAll(async () => {
+    const snapshot = await firestore.collection("orders").get();
+    const batch = firestore.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+  });
 
   test("Learner can order a service", async () => {
     const availability = await tsService.getTutorServiceAvailability(
@@ -72,5 +81,56 @@ describe("Order a service", async () => {
         }),
       ]),
     );
+  });
+});
+
+describe("Cancel an order", async () => {
+  const services = await tsService.getTutorServices();
+  const randomService = faker.helpers.arrayElement(services);
+
+  const { userId, idToken: learnerIdToken } = await registerLearner();
+
+  test("Tutor can cancel an order", async () => {
+    const tutorId = await firestore
+      .collection("tutor_services")
+      .doc(randomService.id)
+      .get()
+      .then(async (doc) => {
+        const ref = doc.data()?.tutorId;
+        return ref.id;
+      });
+    const tutorIdToken = await login(tutorId);
+
+    // Create an order
+    const availability = await tsService.getTutorServiceAvailability(
+      randomService.id,
+    );
+
+    await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .send({
+        learnerId: userId,
+        tutorServiceId: randomService.id,
+        sessionTime: availability[0],
+        totalHours: 1,
+        notes: "I want to learn more",
+      })
+      .expect(201);
+
+    // Cancel the order
+    const orders = await tsService.getOrders(randomService.id);
+    const order = orders[0];
+    await supertest(app)
+      .post(`/api/v1/orders/${order.id}/cancel`)
+      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .expect(200);
+  });
+
+  test("Learner cannot cancel an order", async () => {
+    await supertest(app)
+      .post(`/api/v1/orders/x/cancel`)
+      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .expect(403);
   });
 });
