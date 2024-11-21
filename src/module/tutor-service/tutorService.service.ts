@@ -234,7 +234,6 @@ export class TutorServiceService {
       }
 
       // TODO: also teaches
-      // TODO: location
       // TODO: reviews
 
       return {
@@ -245,6 +244,7 @@ export class TutorServiceService {
         typeLesson: data.typeLesson,
         aboutYou: data.aboutYou,
         teachingMethodology: data.teachingMethodology,
+        location: tutorData.city,
       };
     } catch (error) {
       throw new Error(`Failed to get tutor service detail: ${error}`);
