@@ -266,7 +266,7 @@ export class TutorServiceService {
       const { availability } = tutorService;
 
       const today = new Date();
-      const next7DaysAvailability: Date[] = [];
+      const next7DaysAvailability: string[] = [];
 
       // TODO: handle when there is already order that has status 'scheduled'
       //       remove the time from availability
@@ -298,7 +298,7 @@ export class TutorServiceService {
             return;
           }
 
-          next7DaysAvailability.push(datetime);
+          next7DaysAvailability.push(datetime.toISOString());
         });
       }
 
