@@ -1,18 +1,22 @@
 import { Firestore } from "firebase-admin/firestore";
 import { Auth } from "firebase-admin/lib/auth/auth";
+import { FCMService } from "@/common/fcm.service";
 
 type AuthServiceDependencies = {
   auth: Auth;
   firestore: Firestore;
+  fcmService: FCMService;
 };
 
 export class AuthService {
   private auth: Auth;
   private firestore: Firestore;
+  private fcmService: FCMService;
 
-  constructor({ auth, firestore }: AuthServiceDependencies) {
+  constructor({ auth, firestore, fcmService }: AuthServiceDependencies) {
     this.auth = auth;
     this.firestore = firestore;
+    this.fcmService = fcmService;
   }
 
   async registerLearner(name: string, email: string, password: string) {
@@ -49,5 +53,13 @@ export class AuthService {
     ]);
 
     return { userId: user.uid };
+  }
+
+  async storeFCMToken(userId: string, token: string) {
+    await this.fcmService.storeUserToken(userId, token);
+  }
+
+  async removeFCMToken(userId: string, token: string) {
+    await this.fcmService.removeUserToken(userId, token);
   }
 }

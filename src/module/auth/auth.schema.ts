@@ -23,3 +23,11 @@ export const changePasswordSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+export const fcmTokenSchema = z.object({
+  body: z.object({
+    token: z.string(),
+  }),
+});
+
+export type FCMTokenSchema = z.infer<typeof fcmTokenSchema>;
