@@ -6,18 +6,37 @@ import {
   cancelOrderSchema,
   createOrderSchema,
   declineOrderSchema,
+  getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { OrderService } from "@/module/order/order.service";
 import { z } from "zod";
 
 const orderService = new OrderService({ firestore });
 
+type GetMyOrdersSchema = z.infer<typeof getMyOrdersSchema>;
+export const getMyOrders: Controller<GetMyOrdersSchema> = async (req, res) => {
+  try {
+    const orders = await orderService.getOrders({
+      learnerId: req.learner?.id,
+      tutorId: req.tutor?.id,
+      status: req.query.status,
+    });
+
+    res.json({ status: "success", data: orders });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: "Failed to get orders" });
+  }
+};
+
 type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export const createOrder: Controller<CreateOrderSchema> = async (req, res) => {
   try {
     await orderService.createOrder(req.learner.id, req.body);
 
-    res.status(201).json({ message: "Order has been created successfully" });
+    res.status(201).json({
+      status: "success",
+      message: "Order has been created successfully",
+    });
   } catch (error) {
     logger.error(`Failed to create order: ${error}`);
 
@@ -32,7 +51,10 @@ export const cancelOrder: Controller<CancelOrderSchema> = async (req, res) => {
   try {
     await orderService.cancelOrder(req.params.orderId);
 
-    res.json({ message: "Order has been canceled successfully" });
+    res.json({
+      status: "success",
+      message: "Order has been canceled successfully",
+    });
   } catch (error) {
     logger.error(`Failed to cancel order: ${error}`);
 

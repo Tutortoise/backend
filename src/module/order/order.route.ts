@@ -10,12 +10,19 @@ import {
   cancelOrderSchema,
   createOrderSchema,
   declineOrderSchema,
+  getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { Router } from "express";
 
 // /api/v1/orders
 const orderRouter = Router();
 orderRouter.use(firebaseAuthMiddleware);
+
+orderRouter.get(
+  "/me",
+  validator(getMyOrdersSchema),
+  orderController.getMyOrders,
+);
 
 orderRouter.post(
   "/",

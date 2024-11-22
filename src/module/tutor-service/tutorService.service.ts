@@ -415,7 +415,11 @@ export class TutorServiceService {
     try {
       const ordersSnapshot = await this.firestore
         .collection("orders")
-        .where("tutorServiceId", "==", serviceId)
+        .where(
+          "tutorServiceId",
+          "==",
+          this.firestore.doc(`/tutor_services/${serviceId}`),
+        )
         .get();
 
       return ordersSnapshot.docs.map((doc) => ({

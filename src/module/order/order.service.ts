@@ -13,6 +13,66 @@ export class OrderService {
     this.firestore = firestore;
   }
 
+  async getOrders({
+    learnerId,
+    tutorId,
+    status,
+  }: {
+    learnerId?: string;
+    tutorId?: string;
+    status: "pending" | "scheduled" | "completed";
+  }) {
+    try {
+      let orderQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
+        this.firestore.collection("orders");
+
+      if (status === "pending") {
+        orderQuery = orderQuery.where("status", "==", "pending");
+      } else if (status === "scheduled") {
+        orderQuery = orderQuery.where("status", "==", "scheduled");
+      } else if (status === "completed") {
+        orderQuery = orderQuery.where("status", "in", [
+          "completed",
+          "canceled",
+          "declined",
+        ]);
+      }
+
+      if (learnerId) {
+        orderQuery = orderQuery.where(
+          "learnerId",
+          "==",
+          this.firestore.doc(`/learners/${learnerId}`),
+        );
+      } else {
+        const tutorServicesSnapshot = await this.firestore
+          .collection("tutor_services")
+          .where("tutorId", "==", this.firestore.doc(`/tutors/${tutorId}`))
+          .get();
+
+        const tutorServiceIds = tutorServicesSnapshot.docs.map(
+          (doc) => doc.ref,
+        );
+
+        orderQuery = orderQuery.where("tutorServiceId", "in", tutorServiceIds);
+      }
+
+      const ordersSnapshot = await orderQuery.get();
+
+      return ordersSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          tutorServiceId: data.tutorServiceId.id,
+          learnerId: data.learnerId.id,
+        };
+      });
+    } catch (error) {
+      throw new Error(`Failed to get orders: ${error}`);
+    }
+  }
+
   async createOrder(
     learnerId: string,
     data: z.infer<typeof createOrderSchema>["body"],
@@ -20,7 +80,10 @@ export class OrderService {
     try {
       this.firestore.collection("orders").add({
         ...data,
-        learnerId,
+        tutorServiceId: this.firestore.doc(
+          `/tutor_services/${data.tutorServiceId}`,
+        ),
+        learnerId: this.firestore.doc(`/learners/${learnerId}`),
         status: "pending",
         createdAt: new Date(),
       });

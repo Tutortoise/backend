@@ -61,6 +61,12 @@ export const orderSchema = z.object({
   updatedAt: z.string().optional(),
 });
 
+export const getMyOrdersSchema = z.object({
+  query: z.object({
+    status: z.enum(["pending", "scheduled", "completed"]),
+  }),
+});
+
 export const createOrderSchema = z
   .object({
     body: orderSchema.omit({
