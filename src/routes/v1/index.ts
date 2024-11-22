@@ -6,6 +6,7 @@ import tutorRouter from "@/module/tutor/tutor.route";
 import tutorServiceRouter from "@/module/tutor-service/tutorService.route";
 import orderRouter from "@/module/order/order.route";
 import chatRouter from "@/module/chat/chat.route";
+import sessionRatingRouter from "@/module/session-rating/sessionRating.route";
 
 const v1Router = Router();
 
@@ -16,5 +17,6 @@ v1Router.use("/tutors/services", tutorServiceRouter);
 v1Router.use("/tutors", tutorRouter);
 v1Router.use("/orders", orderRouter);
 v1Router.use("/chat", chatRouter);
+v1Router.use("/session-rating", sessionRatingRouter);
 
 export default v1Router;
