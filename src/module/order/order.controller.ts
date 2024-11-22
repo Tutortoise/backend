@@ -31,11 +31,12 @@ export const getMyOrders: Controller<GetMyOrdersSchema> = async (req, res) => {
 type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export const createOrder: Controller<CreateOrderSchema> = async (req, res) => {
   try {
-    await orderService.createOrder(req.learner.id, req.body);
+    const data = await orderService.createOrder(req.learner.id, req.body);
 
     res.status(201).json({
       status: "success",
       message: "Order has been created successfully",
+      data,
     });
   } catch (error) {
     logger.error(`Failed to create order: ${error}`);

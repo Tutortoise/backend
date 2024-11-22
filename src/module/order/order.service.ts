@@ -78,7 +78,7 @@ export class OrderService {
     data: z.infer<typeof createOrderSchema>["body"],
   ) {
     try {
-      this.firestore.collection("orders").add({
+      const newOrder = await this.firestore.collection("orders").add({
         ...data,
         tutorServiceId: this.firestore.doc(
           `/tutor_services/${data.tutorServiceId}`,
@@ -87,6 +87,8 @@ export class OrderService {
         status: "pending",
         createdAt: new Date(),
       });
+
+      return { orderId: newOrder.id };
     } catch (error) {
       throw new Error(`Failed to create order: ${error}`);
     }
@@ -106,6 +108,21 @@ export class OrderService {
     try {
       this.firestore.collection("orders").doc(orderId).update({
         status: "scheduled",
+      });
+
+      // also cancel other pending orders
+      const order = await this.firestore
+        .collection("orders")
+        .doc(orderId)
+        .get();
+      const tutorServiceId = order.data()?.tutorServiceId;
+      const pendingOrders = await this.firestore
+        .collection("orders")
+        .where("tutorServiceId", "==", tutorServiceId)
+        .where("status", "==", "pending")
+        .get();
+      pendingOrders.docs.forEach((doc) => {
+        doc.ref.update({ status: "canceled" });
       });
     } catch (error) {
       throw new Error(`Failed to accept order: ${error}`);

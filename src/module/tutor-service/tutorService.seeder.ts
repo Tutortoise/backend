@@ -40,7 +40,7 @@ const generateRandomAvailability = () => {
 
   for (const day of days) {
     if (faker.datatype.boolean()) {
-      availability[day] = faker.helpers.arrayElements(timeSlots);
+      availability[day] = faker.helpers.arrayElements(timeSlots).sort();
     }
   }
 

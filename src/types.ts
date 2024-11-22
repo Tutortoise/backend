@@ -4,6 +4,7 @@ import { z } from "zod";
 import { tutorServiceSchema } from "@/module/tutor-service/tutorService.schema";
 import { ParsedQs } from "qs";
 import { NextFunction, Request, Response } from "express";
+import { orderSchema } from "./module/order/order.schema";
 
 interface RequestData {
   body?: unknown;

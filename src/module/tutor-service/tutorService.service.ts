@@ -291,8 +291,19 @@ export class TutorServiceService {
       const today = new Date();
       const next7DaysAvailability: string[] = [];
 
-      // TODO: handle when there is already order that has status 'scheduled'
-      //       remove the time from availability
+      // handle when there is already order from the same tutor that has status 'scheduled'
+      const existingOrders = await this.getOrdersByTutor(
+        tutorService.tutorId.id,
+      );
+      // track the time
+      const existingOrderTimes = existingOrders
+        .filter((order) => order.status === "scheduled")
+        .map((order) => ({
+          startTime: order.sessionTime,
+          endTime: new Date(order.sessionTime).setHours(
+            new Date(order.sessionTime).getHours() + order.totalHours,
+          ),
+        }));
 
       // Calculate availability for the next 7 days
       for (let i = 0; i < 7; i++) {
@@ -319,6 +330,16 @@ export class TutorServiceService {
           // Skip past times
           if (datetime < today) {
             return;
+          }
+
+          // Skip times that are already booked
+          for (const { startTime, endTime } of existingOrderTimes) {
+            if (
+              datetime >= new Date(startTime) &&
+              datetime < new Date(endTime)
+            ) {
+              return;
+            }
           }
 
           next7DaysAvailability.push(datetime.toISOString());
@@ -424,10 +445,46 @@ export class TutorServiceService {
 
       return ordersSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data(),
+        tutorServiceId: doc.data().tutorServiceId,
+        sessionTime: doc.data().sessionTime,
+        totalHours: doc.data().totalHours,
+        notes: doc.data().notes,
+        learnerId: doc.data().learnerId,
+        status: doc.data().status,
+        createdAt: doc.data().createdAt,
       }));
     } catch (error) {
       throw new Error(`Failed to get orders: ${error}`);
+    }
+  }
+
+  async getOrdersByTutor(tutorId: string) {
+    try {
+      const tutorServicesSnapshot = await this.firestore
+        .collection("tutor_services")
+        .where("tutorId", "==", this.firestore.doc(`/tutors/${tutorId}`))
+        .get();
+
+      const tutorServiceIds = tutorServicesSnapshot.docs.map((doc) =>
+        this.firestore.doc(`/tutor_services/${doc.id}`),
+      );
+      const ordersSnapshot = await this.firestore
+        .collection("orders")
+        .where("tutorServiceId", "in", tutorServiceIds)
+        .get();
+
+      return ordersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        tutorServiceId: doc.data().tutorServiceId,
+        sessionTime: doc.data().sessionTime,
+        totalHours: doc.data().totalHours,
+        notes: doc.data().notes,
+        learnerId: doc.data().learnerId,
+        status: doc.data().status,
+        createdAt: doc.data().createdAt,
+      }));
+    } catch (error) {
+      throw new Error(`Failed to get orders by tutor: ${error}`);
     }
   }
 
