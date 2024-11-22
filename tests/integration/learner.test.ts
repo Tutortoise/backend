@@ -138,6 +138,22 @@ describe("Update learner password", async () => {
     idToken = token;
   });
 
+  test("should validate password", async () => {
+    const res = await supertest(app)
+      .put("/api/v1/learners/password")
+      .set("Authorization", `Bearer ${idToken}`)
+      .send({
+        currentPassword: "1234",
+        newPassword: "123",
+        confirmPassword: "123",
+      })
+      .expect(400);
+
+    expect(res.body.errors[0].message).toEqual(
+      "Password must be at least 8 characters",
+    );
+  });
+
   test("should be able to update learner password", async () => {
     const newPassword = faker.internet.password();
     await supertest(app)
@@ -161,21 +177,5 @@ describe("Update learner password", async () => {
         confirmPassword: newPassword,
       })
       .expect(401);
-  });
-
-  test("should validate password", async () => {
-    const res = await supertest(app)
-      .put("/api/v1/learners/password")
-      .set("Authorization", `Bearer ${idToken}`)
-      .send({
-        currentPassword: "1234",
-        newPassword: "123",
-        confirmPassword: "123",
-      })
-      .expect(400);
-
-    expect(res.body.errors[0].message).toEqual(
-      "Password must be at least 8 characters",
-    );
   });
 });
