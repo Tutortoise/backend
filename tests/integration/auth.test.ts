@@ -1,30 +1,10 @@
-import { db } from "@/db/config";
-import { learners, tutors } from "@/db/schema";
 import { app } from "@/main";
-import { faker } from "@faker-js/faker";
+import { generateUser } from "@tests/helpers/generate.helper";
 import supertest from "supertest";
-import { afterAll, describe, expect, test } from "vitest";
-
-function generateUser(role: "learner" | "tutor") {
-  return {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    role,
-  };
-}
-
-async function cleanup() {
-  await db.delete(learners);
-  await db.delete(tutors);
-}
+import { describe, expect, test } from "vitest";
 
 describe("Register and login as learner", () => {
   const newLearner = generateUser("learner");
-
-  afterAll(async () => {
-    await cleanup();
-  });
 
   test("should register as learner correctly", async () => {
     await supertest(app)
@@ -46,10 +26,6 @@ describe("Register and login as learner", () => {
 
 describe("Register and login as tutor", () => {
   const newTutor = generateUser("tutor");
-
-  afterAll(async () => {
-    await cleanup();
-  });
 
   test("should register as tutor correctly", async () => {
     await supertest(app)
