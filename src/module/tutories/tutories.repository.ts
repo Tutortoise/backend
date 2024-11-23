@@ -224,15 +224,18 @@ export class TutoriesRepository {
     } = data;
 
     try {
-      await this.db.insert(tutories).values({
-        tutorId,
-        subjectId,
-        aboutYou,
-        teachingMethodology,
-        hourlyRate,
-        typeLesson,
-        availability: availability as TutorAvailability,
-      });
+      return await this.db
+        .insert(tutories)
+        .values({
+          tutorId,
+          subjectId,
+          aboutYou,
+          teachingMethodology,
+          hourlyRate,
+          typeLesson,
+          availability: availability as TutorAvailability,
+        })
+        .returning({ id: tutories.id });
     } catch (error) {
       throw new Error(`Failed to create tutor service: ${error}`);
     }

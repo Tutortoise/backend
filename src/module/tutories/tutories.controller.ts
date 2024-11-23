@@ -149,11 +149,12 @@ export const createTutories: Controller<CreateTutorServiceSchema> = async (
   const tutorId = req.tutor.id;
 
   try {
-    await tutoriesService.createTutorService(tutorId, req.body);
+    const data = await tutoriesService.createTutorService(tutorId, req.body);
 
     res.status(201).json({
       status: "success",
       message: "Tutor service created successfully",
+      data,
     });
   } catch (error) {
     logger.error(`Failed to create tutor service: ${error}`);
@@ -172,11 +173,11 @@ export const updateTutories: Controller<UpdateTutorServiceSchema> = async (
 ) => {
   const tutoriesId = req.params.tutoriesId;
 
-  // Check if the tutor owns the tutor service
-  const isOwner = await tutoriesService.validateTutoriesOwnership(
-    req.tutor.id,
+  // Check if the tutor owns the tutories
+  const isOwner = await tutoriesService.validateTutoriesOwnership({
+    tutorId: req.tutor.id,
     tutoriesId,
-  );
+  });
 
   if (!isOwner) {
     res.status(403).json({
@@ -210,10 +211,10 @@ export const deleteTutories: Controller<DeleteTutorServiceSchema> = async (
 ) => {
   const tutoriesId = req.params.tutoriesId;
   // Check if the tutor owns the tutories
-  const isOwner = await tutoriesService.validateTutoriesOwnership(
-    req.tutor.id,
+  const isOwner = await tutoriesService.validateTutoriesOwnership({
+    tutorId: req.tutor.id,
     tutoriesId,
-  );
+  });
 
   if (!isOwner) {
     res.status(403).json({

@@ -74,7 +74,11 @@ export class TutoriesService {
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
     try {
-      await this.tutoriesRepository.createTutories(tutorId, data);
+      const [{ id }] = await this.tutoriesRepository.createTutories(
+        tutorId,
+        data,
+      );
+      return { tutoriesId: id };
     } catch (error) {
       logger.error(`Failed to create tutories: ${error}`);
     }
@@ -99,11 +103,17 @@ export class TutoriesService {
     }
   }
 
-  async validateTutoriesOwnership(tutoriesId: string, tutorId: string) {
+  async validateTutoriesOwnership({
+    tutorId,
+    tutoriesId,
+  }: {
+    tutorId: string;
+    tutoriesId: string;
+  }) {
     try {
       return await this.tutoriesRepository.validateTutoriesOwnership(
-        tutoriesId,
         tutorId,
+        tutoriesId,
       );
     } catch (error) {
       logger.error(`Failed to validate tutories ownership: ${error}`);
