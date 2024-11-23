@@ -3,7 +3,10 @@ import type { Tutor, Learner } from "@/types";
 import { auth, firestore } from "@/config";
 import { logger } from "@middleware/logging.middleware";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
-import { decodeJWT, verifyJWT } from "@/helpers/jwt.helper";
+import { verifyJWT } from "@/helpers/jwt.helper";
+import { container } from "@/container";
+
+const learnerRepository = container.learnerRepository;
 
 export const firebaseAuthMiddleware: RequestHandler = async (
   req,
@@ -62,7 +65,7 @@ export const firebaseAuthMiddleware: RequestHandler = async (
   }
 };
 
-export const jwtAuthMiddleware: RequestHandler = (req, res, next) => {
+export const jwtAuthMiddleware: RequestHandler = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     res.status(401).json({ status: "fail", message: "Unauthorized" });
@@ -70,13 +73,22 @@ export const jwtAuthMiddleware: RequestHandler = (req, res, next) => {
   }
 
   const token = authHeader.split("Bearer ")[1];
-  if (!verifyJWT(token)) {
+  if (!token) {
     res.status(401).json({ status: "fail", message: "Unauthorized" });
     return;
   }
 
-  const decoded = decodeJWT(token);
-  console.log(decoded);
+  const decoded = verifyJWT(token);
+  if (!decoded) {
+    res.status(401).json({ status: "fail", message: "Unauthorized" });
+    return;
+  }
+
+  if (decoded.role === "learner") {
+    req.learner = { id: decoded.id };
+  } else if (decoded.role === "tutor") {
+    req.tutor = { id: decoded.id };
+  }
 
   next();
 };

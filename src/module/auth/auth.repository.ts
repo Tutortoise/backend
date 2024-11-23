@@ -7,7 +7,7 @@ import type { db as dbType } from "@/db/config";
 
 type RegisterSchema = z.infer<typeof registerSchema>;
 export class AuthRepository {
-  private static SALT_ROUNDS = 10;
+  public static SALT_ROUNDS = 10;
 
   constructor(private readonly db: typeof dbType) {}
 

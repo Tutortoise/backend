@@ -2,6 +2,8 @@ import { Bucket } from "@google-cloud/storage";
 import { updateProfileSchema } from "@/module/learner/learner.schema";
 import { z } from "zod";
 import { LearnerRepository } from "./learner.repository";
+import { hash } from "bcryptjs";
+import { AuthRepository } from "../auth/auth.repository";
 
 export interface LearnerServiceDependencies {
   learnerRepository: LearnerRepository;
@@ -52,7 +54,7 @@ export class LearnerService {
   async changePassword(userId: string, newPassword: string) {
     try {
       await this.learnerRepository.updateLearnerProfile(userId, {
-        password: newPassword,
+        password: await hash(newPassword, AuthRepository.SALT_ROUNDS),
       });
     } catch (error) {
       throw new Error(`Failed to change password: ${error}`);

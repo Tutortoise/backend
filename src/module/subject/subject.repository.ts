@@ -40,11 +40,15 @@ export class SubjectRepository {
   }
 
   public async validateInterests(interests: string[]) {
-    const result = await this.db
-      .select({ id: subjects.id })
-      .from(subjects)
-      .where(inArray(subjects.id, interests));
+    try {
+      const result = await this.db
+        .select({ id: subjects.id })
+        .from(subjects)
+        .where(inArray(subjects.id, interests));
 
-    return result.length === interests.length;
+      return result.length === interests.length;
+    } catch (error) {
+      return false;
+    }
   }
 }
