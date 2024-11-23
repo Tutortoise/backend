@@ -48,7 +48,7 @@ export class AuthRepository {
     if (!user) return null;
 
     // Check if password correct
-    const isPasswordCorrect = await this.comparePassword(
+    const isPasswordCorrect = await AuthRepository.comparePassword(
       password,
       user.password,
     );
@@ -102,7 +102,10 @@ export class AuthRepository {
     return hash(password, AuthRepository.SALT_ROUNDS);
   }
 
-  private async comparePassword(password: string, hashedPassword: string) {
+  public static async comparePassword(
+    password: string,
+    hashedPassword: string,
+  ) {
     return compare(password, hashedPassword);
   }
 }

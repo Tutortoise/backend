@@ -28,8 +28,6 @@ learnerRouter.put(
   learnerController.updateProfilePicture,
 );
 
-// TODO: harus validasi dulu password lamanya. Di firebase-admin ga ada kayak compare password
-//       jadi harus di handle di client atau generate password reset link yang dikirim di email
 learnerRouter.put(
   "/password",
   validator(changePasswordSchema),

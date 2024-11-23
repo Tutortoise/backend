@@ -30,4 +30,14 @@ export class LearnerRepository {
 
     return results.map((subject) => subject.id);
   }
+
+  public async getLearnerById(learnerId: string) {
+    const result = await this.db
+      .select()
+      .from(learners)
+      .where(eq(learners.id, learnerId))
+      .limit(1);
+
+    return result[0];
+  }
 }
