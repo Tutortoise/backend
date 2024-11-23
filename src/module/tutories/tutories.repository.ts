@@ -86,6 +86,8 @@ export class TutoriesRepository {
           subjectName: subjects.name,
           hourlyRate: tutories.hourlyRate,
           typeLesson: tutories.typeLesson,
+          city: tutors.city,
+          district: tutors.district,
         })
         .from(tutories)
         .where(and(...conditions))
