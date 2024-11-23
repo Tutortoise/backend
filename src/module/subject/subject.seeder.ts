@@ -84,6 +84,10 @@ export const seedSubjects = async () => {
     },
   ];
 
+  if (await subjectRepository.hasSubjects()) {
+    return;
+  }
+
   console.log(`Seeding subjects with ${subjects.length} data...`);
   for (const subject of subjects) {
     await subjectRepository.createSubject(subject.name, subject.iconUrl);
