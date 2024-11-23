@@ -1,4 +1,3 @@
-import { firestore } from "@/config";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
 import { container } from "@/container";
@@ -6,33 +5,92 @@ import { container } from "@/container";
 const authRepository = container.authRepository;
 const tutorRepository = container.tutorRepository;
 
+const cityDistricts = {
+  Jakarta: [
+    "Cengkareng",
+    "Grogol Petamburan",
+    "Kebon Jeruk",
+    "Menteng",
+    "Pancoran",
+    "Penjaringan",
+    "Cipayung",
+    "Jatinegara",
+    "Tebet",
+    "Setiabudi",
+  ],
+  Bandung: [
+    "Cibiru",
+    "Cileunyi",
+    "Arcamanik",
+    "Gedebage",
+    "Sukajadi",
+    "Kiaracondong",
+    "Rancasari",
+  ],
+  Surabaya: [
+    "Wonokromo",
+    "Sukomanunggal",
+    "Tandes",
+    "Rungkut",
+    "Gubeng",
+    "Asemrowo",
+    "Karang Pilang",
+  ],
+  Yogyakarta: [
+    "Sleman",
+    "Bantul",
+    "Gunungkidul",
+    "Kulon Progo",
+    "Depok",
+    "Tegalrejo",
+    "Ngampilan",
+  ],
+  Samarinda: [
+    "Samarinda Utara",
+    "Samarinda Seberang",
+    "Samarinda Ilir",
+    "Samarinda Barometer",
+  ],
+};
+
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
   for (let i = 0; i < 25; i++) {
+    const city = faker.helpers.arrayElement([
+      "Jakarta",
+      "Bandung",
+      "Surabaya",
+      "Yogyakarta",
+      "Samarinda",
+    ]);
+    const district = faker.helpers.arrayElement(cityDistricts[city]);
+
     tutors.push({
       name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
       gender: faker.helpers.arrayElement([
         "male",
         "female",
         "prefer not to say",
       ]),
-      createdAt: new Date(),
+      city,
+      district,
     });
-  }
-
-  const tutorSnapshot = await firestore.collection("tutors").get();
-  if (!tutorSnapshot.empty) {
-    return;
   }
 
   console.log(`Seeding tutors with ${tutors.length} data...`);
   for (const tutor of tutors) {
     const { id } = await authRepository.registerUser({
-      email: faker.internet.email(),
+      name: tutor.name,
+      email: tutor.email,
       password: "12345678",
-      name: tutor.name!,
       role: "tutor",
     });
-    // tutorRepository.updateTutorProfile(id, {});
+
+    tutorRepository.updateTutorProfile(id, {
+      city: tutor.city,
+      district: tutor.district,
+    });
   }
 };
