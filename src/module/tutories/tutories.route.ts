@@ -1,7 +1,4 @@
-import {
-  firebaseAuthMiddleware,
-  verifyTutor,
-} from "@/module/auth/auth.middleware";
+import { jwtAuthMiddleware, verifyTutor } from "@/module/auth/auth.middleware";
 import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
   createTutorServiceSchema,
@@ -12,7 +9,7 @@ import { Router } from "express";
 
 // /api/v1/tutors/services
 const tutorServiceRouter = Router();
-tutorServiceRouter.use(firebaseAuthMiddleware);
+tutorServiceRouter.use(jwtAuthMiddleware);
 
 tutorServiceRouter.get("/", tutoriesController.getServices);
 tutorServiceRouter.get("/:tutorServiceId", tutoriesController.getService);
