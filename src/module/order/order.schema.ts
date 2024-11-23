@@ -1,16 +1,10 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { LearnerService } from "@/module/learner/learner.service";
+import { firestore } from "@/config";
 import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
 import { z, ZodIssueCode } from "zod";
 import { OrderService } from "./order.service";
+import { container } from "@/container";
 
-const learnerService = new LearnerService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-});
+const learnerRepository = container.learnerRepository;
 
 const tutorServiceService = new TutorServiceService({
   firestore,
@@ -23,7 +17,7 @@ const orderService = new OrderService({
 export const orderSchema = z.object({
   id: z.string().optional(),
   learnerId: z.string().superRefine(async (learnerId, ctx) => {
-    const exists = await learnerService.checkLearnerExists(learnerId);
+    const exists = await learnerRepository.checkLearnerExists(learnerId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

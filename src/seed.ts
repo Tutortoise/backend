@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { seedLearners } from "@/module/learner/learner.seeder";
 import { seedSubjects } from "@/module/subject/subject.seeder";
 import { seedTutors } from "@/module/tutor/tutor.seeder";

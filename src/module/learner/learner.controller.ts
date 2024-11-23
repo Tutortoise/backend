@@ -1,4 +1,4 @@
-import { auth, bucket, firestore } from "@/config";
+import { bucket } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
@@ -7,10 +7,10 @@ import { updateProfileSchema } from "@/module/learner/learner.schema";
 import { LearnerService } from "@/module/learner/learner.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
+import { container } from "@/container";
 
 const learnerService = new LearnerService({
-  auth,
-  firestore,
+  learnerRepository: container.learnerRepository,
   bucket,
   downscaleImage,
 });
