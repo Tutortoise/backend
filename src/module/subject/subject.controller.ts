@@ -1,9 +1,11 @@
-import { firestore } from "@/config";
+import { container } from "@/container";
 import { SubjectService } from "@/module/subject/subject.service";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 
-const subjectService = new SubjectService({ firestore });
+const subjectService = new SubjectService({
+  subjectRepository: container.subjectRepository,
+});
 
 export const getAllSubjects: Controller = async (_req, res) => {
   try {

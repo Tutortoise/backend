@@ -1,4 +1,5 @@
 import { auth, bucket, firestore } from "@/config";
+import { container } from "@/container";
 import { downscaleImage } from "@/helpers/image.helper";
 import { getCityName } from "@/helpers/location.helper";
 import { SubjectService } from "@/module/subject/subject.service";
@@ -6,7 +7,7 @@ import { TutorService } from "@/module/tutor/tutor.service";
 import { z } from "zod";
 
 const subjectService = new SubjectService({
-  firestore,
+  subjectRepository: container.subjectRepository,
 });
 const tutorService = new TutorService({
   firestore,

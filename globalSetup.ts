@@ -4,7 +4,7 @@ import { seedServices } from "@/module/tutor-service/tutorService.seeder";
 import { seedTutors } from "@/module/tutor/tutor.seeder";
 
 export default async function setup() {
-  // await seedSubjects();
+  await seedSubjects();
   // await seedLearners();
   // await seedTutors();
   // await seedServices({ randomTeachingMethodology: true });
