@@ -1,34 +1,10 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { getCityName } from "@/helpers/location.helper";
+import { firestore } from "@/config";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
-import { AuthService } from "@/module/auth/auth.service";
-import { TutorService } from "@/module/tutor/tutor.service";
-import { FCMService } from "@/common/fcm.service";
 import { container } from "@/container";
 
-const fcmService = new FCMService({ firestore });
-const authService = new AuthService({
-  authRepository: container.authRepository,
-  fcmService,
-});
-const tutorService = new TutorService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-  getCityName,
-});
-
-// https://www.latlong.net/category/cities-103-15.html
-function generateRandomLocation(): { latitude: number; longitude: number } {
-  return faker.helpers.arrayElement([
-    { latitude: -7.250445, longitude: 112.768845 }, // Surabaya
-    { latitude: -0.502106, longitude: 117.153709 }, // Samarinda
-    { latitude: -6.2, longitude: 106.816666 }, // Jakarta
-  ]);
-}
+const authRepository = container.authRepository;
+const tutorRepository = container.tutorRepository;
 
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
@@ -51,13 +27,12 @@ export const seedTutors = async () => {
 
   console.log(`Seeding tutors with ${tutors.length} data...`);
   for (const tutor of tutors) {
-    const { userId } = await authService.registerTutor(
-      tutor.name!,
-      faker.internet.email(),
-      "12345678",
-    );
-    tutorService.updateProfile(userId, {
-      location: generateRandomLocation(),
+    const { id } = await authRepository.registerUser({
+      email: faker.internet.email(),
+      password: "12345678",
+      name: tutor.name!,
+      role: "tutor",
     });
+    // tutorRepository.updateTutorProfile(id, {});
   }
 };

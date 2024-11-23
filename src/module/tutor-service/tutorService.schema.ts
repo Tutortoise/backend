@@ -1,21 +1,12 @@
-import { auth, bucket, firestore } from "@/config";
 import { container } from "@/container";
-import { downscaleImage } from "@/helpers/image.helper";
-import { getCityName } from "@/helpers/location.helper";
 import { SubjectService } from "@/module/subject/subject.service";
-import { TutorService } from "@/module/tutor/tutor.service";
 import { z } from "zod";
 
 const subjectService = new SubjectService({
   subjectRepository: container.subjectRepository,
 });
-const tutorService = new TutorService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-  getCityName,
-});
+
+const tutorRepository = container.tutorRepository;
 
 const zodTimesArray = z
   .array(z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"))
@@ -24,7 +15,7 @@ const zodTimesArray = z
 export const tutorServiceSchema = z.object({
   id: z.string().optional(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    const exists = await tutorService.checkTutorExists(tutorId);
+    const exists = await tutorRepository.checkTutorExists(tutorId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

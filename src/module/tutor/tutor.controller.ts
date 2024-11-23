@@ -1,6 +1,5 @@
-import { auth, bucket, firestore } from "@/config";
+import { bucket } from "@/config";
 import { downscaleImage } from "@/helpers/image.helper";
-import { getCityName } from "@/helpers/location.helper";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@/module/auth/auth.schema";
@@ -8,13 +7,12 @@ import { updateProfileSchema } from "@/module/tutor/tutor.schema";
 import { TutorService } from "@/module/tutor/tutor.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
+import { container } from "@/container";
 
 const tutorService = new TutorService({
-  auth,
-  firestore,
+  tutorRepository: container.tutorRepository,
   downscaleImage,
   bucket,
-  getCityName,
 });
 
 type UpdateTutorProfileSchema = z.infer<typeof updateProfileSchema>;
@@ -67,6 +65,19 @@ export const changePassword: Controller<ChangePasswordSchema> = async (
   res,
 ) => {
   try {
+    const isPasswordCorrect = await tutorService.verifyPassword(
+      req.tutor.id,
+      req.body.currentPassword,
+    );
+
+    if (!isPasswordCorrect) {
+      res.status(400).json({
+        status: "fail",
+        message: "Current password is incorrect",
+      });
+      return;
+    }
+
     await tutorService.changePassword(req.tutor.id, req.body.newPassword);
 
     res.json({
