@@ -6,9 +6,13 @@ import { faker } from "@faker-js/faker";
 import { AuthService } from "@/module/auth/auth.service";
 import { TutorService } from "@/module/tutor/tutor.service";
 import { FCMService } from "@/common/fcm.service";
+import { container } from "@/container";
 
 const fcmService = new FCMService({ firestore });
-const authService = new AuthService({ firestore, auth, fcmService });
+const authService = new AuthService({
+  authRepository: container.authRepository,
+  fcmService,
+});
 const tutorService = new TutorService({
   firestore,
   auth,

@@ -12,6 +12,12 @@ export const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME!;
 
 export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY!;
 
+export const JWT_SECRET = process.env.JWT_SECRET!;
+
+if (!JWT_SECRET) {
+  throw new Error("Missing JWT Secret");
+}
+
 if (!GOOGLE_MAPS_API_KEY && process.env.NODE_ENV !== "test") {
   throw new Error("Missing Google Maps API Key");
 }
