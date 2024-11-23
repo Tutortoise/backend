@@ -77,10 +77,21 @@ export const tutoriesSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
-export const getServicesSchema = z.object({
+export const getTutoriesSchema = z.object({
   query: z.object({
     q: z.string().optional(), // search query
-    subjectId: z.string().optional(),
+    subjectId: z
+      .string()
+      .superRefine(async (subjectId, ctx) => {
+        const exists = await subjectRepository.checkSubjectExists(subjectId);
+        if (!exists) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Subject does not exist",
+          });
+        }
+      })
+      .optional(),
     minHourlyRate: z.string().optional(),
     maxHourlyRate: z.string().optional(),
     minRating: z.string().optional(),

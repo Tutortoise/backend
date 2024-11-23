@@ -3,7 +3,7 @@ import {
   createTutoriesSchema,
   deleteTutorServiceSchema,
   getServiceSchema,
-  getServicesSchema,
+  getTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { TutoriesService } from "@/module/tutories/tutories.service";
@@ -15,8 +15,8 @@ const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,
 });
 
-type GetServicesSchema = z.infer<typeof getServicesSchema>;
-export const getAllTutories: Controller<GetServicesSchema> = async (
+type GetTutoriesSchema = z.infer<typeof getTutoriesSchema>;
+export const getAllTutories: Controller<GetTutoriesSchema> = async (
   req,
   res,
 ) => {
@@ -49,11 +49,11 @@ export const getAllTutories: Controller<GetServicesSchema> = async (
       data: tutories,
     });
   } catch (error) {
-    logger.error(`Failed to get tutor services: ${error}`);
+    logger.error(`Failed to get tutories: ${error}`);
 
     res.status(500).json({
       status: "error",
-      message: `Failed to get tutor services`,
+      message: `Failed to get tutories`,
     });
   }
 };

@@ -23,13 +23,17 @@ export class TutorRepository {
 
   // Check if a tutor exists
   public async checkTutorExists(tutorId: string) {
-    const result = await this.db
-      .select({ id: tutors.id })
-      .from(tutors)
-      .where(eq(tutors.id, tutorId))
-      .limit(1);
+    try {
+      const result = await this.db
+        .select({ id: tutors.id })
+        .from(tutors)
+        .where(eq(tutors.id, tutorId))
+        .limit(1);
 
-    return result.length > 0;
+      return result.length > 0;
+    } catch (error) {
+      return false;
+    }
   }
 
   public async validateServices(services: string[]) {

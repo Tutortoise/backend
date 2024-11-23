@@ -30,13 +30,16 @@ export class SubjectRepository {
   }
 
   public async checkSubjectExists(subjectId: string) {
-    const result = await this.db
-      .select({ id: subjects.id })
-      .from(subjects)
-      .where(eq(subjects.id, subjectId))
-      .limit(1);
-
-    return result.length > 0;
+    try {
+      const result = await this.db
+        .select({ id: subjects.id })
+        .from(subjects)
+        .where(eq(subjects.id, subjectId))
+        .limit(1);
+      return result.length > 0;
+    } catch (error) {
+      return false;
+    }
   }
 
   public async validateInterests(interests: string[]) {
