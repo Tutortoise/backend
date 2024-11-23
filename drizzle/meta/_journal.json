@@ -15,6 +15,13 @@
       "when": 1732359006723,
       "tag": "0001_famous_mandrill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1732379492209,
+      "tag": "0002_keen_mastermind",
+      "breakpoints": true
     }
   ]
 }

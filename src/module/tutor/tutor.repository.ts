@@ -12,6 +12,15 @@ export class TutorRepository {
       .where(eq(tutors.id, userId));
   }
 
+  public async getAllTutors() {
+    return await this.db.select().from(tutors);
+  }
+
+  public async hasTutors() {
+    const result = await this.db.select().from(tutors);
+    return result.length > 0;
+  }
+
   // Check if a tutor exists
   public async checkTutorExists(tutorId: string) {
     const result = await this.db

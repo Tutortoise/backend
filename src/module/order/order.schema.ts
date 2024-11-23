@@ -1,14 +1,10 @@
 import { firestore } from "@/config";
-import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
+import { container } from "@/container";
 import { z, ZodIssueCode } from "zod";
 import { OrderService } from "./order.service";
-import { container } from "@/container";
 
 const learnerRepository = container.learnerRepository;
-
-const tutorServiceService = new TutorServiceService({
-  firestore,
-});
+const tutoriesRepository = container.tutoriesRepository;
 
 const orderService = new OrderService({
   firestore,
@@ -25,12 +21,12 @@ export const orderSchema = z.object({
       });
     }
   }),
-  tutorServiceId: z.string().superRefine(async (serviceId, ctx) => {
-    const exists = await tutorServiceService.checkServiceExists(serviceId);
+  tutoriesId: z.string().superRefine(async (tutoriesId, ctx) => {
+    const exists = await tutoriesRepository.checkTutoriesExists(tutoriesId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Tutor service does not exist",
+        message: "Tutories does not exist",
       });
     }
   }),
@@ -72,10 +68,9 @@ export const createOrderSchema = z
     }),
   })
   .superRefine(async (data, ctx) => {
-    const availabilityList =
-      await tutorServiceService.getTutorServiceAvailability(
-        data.body.tutorServiceId,
-      );
+    const availabilityList = await tutoriesRepository.getTutoriesAvailability(
+      data.body.tutoriesId,
+    );
 
     const sessionDate = new Date(data.body.sessionTime);
     if (!availabilityList.includes(sessionDate.toISOString())) {

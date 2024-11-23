@@ -81,7 +81,7 @@ export class OrderService {
       const newOrder = await this.firestore.collection("orders").add({
         ...data,
         tutorServiceId: this.firestore.doc(
-          `/tutor_services/${data.tutorServiceId}`,
+          `/tutor_services/${data.tutoriesId}`,
         ),
         learnerId: this.firestore.doc(`/learners/${learnerId}`),
         status: "pending",

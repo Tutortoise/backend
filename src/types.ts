@@ -1,7 +1,7 @@
 import { tutorSchema } from "@/module/tutor/tutor.schema";
 import { learnerSchema } from "@/module/learner/learner.schema";
 import { z } from "zod";
-import { tutorServiceSchema } from "@/module/tutor-service/tutorService.schema";
+import { tutoriesSchema } from "@/module/tutories/tutories.schema";
 import { ParsedQs } from "qs";
 import { NextFunction, Request, Response } from "express";
 
@@ -21,7 +21,7 @@ export interface Controller<T extends RequestData = RequestData> {
 
 export type Learner = z.infer<typeof learnerSchema>;
 export type Tutor = z.infer<typeof tutorSchema>;
-export type TutorService = z.infer<typeof tutorServiceSchema>;
+export type Tutories = z.infer<typeof tutoriesSchema>;
 
 export interface Subject {
   name: string;

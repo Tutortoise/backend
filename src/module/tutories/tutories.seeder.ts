@@ -1,8 +1,11 @@
-import { firestore } from "@/config";
-import { TutorService } from "@/types";
+import { container } from "@/container";
+import { Tutories } from "@/types";
 import { faker } from "@faker-js/faker";
-import firebase from "firebase-admin";
 import Groq from "groq-sdk";
+
+const subjectRepository = container.subjectRepository;
+const tutorRepository = container.tutorRepository;
+const tutoriesRepository = container.tutoriesRepository;
 
 const generateTeachingMethodology = async (
   client: Groq,
@@ -47,37 +50,24 @@ const generateRandomAvailability = () => {
   return availability;
 };
 
-export const seedServices = async ({ randomTeachingMethodology = false }) => {
-  const tutorServices: TutorService[] = [];
+export const seedTutories = async ({ randomTeachingMethodology = false }) => {
+  const tutories: Tutories[] = [];
 
-  const tutorsSnapshot = await firestore.collection("tutors").get();
-  const subjectsSnapshot = await firestore.collection("subjects").get();
+  const subjectExists = await subjectRepository.hasSubjects();
+  const tutorsExists = await tutorRepository.hasTutors();
 
-  if (tutorsSnapshot.empty || subjectsSnapshot.empty) {
+  if (!subjectExists || !tutorsExists) {
     throw new Error("Tutors or subjects not found");
   }
 
-  const tutors = tutorsSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    name: doc.data().name,
-  }));
-
-  const subjects = subjectsSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    name: doc.data().name,
-  }));
-
-  if (subjects.length === 0) {
-    throw new Error("No subjects available for seeding services.");
-  }
+  const subjects = await subjectRepository.getAllSubjects();
+  const tutors = await tutorRepository.getAllTutors();
 
   for (const tutor of tutors) {
     const randomSubject = faker.helpers.arrayElement(subjects);
-
     const randomAvailability = generateRandomAvailability();
 
     let subjectTeachingMethodology;
-
     if (randomTeachingMethodology) {
       subjectTeachingMethodology = faker.lorem.paragraph();
     } else {
@@ -94,8 +84,7 @@ export const seedServices = async ({ randomTeachingMethodology = false }) => {
       throw new Error("Failed to generate teaching methodology");
     }
 
-    tutorServices.push({
-      id: firebase.firestore().collection("tmp").doc().id,
+    tutories.push({
       tutorId: tutor.id,
       subjectId: randomSubject.id,
       createdAt: new Date(),
@@ -107,24 +96,8 @@ export const seedServices = async ({ randomTeachingMethodology = false }) => {
     });
   }
 
-  console.log(`Seeding ${tutorServices.length} tutor services...`);
-
-  // Batch write to Firestore
-  const batch = firestore.batch();
-
-  tutorServices.forEach((service) => {
-    const serviceRef = firestore.collection("tutor_services").doc(service.id!);
-    batch.set(serviceRef, {
-      ...service,
-      tutorId: firestore.collection("tutors").doc(service.tutorId),
-      subjectId: firestore.collection("subjects").doc(service.subjectId),
-    });
-
-    const tutorRef = firestore.collection("tutors").doc(service.tutorId);
-    batch.update(tutorRef, {
-      services: firebase.firestore.FieldValue.arrayUnion(serviceRef),
-    });
-  });
-
-  await batch.commit();
+  console.log(`Seeding ${tutories.length} tutor services...`);
+  for (const t of tutories) {
+    await tutoriesRepository.createTutories(t.tutorId, t);
+  }
 };

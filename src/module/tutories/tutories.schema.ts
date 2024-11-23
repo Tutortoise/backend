@@ -1,18 +1,14 @@
 import { container } from "@/container";
-import { SubjectService } from "@/module/subject/subject.service";
 import { z } from "zod";
 
-const subjectService = new SubjectService({
-  subjectRepository: container.subjectRepository,
-});
-
+const subjectRepository = container.subjectRepository;
 const tutorRepository = container.tutorRepository;
 
 const zodTimesArray = z
   .array(z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"))
   .optional();
 
-export const tutorServiceSchema = z.object({
+export const tutoriesSchema = z.object({
   id: z.string().optional(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {
     const exists = await tutorRepository.checkTutorExists(tutorId);
@@ -24,7 +20,7 @@ export const tutorServiceSchema = z.object({
     }
   }),
   subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    const exists = await subjectService.checkSubjectExists(subjectId);
+    const exists = await subjectRepository.checkSubjectExists(subjectId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -104,7 +100,7 @@ export const getServiceSchema = z.object({
 });
 
 export const createTutorServiceSchema = z.object({
-  body: tutorServiceSchema.omit({
+  body: tutoriesSchema.omit({
     id: true,
     tutorId: true, // can directly get from req.tutor.id
     createdAt: true,
@@ -113,7 +109,7 @@ export const createTutorServiceSchema = z.object({
 });
 
 export const updateTutorServiceSchema = z.object({
-  body: tutorServiceSchema
+  body: tutoriesSchema
     .omit({
       id: true,
       tutorId: true,
@@ -123,7 +119,7 @@ export const updateTutorServiceSchema = z.object({
     })
     .partial(),
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });
 

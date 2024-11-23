@@ -66,8 +66,8 @@ export const learners = pgTable("learners", {
   learningStyle: learningStyleEnum("learning_style"),
   gender: genderEnum("gender"),
   phoneNumber: varchar("phone_number", { length: 20 }),
-  latitude: real("latitude"),
-  longitude: real("longitude"),
+  city: varchar({ length: 255 }),
+  district: varchar({ length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
@@ -81,13 +81,13 @@ export const tutors = pgTable("tutors", {
   password: varchar({ length: 255 }).notNull(),
   gender: genderEnum("gender"),
   phoneNumber: varchar("phone_number", { length: 20 }),
-  latitude: real("latitude"),
-  longitude: real("longitude"),
+  city: varchar({ length: 255 }),
+  district: varchar({ length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
 
-type TutorAvailability = {
+export type TutorAvailability = {
   [key: number]: string[]; // day index: array of time slots
 };
 

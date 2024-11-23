@@ -5,12 +5,14 @@ import { LearnerRepository } from "./module/learner/learner.repository";
 import { TutorRepository } from "./module/tutor/tutor.repository";
 import { ChatRepository } from "./module/chat/chat.repository";
 import { FCMRepository } from "./common/fcm.repository";
+import { TutoriesRepository } from "./module/tutories/tutories.repository";
 
 interface Container {
   authRepository: AuthRepository;
   subjectRepository: SubjectRepository;
   learnerRepository: LearnerRepository;
   tutorRepository: TutorRepository;
+  tutoriesRepository: TutoriesRepository;
   chatRepository: ChatRepository;
   fcmRepository: FCMRepository;
 }
@@ -24,6 +26,7 @@ export const setupContainer = (): Container => {
       subjectRepository: new SubjectRepository(db),
       learnerRepository: new LearnerRepository(db),
       tutorRepository: new TutorRepository(db),
+      tutoriesRepository: new TutoriesRepository(db),
       chatRepository: new ChatRepository(db),
       fcmRepository: new FCMRepository(db),
     };

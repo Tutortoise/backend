@@ -1,18 +1,19 @@
-// import * as tutorServiceService from "@services/tutorService.service"; // hell nah
-import { firestore } from "@/config";
-import { Controller } from "@/types";
-import { logger } from "@middleware/logging.middleware";
+import { container } from "@/container";
 import {
   createTutorServiceSchema,
   deleteTutorServiceSchema,
   getServiceSchema,
   getServicesSchema,
   updateTutorServiceSchema,
-} from "@/module/tutor-service/tutorService.schema";
-import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
+} from "@/module/tutories/tutories.schema";
+import { TutoriesService } from "@/module/tutories/tutories.service";
+import { Controller } from "@/types";
+import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 
-const tutorServiceService = new TutorServiceService({ firestore });
+const tutoriesService = new TutoriesService({
+  tutoriesRepository: container.tutoriesRepository,
+});
 
 type GetServicesSchema = z.infer<typeof getServicesSchema>;
 export const getServices: Controller<GetServicesSchema> = async (req, res) => {
@@ -30,11 +31,19 @@ export const getServices: Controller<GetServicesSchema> = async (req, res) => {
   };
 
   try {
-    const services = await tutorServiceService.getTutorServices(filters);
+    const tutories = await tutoriesService.getTutories({
+      q: filters.q,
+      subjectId: filters.subjectId,
+      minHourlyRate: filters.minHourlyRate,
+      maxHourlyRate: filters.maxHourlyRate,
+      typeLesson: filters.typeLesson,
+      // minRating: filters.minRating,
+      city: filters.city,
+    });
 
     res.json({
       status: "success",
-      data: services,
+      data: tutories,
     });
   } catch (error) {
     logger.error(`Failed to get tutor services: ${error}`);
@@ -52,28 +61,26 @@ export const getService: Controller<GetServiceSchema> = async (
   res,
   next,
 ) => {
-  const tutorServiceId = req.params.tutorServiceId;
+  const tutoriesId = req.params.tutorServiceId;
 
-  if (tutorServiceId === "me") {
+  if (tutoriesId === "me") {
     next();
     return;
   }
 
   try {
-    const service =
-      await tutorServiceService.getTutorServiceDetail(tutorServiceId);
-
-    if (!service) {
+    const tutories = await tutoriesService.getTutoriesDetail(tutoriesId);
+    if (!tutories) {
       res.status(404).json({
         status: "error",
-        message: "Tutor service not found",
+        message: "Tutories not found",
       });
       return;
     }
 
     res.json({
       status: "success",
-      data: service,
+      data: tutories,
     });
   } catch (error) {
     logger.error(`Failed to get tutor service: ${error}`);
@@ -93,7 +100,7 @@ export const getServiceAvailability: Controller<GetServiceSchema> = async (
 
   try {
     const availability =
-      await tutorServiceService.getTutorServiceAvailability(tutorServiceId);
+      await tutoriesService.getTutoriesAvailability(tutorServiceId);
 
     res.json({
       status: "success",
@@ -113,13 +120,13 @@ export const getMyServices: Controller = async (req, res) => {
   const tutorId = req.tutor.id;
 
   try {
-    const services = await tutorServiceService.getTutorServices({
-      tutorId,
+    const tutories = await tutoriesService.getTutories({
+      tutorId: tutorId,
     });
 
     res.json({
       status: "success",
-      data: services,
+      data: tutories,
     });
   } catch (error) {
     logger.error(`Failed to get tutor services: ${error}`);
@@ -139,7 +146,7 @@ export const createService: Controller<CreateTutorServiceSchema> = async (
   const tutorId = req.tutor.id;
 
   try {
-    await tutorServiceService.createTutorService(tutorId, req.body);
+    await tutoriesService.createTutorService(tutorId, req.body);
 
     res.status(201).json({
       status: "success",
@@ -160,12 +167,12 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
   req,
   res,
 ) => {
-  const tutorServiceId = req.params.tutorServiceId;
+  const tutoriesId = req.params.tutoriesId;
 
   // Check if the tutor owns the tutor service
-  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+  const isOwner = await tutoriesService.validateTutoriesOwnership(
     req.tutor.id,
-    tutorServiceId,
+    tutoriesId,
   );
 
   if (!isOwner) {
@@ -177,7 +184,7 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
   }
 
   try {
-    await tutorServiceService.updateTutorService(tutorServiceId, req.body);
+    await tutoriesService.updateTutories(tutoriesId, req.body);
 
     res.status(200).json({
       status: "success",
@@ -198,12 +205,11 @@ export const deleteService: Controller<DeleteTutorServiceSchema> = async (
   req,
   res,
 ) => {
-  const tutorServiceId = req.params.tutorServiceId;
-
-  // Check if the tutor owns the tutor service
-  const isOwner = await tutorServiceService.validateTutorServiceOwnership(
+  const tutoriesId = req.params.tutorServiceId;
+  // Check if the tutor owns the tutories
+  const isOwner = await tutoriesService.validateTutoriesOwnership(
     req.tutor.id,
-    tutorServiceId,
+    tutoriesId,
   );
 
   if (!isOwner) {
@@ -215,7 +221,7 @@ export const deleteService: Controller<DeleteTutorServiceSchema> = async (
   }
 
   try {
-    await tutorServiceService.deleteTutorService(req.tutor.id, tutorServiceId);
+    await tutoriesService.deleteTutories(tutoriesId);
 
     res.json({
       status: "success",
