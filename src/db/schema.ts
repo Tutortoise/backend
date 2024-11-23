@@ -9,6 +9,7 @@ import {
   integer,
   text,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 import { v4 as uuidv4 } from "uuid";
@@ -35,6 +36,15 @@ export const orderStatusEnum = pgEnum("status", [
   "scheduled",
   "completed",
 ]);
+
+export const USER_ROLES = ["learner", "tutor"] as const;
+export const MESSAGE_TYPES = ["text", "image"] as const;
+
+export const userRoleEnum = pgEnum("user_role", USER_ROLES);
+export const messageTypeEnum = pgEnum("message_type", MESSAGE_TYPES);
+
+export type UserRole = (typeof USER_ROLES)[number];
+export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 // Tables
 export const subjects = pgTable("subjects", {
@@ -120,6 +130,45 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const chatRooms = pgTable("chat_rooms", {
+  id: uuid()
+    .primaryKey()
+    .$default(() => uuidv4()),
+  learnerId: uuid()
+    .notNull()
+    .references(() => learners.id),
+  tutorId: uuid()
+    .notNull()
+    .references(() => tutors.id),
+  lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid()
+    .primaryKey()
+    .$default(() => uuidv4()),
+  roomId: uuid()
+    .notNull()
+    .references(() => chatRooms.id),
+  senderId: uuid().notNull(),
+  senderRole: userRoleEnum("sender_role").notNull(),
+  content: text("content").notNull(),
+  type: messageTypeEnum("type").notNull(),
+  sentAt: timestamp("sent_at").notNull().defaultNow(),
+  isRead: boolean("is_read").notNull().default(false),
+});
+
+export const fcmTokens = pgTable("fcm_tokens", {
+  id: uuid()
+    .primaryKey()
+    .$default(() => uuidv4()),
+  userId: uuid().notNull(),
+  token: varchar({ length: 255 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at"),
+});
+
 export const learnerRelations = relations(learners, ({ many }) => ({
   orders: many(orders),
 }));
@@ -153,5 +202,35 @@ export const orderRelations = relations(orders, ({ one }) => ({
   tutory: one(tutories, {
     fields: [orders.tutoryId],
     references: [tutories.id],
+  }),
+}));
+
+export const chatRoomRelations = relations(chatRooms, ({ one, many }) => ({
+  learner: one(learners, {
+    fields: [chatRooms.learnerId],
+    references: [learners.id],
+  }),
+  tutor: one(tutors, {
+    fields: [chatRooms.tutorId],
+    references: [tutors.id],
+  }),
+  messages: many(chatMessages),
+}));
+
+export const chatMessageRelations = relations(chatMessages, ({ one }) => ({
+  room: one(chatRooms, {
+    fields: [chatMessages.roomId],
+    references: [chatRooms.id],
+  }),
+}));
+
+export const fcmTokensRelations = relations(fcmTokens, ({ one }) => ({
+  learner: one(learners, {
+    fields: [fcmTokens.userId],
+    references: [learners.id],
+  }),
+  tutor: one(tutors, {
+    fields: [fcmTokens.userId],
+    references: [tutors.id],
   }),
 }));

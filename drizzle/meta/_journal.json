@@ -8,6 +8,13 @@
       "when": 1732333483234,
       "tag": "0000_jittery_frank_castle",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1732359006723,
+      "tag": "0001_famous_mandrill",
+      "breakpoints": true
     }
   ]
 }

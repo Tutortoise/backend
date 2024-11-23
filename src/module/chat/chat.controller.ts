@@ -10,6 +10,7 @@ import { ChatService } from "@/module/chat/chat.service";
 import { PresenceService } from "@/module/chat/presence.service";
 import { z } from "zod";
 import { FCMService } from "@/common/fcm.service";
+import { container } from "@/container";
 
 const typingStatusSchema = z.object({
   params: z.object({
@@ -29,80 +30,64 @@ const roomPresenceSchema = z.object({
 type TypingStatusSchema = z.infer<typeof typingStatusSchema>;
 type RoomPresenceSchema = z.infer<typeof roomPresenceSchema>;
 
-const fcmService = new FCMService({ firestore });
+const fcmService = new FCMService({ fcmRepository: container.fcmRepository });
 const presenceService = new PresenceService({ realtimeDb });
 const chatService = new ChatService({
-  firestore,
+  chatRepository: container.chatRepository,
   bucket,
-  presenceService,
+  presenceService: presenceService,
   fcmService,
 });
 
 type CreateRoomSchema = z.infer<typeof createRoomSchema>;
 export const createRoom: Controller<CreateRoomSchema> = async (req, res) => {
-  try {
-    const userId = req.learner?.id || req.tutor?.id;
+  const userId = req.learner?.id || req.tutor?.id;
 
-    if (!userId) {
-      res.status(403).json({
-        status: "error",
-        message: "Unauthorized",
-      });
-      return;
-    }
-
-    if (userId !== req.body.learnerId && userId !== req.body.tutorId) {
-      res.status(403).json({
-        status: "error",
-        message: "You can only create chat rooms that you are a participant of",
-      });
-      return;
-    }
-
-    const room = await chatService.createRoom(
-      req.body.learnerId,
-      req.body.tutorId,
-    );
-
-    res.status(201).json({
-      status: "success",
-      data: room,
-    });
-  } catch (error) {
-    logger.error(`Failed to create chat room: ${error}`);
-    res.status(500).json({
+  if (!userId) {
+    res.status(403).json({
       status: "error",
-      message: "Failed to create chat room",
+      message: "Unauthorized",
     });
+    return;
   }
+
+  if (userId !== req.body.learnerId && userId !== req.body.tutorId) {
+    res.status(403).json({
+      status: "error",
+      message: "You can only create chat rooms that you are a participant of",
+    });
+    return;
+  }
+
+  const room = await chatService.createRoom(
+    req.body.learnerId,
+    req.body.tutorId,
+  );
+
+  res.status(201).json({
+    status: "success",
+    data: room,
+  });
 };
 
 export const getRooms: Controller = async (req, res) => {
-  try {
-    const userId = req.learner?.id || req.tutor?.id;
-    const userRole = req.learner ? "learner" : "tutor";
+  const userId = req.learner?.id || req.tutor?.id;
+  const userRole = req.learner ? "learner" : "tutor";
 
-    if (!userId) {
-      res.status(401).json({
-        status: "error",
-        message: "Unauthorized",
-      });
-      return;
-    }
-
-    const rooms = await chatService.getRooms(userId, userRole);
-
-    res.json({
-      status: "success",
-      data: rooms,
-    });
-  } catch (error) {
-    logger.error(`Failed to get chat rooms: ${error}`);
-    res.status(500).json({
+  if (!userId) {
+    res.status(401).json({
       status: "error",
-      message: "Failed to get chat rooms",
+      message: "Unauthorized",
     });
+    return;
   }
+
+  const rooms = await chatService.getRooms(userId, userRole);
+
+  res.json({
+    status: "success",
+    data: rooms,
+  });
 };
 
 type GetRoomMessagesSchema = z.infer<typeof getRoomMessagesSchema>;
@@ -123,17 +108,37 @@ export const getRoomMessages: Controller<GetRoomMessagesSchema> = async (
     const { roomId } = req.params;
     const { before, limit } = req.query;
 
-    const messages = await chatService.getRoomMessages(
-      roomId,
-      userId,
-      before ? new Date(before as string) : undefined,
-      limit as string,
-    );
+    try {
+      const messages = await chatService.getRoomMessages(
+        roomId,
+        userId,
+        before ? new Date(before as string) : undefined,
+        limit ? parseInt(limit as string) : undefined,
+      );
 
-    res.json({
-      status: "success",
-      data: messages,
-    });
+      res.json({
+        status: "success",
+        data: messages,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === "Room not found") {
+          res.status(404).json({
+            status: "fail",
+            message: "Room not found",
+          });
+          return;
+        }
+        if (error.message === "Unauthorized access to chat room") {
+          res.status(401).json({
+            status: "fail",
+            message: "Unauthorized access to chat room",
+          });
+          return;
+        }
+      }
+      throw error;
+    }
   } catch (error) {
     logger.error(`Failed to get room messages: ${error}`);
     res.status(500).json({

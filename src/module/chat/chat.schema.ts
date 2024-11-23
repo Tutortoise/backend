@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ParsedQs } from "qs";
+import type { MessageType } from "@/db/schema";
 
 export const createRoomSchema = z.object({
   body: z.object({
@@ -20,11 +21,11 @@ export const sendTextMessageSchema = z.object({
 export const sendMessageSchema = z.object({
   body: z.discriminatedUnion("type", [
     z.object({
-      type: z.literal("text"),
+      type: z.literal<MessageType>("text"),
       content: z.string().min(1, "Message cannot be empty"),
     }),
     z.object({
-      type: z.literal("image"),
+      type: z.literal<MessageType>("image"),
     }),
   ]),
   params: z.object({

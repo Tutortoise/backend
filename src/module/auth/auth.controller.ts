@@ -8,7 +8,9 @@ import { FCMService } from "@/common/fcm.service";
 import { container } from "@/container";
 import { generateJWT } from "@/helpers/jwt.helper";
 
-const fcmService = new FCMService({ firestore });
+const fcmService = new FCMService({
+  fcmRepository: container.fcmRepository,
+});
 const authService = new AuthService({
   authRepository: container.authRepository,
   fcmService,
