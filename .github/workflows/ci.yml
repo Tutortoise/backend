@@ -50,6 +50,7 @@ jobs:
         FIREBASE_DATABASE_EMULATOR_HOST: 127.0.0.1:9000
         FIREBASE_STORAGE_EMULATOR_HOST: 127.0.0.1:9199
         GCS_BUCKET_NAME: tutortoise-test
+        JWT_SECRET: xyz
 
     - name: Build Project
       run: pnpm run build
