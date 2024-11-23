@@ -37,6 +37,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-firebase-emulators-
 
+    - uses: ikalnytskyi/action-setup-postgres@v7
+      id: postgres
+
     - name: Run Linting
       run: pnpm run lint
 
@@ -50,6 +53,7 @@ jobs:
         FIREBASE_DATABASE_EMULATOR_HOST: 127.0.0.1:9000
         FIREBASE_STORAGE_EMULATOR_HOST: 127.0.0.1:9199
         GCS_BUCKET_NAME: tutortoise-test
+        DATABASE_URL: ${{ steps.postgres.outputs.connection-uri }}
         JWT_SECRET: xyz
 
     - name: Build Project
