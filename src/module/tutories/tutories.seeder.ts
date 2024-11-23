@@ -98,6 +98,13 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
 
   console.log(`Seeding ${tutories.length} tutor services...`);
   for (const t of tutories) {
-    await tutoriesRepository.createTutories(t.tutorId, t);
+    await tutoriesRepository.createTutories(t.tutorId, {
+      subjectId: t.subjectId,
+      aboutYou: t.aboutYou,
+      teachingMethodology: t.teachingMethodology,
+      hourlyRate: t.hourlyRate,
+      typeLesson: t.typeLesson!,
+      availability: t.availability!,
+    });
   }
 };

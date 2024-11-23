@@ -6,63 +6,14 @@ const authRepository = container.authRepository;
 const tutorRepository = container.tutorRepository;
 
 const cityDistricts = {
-  Jakarta: [
-    "Cengkareng",
-    "Grogol Petamburan",
-    "Kebon Jeruk",
-    "Menteng",
-    "Pancoran",
-    "Penjaringan",
-    "Cipayung",
-    "Jatinegara",
-    "Tebet",
-    "Setiabudi",
-  ],
-  Bandung: [
-    "Cibiru",
-    "Cileunyi",
-    "Arcamanik",
-    "Gedebage",
-    "Sukajadi",
-    "Kiaracondong",
-    "Rancasari",
-  ],
-  Surabaya: [
-    "Wonokromo",
-    "Sukomanunggal",
-    "Tandes",
-    "Rungkut",
-    "Gubeng",
-    "Asemrowo",
-    "Karang Pilang",
-  ],
-  Yogyakarta: [
-    "Sleman",
-    "Bantul",
-    "Gunungkidul",
-    "Kulon Progo",
-    "Depok",
-    "Tegalrejo",
-    "Ngampilan",
-  ],
-  Samarinda: [
-    "Samarinda Utara",
-    "Samarinda Seberang",
-    "Samarinda Ilir",
-    "Samarinda Barometer",
-  ],
+  Surabaya: ["Asemrowo", "Benowo", "Bubutan", "Bulak"],
+  Samarinda: ["Samarinda Utara", "Samarinda Kota", "Samarinda Ilir"],
 };
 
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
   for (let i = 0; i < 25; i++) {
-    const city = faker.helpers.arrayElement([
-      "Jakarta",
-      "Bandung",
-      "Surabaya",
-      "Yogyakarta",
-      "Samarinda",
-    ]);
+    const city = faker.helpers.arrayElement(["Surabaya", "Samarinda"]);
     const district = faker.helpers.arrayElement(cityDistricts[city]);
 
     tutors.push({

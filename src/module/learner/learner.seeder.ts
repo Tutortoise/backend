@@ -10,6 +10,8 @@ export const seedLearners = async () => {
   for (let i = 0; i < 25; i++) {
     learners.push({
       name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
       gender: faker.helpers.arrayElement([
         "male",
         "female",
@@ -20,7 +22,6 @@ export const seedLearners = async () => {
         "auditory",
         "kinesthetic",
       ]),
-      createdAt: new Date(),
     });
   }
 
@@ -28,12 +29,13 @@ export const seedLearners = async () => {
   for (const learner of learners) {
     const { id } = await authRepository.registerUser({
       name: learner.name,
-      email: faker.internet.email(),
-      password: faker.internet.password(),
+      email: learner.email,
+      password: learner.password,
       role: "learner",
     });
     await learnerRepository.updateLearnerProfile(id, {
-      ...learner,
+      gender: learner.gender,
+      learningStyle: learner.learningStyle,
     });
   }
 };
