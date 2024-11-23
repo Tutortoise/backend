@@ -43,9 +43,6 @@ export const subjects = pgTable("subjects", {
     .$default(() => uuidv4()),
   name: varchar({ length: 255 }).notNull(),
   iconUrl: varchar("icon_url", { length: 255 }),
-  created_at: timestamp()
-    .notNull()
-    .$default(() => new Date()),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
