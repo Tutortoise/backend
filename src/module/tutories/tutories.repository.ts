@@ -7,8 +7,8 @@ import {
   tutors,
 } from "@/db/schema";
 import {
-  createTutorServiceSchema,
-  updateTutorServiceSchema,
+  createTutoriesSchema,
+  updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { and, eq, gte, like, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
@@ -210,7 +210,7 @@ export class TutoriesRepository {
 
   async createTutories(
     tutorId: string,
-    data: z.infer<typeof createTutorServiceSchema>["body"],
+    data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
     const {
       subjectId,
@@ -238,7 +238,7 @@ export class TutoriesRepository {
 
   async updateTutories(
     serviceId: string,
-    data: z.infer<typeof updateTutorServiceSchema>["body"],
+    data: z.infer<typeof updateTutoriesSchema>["body"],
   ) {
     try {
       await this.db

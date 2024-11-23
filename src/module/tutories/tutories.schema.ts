@@ -95,11 +95,11 @@ export const getServicesSchema = z.object({
 
 export const getServiceSchema = z.object({
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });
 
-export const createTutorServiceSchema = z.object({
+export const createTutoriesSchema = z.object({
   body: tutoriesSchema.omit({
     id: true,
     tutorId: true, // can directly get from req.tutor.id
@@ -108,7 +108,7 @@ export const createTutorServiceSchema = z.object({
   }),
 });
 
-export const updateTutorServiceSchema = z.object({
+export const updateTutoriesSchema = z.object({
   body: tutoriesSchema
     .omit({
       id: true,
@@ -125,6 +125,6 @@ export const updateTutorServiceSchema = z.object({
 
 export const deleteTutorServiceSchema = z.object({
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });

@@ -1,37 +1,37 @@
 import { jwtAuthMiddleware, verifyTutor } from "@/module/auth/auth.middleware";
 import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
-  createTutorServiceSchema,
-  updateTutorServiceSchema,
+  createTutoriesSchema,
+  updateTutoriesSchema as updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { validator } from "@middleware/validation.middleware";
 import { Router } from "express";
 
 // /api/v1/tutors/services
-const tutorServiceRouter = Router();
-tutorServiceRouter.use(jwtAuthMiddleware);
+const tutoriesRouter = Router();
+tutoriesRouter.use(jwtAuthMiddleware);
 
-tutorServiceRouter.get("/", tutoriesController.getServices);
-tutorServiceRouter.get("/:tutorServiceId", tutoriesController.getService);
-tutorServiceRouter.get(
-  "/:tutorServiceId/availability",
-  tutoriesController.getServiceAvailability,
+tutoriesRouter.get("/", tutoriesController.getAllTutories);
+tutoriesRouter.get("/:tutoriesId", tutoriesController.getTutories);
+tutoriesRouter.get(
+  "/:tutoriesId/availability",
+  tutoriesController.getTutoriesAvailability,
 );
 
-tutorServiceRouter.use(verifyTutor);
+tutoriesRouter.use(verifyTutor);
 
-tutorServiceRouter.get("/me", tutoriesController.getMyServices);
+tutoriesRouter.get("/me", tutoriesController.getMyTutories);
 
-tutorServiceRouter.post(
+tutoriesRouter.post(
   "/",
-  validator(createTutorServiceSchema),
-  tutoriesController.createService,
+  validator(createTutoriesSchema),
+  tutoriesController.createTutories,
 );
-tutorServiceRouter.patch(
-  "/:tutorServiceId",
-  validator(updateTutorServiceSchema),
-  tutoriesController.updateService,
+tutoriesRouter.patch(
+  "/:tutoriesId",
+  validator(updateTutoriesSchema),
+  tutoriesController.updateTutories,
 );
-tutorServiceRouter.delete("/:tutorServiceId", tutoriesController.deleteService);
+tutoriesRouter.delete("/:tutoriesId", tutoriesController.deleteTutories);
 
-export default tutorServiceRouter;
+export default tutoriesRouter;

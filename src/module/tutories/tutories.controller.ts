@@ -1,10 +1,10 @@
 import { container } from "@/container";
 import {
-  createTutorServiceSchema,
+  createTutoriesSchema,
   deleteTutorServiceSchema,
   getServiceSchema,
   getServicesSchema,
-  updateTutorServiceSchema,
+  updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { TutoriesService } from "@/module/tutories/tutories.service";
 import { Controller } from "@/types";
@@ -16,7 +16,10 @@ const tutoriesService = new TutoriesService({
 });
 
 type GetServicesSchema = z.infer<typeof getServicesSchema>;
-export const getServices: Controller<GetServicesSchema> = async (req, res) => {
+export const getAllTutories: Controller<GetServicesSchema> = async (
+  req,
+  res,
+) => {
   const { q, subjectId, minHourlyRate, maxHourlyRate, typeLesson, city } =
     req.query;
 
@@ -56,12 +59,12 @@ export const getServices: Controller<GetServicesSchema> = async (req, res) => {
 };
 
 type GetServiceSchema = z.infer<typeof getServiceSchema>;
-export const getService: Controller<GetServiceSchema> = async (
+export const getTutories: Controller<GetServiceSchema> = async (
   req,
   res,
   next,
 ) => {
-  const tutoriesId = req.params.tutorServiceId;
+  const tutoriesId = req.params.tutoriesId;
 
   if (tutoriesId === "me") {
     next();
@@ -92,15 +95,15 @@ export const getService: Controller<GetServiceSchema> = async (
   }
 };
 
-export const getServiceAvailability: Controller<GetServiceSchema> = async (
+export const getTutoriesAvailability: Controller<GetServiceSchema> = async (
   req,
   res,
 ) => {
-  const tutorServiceId = req.params.tutorServiceId;
+  const tutoriesId = req.params.tutoriesId;
 
   try {
     const availability =
-      await tutoriesService.getTutoriesAvailability(tutorServiceId);
+      await tutoriesService.getTutoriesAvailability(tutoriesId);
 
     res.json({
       status: "success",
@@ -116,7 +119,7 @@ export const getServiceAvailability: Controller<GetServiceSchema> = async (
   }
 };
 
-export const getMyServices: Controller = async (req, res) => {
+export const getMyTutories: Controller = async (req, res) => {
   const tutorId = req.tutor.id;
 
   try {
@@ -138,8 +141,8 @@ export const getMyServices: Controller = async (req, res) => {
   }
 };
 
-type CreateTutorServiceSchema = z.infer<typeof createTutorServiceSchema>;
-export const createService: Controller<CreateTutorServiceSchema> = async (
+type CreateTutorServiceSchema = z.infer<typeof createTutoriesSchema>;
+export const createTutories: Controller<CreateTutorServiceSchema> = async (
   req,
   res,
 ) => {
@@ -162,8 +165,8 @@ export const createService: Controller<CreateTutorServiceSchema> = async (
   }
 };
 
-type UpdateTutorServiceSchema = z.infer<typeof updateTutorServiceSchema>;
-export const updateService: Controller<UpdateTutorServiceSchema> = async (
+type UpdateTutorServiceSchema = z.infer<typeof updateTutoriesSchema>;
+export const updateTutories: Controller<UpdateTutorServiceSchema> = async (
   req,
   res,
 ) => {
@@ -201,11 +204,11 @@ export const updateService: Controller<UpdateTutorServiceSchema> = async (
 };
 
 type DeleteTutorServiceSchema = z.infer<typeof deleteTutorServiceSchema>;
-export const deleteService: Controller<DeleteTutorServiceSchema> = async (
+export const deleteTutories: Controller<DeleteTutorServiceSchema> = async (
   req,
   res,
 ) => {
-  const tutoriesId = req.params.tutorServiceId;
+  const tutoriesId = req.params.tutoriesId;
   // Check if the tutor owns the tutories
   const isOwner = await tutoriesService.validateTutoriesOwnership(
     req.tutor.id,

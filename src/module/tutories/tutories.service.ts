@@ -1,6 +1,6 @@
 import {
-  createTutorServiceSchema,
-  updateTutorServiceSchema,
+  createTutoriesSchema,
+  updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
@@ -71,7 +71,7 @@ export class TutoriesService {
 
   async createTutorService(
     tutorId: string,
-    data: z.infer<typeof createTutorServiceSchema>["body"],
+    data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
     try {
       await this.tutoriesRepository.createTutories(tutorId, data);
@@ -82,7 +82,7 @@ export class TutoriesService {
 
   async updateTutories(
     tutoriesId: string,
-    data: z.infer<typeof updateTutorServiceSchema>["body"],
+    data: z.infer<typeof updateTutoriesSchema>["body"],
   ) {
     try {
       await this.tutoriesRepository.updateTutories(tutoriesId, data);
