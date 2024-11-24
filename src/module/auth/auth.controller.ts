@@ -1,4 +1,3 @@
-import { firestore } from "@/config";
 import type { Controller } from "@/types";
 import { LoginSchema, RegisterSchema } from "@/module/auth/auth.schema";
 import { AuthService } from "@/module/auth/auth.service";

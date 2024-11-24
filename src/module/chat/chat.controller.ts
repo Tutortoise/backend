@@ -1,4 +1,4 @@
-import { realtimeDb, firestore, bucket } from "@/config";
+import { realtimeDb, bucket } from "@/config";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import {

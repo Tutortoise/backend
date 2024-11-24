@@ -1,6 +1,5 @@
 import { db as dbType } from "@/db/config";
 import { fcmTokens } from "@/db/schema";
-import { logger } from "@middleware/logging.middleware";
 import { eq, and, inArray } from "drizzle-orm";
 
 export class FCMRepository {

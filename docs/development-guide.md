@@ -43,7 +43,6 @@ This guide covers how to set up and run the project in your local development en
 
    # Google Cloud Storage
    GCS_BUCKET_NAME=your-bucket-name
-   GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 
    # JWT
    JWT_SECRET=your-jwt-secret

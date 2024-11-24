@@ -96,7 +96,7 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
     });
   }
 
-  console.log(`Seeding ${tutories.length} tutor services...`);
+  console.log(`Seeding tutories with ${tutories.length} data...`);
   for (const t of tutories) {
     await tutoriesRepository.createTutories(t.tutorId, {
       subjectId: t.subjectId,

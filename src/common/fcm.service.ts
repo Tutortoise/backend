@@ -1,5 +1,4 @@
 import { messaging } from "firebase-admin";
-import { logger } from "@middleware/logging.middleware";
 import { FCMRepository } from "./fcm.repository";
 import type { MessageType } from "@/db/schema";
 
