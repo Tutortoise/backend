@@ -1,5 +1,5 @@
 import type { db as dbType } from "@/db/config";
-import { learners, subjects } from "@/db/schema";
+import { interests, learners, subjects } from "@/db/schema";
 import { eq } from "drizzle-orm/expressions";
 
 export class LearnerRepository {
@@ -7,6 +7,16 @@ export class LearnerRepository {
 
   // Update learner profile
   public async updateLearnerProfile(userId: string, data: any) {
+    if (data.interests) {
+      await this.db.delete(interests).where(eq(interests.learnerId, userId));
+      await this.db.insert(interests).values(
+        data.interests.map((subjectId: string) => ({
+          learnerId: userId,
+          subjectId: subjectId,
+        })),
+      );
+    }
+
     await this.db
       .update(learners)
       .set({ ...data, updatedAt: new Date() })
