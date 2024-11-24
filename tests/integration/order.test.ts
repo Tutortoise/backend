@@ -225,9 +225,9 @@ describe("Decline an order", async () => {
 });
 
 describe("Handle availability edge cases", async () => {
-  // afterAll(async () => {
-  //   await cleanupOrders();
-  // });
+  afterAll(async () => {
+    await cleanupOrders();
+  });
 
   test("Learner cannot order a tutories when there is already a scheduled order", async () => {
     const tutories = await tutoriesRepository.getTutories();
