@@ -7,6 +7,7 @@ import { ChatRepository } from "./module/chat/chat.repository";
 import { FCMRepository } from "./common/fcm.repository";
 import { TutoriesRepository } from "./module/tutories/tutories.repository";
 import { OrderRepository } from "./module/order/order.repository";
+import { ReviewRepository } from "./module/review/review.repository";
 
 interface Container {
   authRepository: AuthRepository;
@@ -17,6 +18,7 @@ interface Container {
   orderRepository: OrderRepository;
   chatRepository: ChatRepository;
   fcmRepository: FCMRepository;
+  reviewRepository: ReviewRepository;
 }
 
 let containerInstance: Container | null = null;
@@ -32,6 +34,7 @@ export const setupContainer = (): Container => {
       orderRepository: new OrderRepository(db),
       chatRepository: new ChatRepository(db),
       fcmRepository: new FCMRepository(db),
+      reviewRepository: new ReviewRepository(db),
     };
   }
 

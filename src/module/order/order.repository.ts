@@ -21,11 +21,13 @@ export class OrderRepository {
     learnerId,
     tutorId,
     tutoriesId,
+    orderId,
     status,
   }: {
     learnerId?: string;
     tutorId?: string;
     tutoriesId?: string;
+    orderId?: string;
     status?: "pending" | "scheduled" | "completed";
   }) {
     const conditions = [];
@@ -40,7 +42,13 @@ export class OrderRepository {
 
     if (learnerId) {
       conditions.push(eq(orders.learnerId, learnerId));
-    } else if (tutorId) {
+    }
+
+    if (orderId) {
+      conditions.push(eq(orders.id, orderId));
+    }
+
+    if (tutorId) {
       const tutories = await this.db
         .select({ id: tutoriesTable.id })
         .from(orders)
