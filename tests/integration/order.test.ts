@@ -118,7 +118,6 @@ describe("Cancel an order", async () => {
     const availability = await tutoriesRepository.getTutoriesAvailability(
       randomTutories.id,
     );
-    console.log(availability);
 
     await supertest(app)
       .post("/api/v1/orders")
