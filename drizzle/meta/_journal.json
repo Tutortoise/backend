@@ -22,6 +22,13 @@
       "when": 1732379492209,
       "tag": "0002_keen_mastermind",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1732429862609,
+      "tag": "0003_salty_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

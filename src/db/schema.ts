@@ -169,6 +169,19 @@ export const fcmTokens = pgTable("fcm_tokens", {
   updatedAt: timestamp("updated_at"),
 });
 
+export const reviews = pgTable("reviews", {
+  id: uuid()
+    .primaryKey()
+    .$default(() => uuidv4()),
+  orderId: uuid()
+    .notNull()
+    .unique()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(),
+  message: text("message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const learnerRelations = relations(learners, ({ many }) => ({
   orders: many(orders),
 }));
@@ -203,6 +216,10 @@ export const orderRelations = relations(orders, ({ one }) => ({
     fields: [orders.tutoryId],
     references: [tutories.id],
   }),
+  review: one(reviews, {
+    fields: [orders.id],
+    references: [reviews.orderId],
+  }),
 }));
 
 export const chatRoomRelations = relations(chatRooms, ({ one, many }) => ({
@@ -232,5 +249,12 @@ export const fcmTokensRelations = relations(fcmTokens, ({ one }) => ({
   tutor: one(tutors, {
     fields: [fcmTokens.userId],
     references: [tutors.id],
+  }),
+}));
+
+export const reviewRelations = relations(reviews, ({ one }) => ({
+  order: one(orders, {
+    fields: [reviews.orderId],
+    references: [orders.id],
   }),
 }));
