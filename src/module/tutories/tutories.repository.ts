@@ -272,7 +272,7 @@ export class TutoriesRepository {
       return await this.db
         .select({
           id: orders.id,
-          tutoryId: orders.tutoryId,
+          tutoriesId: orders.tutoriesId,
           sessionTime: orders.sessionTime,
           totalHours: orders.totalHours,
           notes: orders.notes,
@@ -281,7 +281,7 @@ export class TutoriesRepository {
           createdAt: orders.createdAt,
         })
         .from(orders)
-        .where(eq(orders.tutoryId, serviceId));
+        .where(eq(orders.tutoriesId, serviceId));
     } catch (error) {
       throw new Error(`Failed to get orders: ${error}`);
     }
@@ -292,7 +292,7 @@ export class TutoriesRepository {
       return await this.db
         .select({
           id: orders.id,
-          tutoryId: orders.tutoryId,
+          tutoriesId: orders.tutoriesId,
           sessionTime: orders.sessionTime,
           totalHours: orders.totalHours,
           notes: orders.notes,
@@ -301,7 +301,8 @@ export class TutoriesRepository {
           createdAt: orders.createdAt,
         })
         .from(orders)
-        .where(eq(orders.tutorId, tutorId));
+        .innerJoin(tutories, eq(orders.tutoriesId, tutories.id))
+        .where(eq(tutories.tutorId, tutorId));
     } catch (error) {
       throw new Error(`Failed to get orders by tutor: ${error}`);
     }

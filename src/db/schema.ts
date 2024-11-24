@@ -5,7 +5,6 @@ import {
   varchar,
   timestamp,
   pgEnum,
-  real,
   integer,
   text,
   jsonb,
@@ -126,10 +125,7 @@ export const orders = pgTable("orders", {
   learnerId: uuid()
     .notNull()
     .references(() => learners.id, { onDelete: "cascade" }),
-  tutorId: uuid()
-    .notNull()
-    .references(() => tutors.id, { onDelete: "cascade" }),
-  tutoryId: uuid()
+  tutoriesId: uuid()
     .notNull()
     .references(() => tutories.id, { onDelete: "cascade" }),
   sessionTime: timestamp("session_time").notNull(),
@@ -211,7 +207,7 @@ export const tutorRelations = relations(tutors, ({ many }) => ({
   orders: many(orders),
 }));
 
-export const tutoryRelations = relations(tutories, ({ one, many }) => ({
+export const tutoriesRelations = relations(tutories, ({ one, many }) => ({
   tutor: one(tutors, {
     fields: [tutories.tutorId],
     references: [tutors.id],
@@ -228,12 +224,8 @@ export const orderRelations = relations(orders, ({ one }) => ({
     fields: [orders.learnerId],
     references: [learners.id],
   }),
-  tutor: one(tutors, {
-    fields: [orders.tutorId],
-    references: [tutors.id],
-  }),
-  tutory: one(tutories, {
-    fields: [orders.tutoryId],
+  tutories: one(tutories, {
+    fields: [orders.tutoriesId],
     references: [tutories.id],
   }),
   review: one(reviews, {

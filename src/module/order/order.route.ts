@@ -1,6 +1,6 @@
 import * as orderController from "@/module/order/order.controller";
 import {
-  firebaseAuthMiddleware,
+  jwtAuthMiddleware,
   verifyLearner,
   verifyTutor,
 } from "@/module/auth/auth.middleware";
@@ -16,7 +16,7 @@ import { Router } from "express";
 
 // /api/v1/orders
 const orderRouter = Router();
-orderRouter.use(firebaseAuthMiddleware);
+orderRouter.use(jwtAuthMiddleware);
 
 orderRouter.get(
   "/me",
