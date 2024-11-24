@@ -56,6 +56,15 @@ export const subjects = pgTable("subjects", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const interests = pgTable("interests", {
+  learnerId: uuid()
+    .notNull()
+    .references(() => learners.id, { onDelete: "cascade" }),
+  subjectId: uuid()
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+});
+
 export const learners = pgTable("learners", {
   id: uuid()
     .primaryKey()
@@ -181,6 +190,17 @@ export const reviews = pgTable("reviews", {
   message: text("message"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const interestRelations = relations(interests, ({ one }) => ({
+  learner: one(learners, {
+    fields: [interests.learnerId],
+    references: [learners.id],
+  }),
+  subject: one(subjects, {
+    fields: [interests.subjectId],
+    references: [subjects.id],
+  }),
+}));
 
 export const learnerRelations = relations(learners, ({ many }) => ({
   orders: many(orders),
