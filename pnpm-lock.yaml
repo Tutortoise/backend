@@ -11,9 +11,6 @@ importers:
       '@google-cloud/storage':
         specifier: ^7.14.0
         version: 7.14.0
-      '@types/qs':
-        specifier: ^6.9.17
-        version: 6.9.17
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
@@ -99,6 +96,9 @@ importers:
       '@types/pg':
         specifier: ^8.11.10
         version: 8.11.10
+      '@types/qs':
+        specifier: ^6.9.17
+        version: 6.9.17
       '@types/supertest':
         specifier: ^6.0.2
         version: 6.0.2

@@ -9,14 +9,14 @@
     "dev": "tsx --watch src/main.ts",
     "lint": "prettier --check .",
     "format": "prettier --write .",
-    "seed": "tsx src/seed.ts",
-    "test": "NODE_ENV=test firebase emulators:exec --only storage --project tutortoise-test 'vitest'",
-    "test:ui": "NODE_ENV=test firebase emulators:exec --only storage --ui --project tutortoise-test 'vitest'",
-    "lint-staged": "pnpm lint && NODE_ENV=test firebase emulators:exec --only auth,storage,database,firestore --project tutortoise-test 'vitest run'"
+    "db:seed": "tsx src/seed.ts",
+    "db:migrate": "npx drizzle-kit migrate",
+    "test": "NODE_ENV=test firebase emulators:exec --only storage,database --project tutortoise-test 'vitest'",
+    "test:ui": "NODE_ENV=test firebase emulators:exec --only storage,database --ui --project tutortoise-test 'vitest'",
+    "lint-staged": "pnpm lint && NODE_ENV=test firebase emulators:exec --only storage,database --project tutortoise-test 'vitest run'"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
-    "@types/qs": "^6.9.17",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
@@ -47,6 +47,7 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.12",
     "@types/pg": "^8.11.10",
+    "@types/qs": "^6.9.17",
     "@types/supertest": "^6.0.2",
     "drizzle-kit": "^0.28.1",
     "husky": "^9.1.7",
