@@ -21,22 +21,13 @@ type GetTutoriesFilters = {
   typeLesson?: "online" | "offline" | "both" | null;
   tutorId?: string | null;
   city?: string | null;
+  minRating?: number | null;
 };
 
 export class TutoriesRepository {
   constructor(private readonly db: typeof dbType) {}
 
-  async getTutories(
-    filters: GetTutoriesFilters = {
-      q: null,
-      subjectId: null,
-      minHourlyRate: null,
-      maxHourlyRate: null,
-      typeLesson: null,
-      tutorId: null,
-      city: null,
-    },
-  ) {
+  async getTutories(filters: GetTutoriesFilters = {}) {
     try {
       const conditions = [];
 

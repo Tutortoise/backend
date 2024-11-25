@@ -5,9 +5,11 @@ import {
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 import { TutoriesRepository } from "./tutories.repository";
+import { ReviewRepository } from "@/module/review/review.repository";
 
 export interface TutorServiceServiceDependencies {
   tutoriesRepository: TutoriesRepository;
+  reviewRepository: ReviewRepository;
 }
 
 type GetTutorServicesFilters = {
@@ -18,13 +20,19 @@ type GetTutorServicesFilters = {
   typeLesson?: "online" | "offline" | "both" | null;
   city?: string | null;
   tutorId?: string | null;
+  minRating?: number | null;
 };
 
 export class TutoriesService {
   private tutoriesRepository: TutoriesRepository;
+  private reviewRepository: ReviewRepository;
 
-  constructor({ tutoriesRepository }: TutorServiceServiceDependencies) {
+  constructor({
+    tutoriesRepository,
+    reviewRepository,
+  }: TutorServiceServiceDependencies) {
     this.tutoriesRepository = tutoriesRepository;
+    this.reviewRepository = reviewRepository;
   }
 
   // TODO: Implement realtime updates for tutor service availability
@@ -37,15 +45,30 @@ export class TutoriesService {
   // - Send booking confirmation notifications
   // - Alert tutors of new booking requests
   async getTutories(filters: GetTutorServicesFilters) {
-    return await this.tutoriesRepository.getTutories({
-      q: filters.q,
-      subjectId: filters.subjectId,
-      minHourlyRate: filters.minHourlyRate,
-      maxHourlyRate: filters.maxHourlyRate,
-      typeLesson: filters.typeLesson,
-      tutorId: filters.tutorId,
-      city: filters.city,
-    });
+    const tutories = await this.tutoriesRepository.getTutories(filters);
+
+    // Get ratings for all tutories in parallel
+    const tutoriesWithRatings = await Promise.all(
+      tutories.map(async (tutory) => {
+        const { avgRating, totalReviews } =
+          await this.reviewRepository.getAverageRating(tutory.id);
+        return {
+          ...tutory,
+          avgRating,
+          totalReviews,
+        };
+      }),
+    );
+
+    // Filter by minimum rating if specified
+    if (filters.minRating !== null && filters.minRating !== undefined) {
+      return tutoriesWithRatings.filter(
+        (tutory) => tutory.avgRating >= filters.minRating!,
+      );
+    }
+
+    // Sort by rating in descending order
+    return tutoriesWithRatings.sort((a, b) => b.avgRating - a.avgRating);
   }
 
   async getTutoriesDetail(tutoriesId: string) {

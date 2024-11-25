@@ -1,6 +1,6 @@
 import { db as dbType } from "@/db/config";
 import { reviews, orders, learners, tutories } from "@/db/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 export class ReviewRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -61,5 +61,20 @@ export class ReviewRepository {
       .limit(1);
 
     return result[0] || { avgRating: 0, totalReviews: 0 };
+  }
+
+  async getBatchAverageRatings(tutoriesIds: string[]) {
+    const results = await this.db
+      .select({
+        tutoriesId: orders.tutoriesId,
+        avgRating: sql<number>`COALESCE(AVG(${reviews.rating})::numeric(10,1), 0)`,
+        totalReviews: sql<number>`COUNT(${reviews.id})`,
+      })
+      .from(reviews)
+      .innerJoin(orders, eq(reviews.orderId, orders.id))
+      .where(inArray(orders.tutoriesId, tutoriesIds))
+      .groupBy(orders.tutoriesId);
+
+    return results;
   }
 }

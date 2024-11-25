@@ -13,6 +13,7 @@ import { z } from "zod";
 
 const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,
+  reviewRepository: container.reviewRepository,
 });
 
 type GetTutoriesSchema = z.infer<typeof getTutoriesSchema>;
@@ -20,8 +21,15 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
   req,
   res,
 ) => {
-  const { q, subjectId, minHourlyRate, maxHourlyRate, typeLesson, city } =
-    req.query;
+  const {
+    q,
+    subjectId,
+    minHourlyRate,
+    maxHourlyRate,
+    typeLesson,
+    city,
+    minRating,
+  } = req.query;
 
   const filters = {
     q: q || null,
@@ -29,7 +37,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
     minHourlyRate: minHourlyRate ? parseInt(minHourlyRate as string) : null,
     maxHourlyRate: maxHourlyRate ? parseInt(maxHourlyRate as string) : null,
     typeLesson: typeLesson || null,
-    // minRating: minRating ? parseFloat(minRating as string) : null,
+    minRating: minRating ? parseFloat(minRating as string) : null,
     city: city || null,
   };
 
@@ -40,7 +48,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
       minHourlyRate: filters.minHourlyRate,
       maxHourlyRate: filters.maxHourlyRate,
       typeLesson: filters.typeLesson,
-      // minRating: filters.minRating,
+      minRating: filters.minRating,
       city: filters.city,
     });
 
