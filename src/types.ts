@@ -1,10 +1,6 @@
-import { tutorSchema } from "@/module/tutor/tutor.schema";
-import { learnerSchema } from "@/module/learner/learner.schema";
-import { z } from "zod";
-import { tutorServiceSchema } from "@/module/tutor-service/tutorService.schema";
 import { ParsedQs } from "qs";
 import { NextFunction, Request, Response } from "express";
-import { orderSchema } from "./module/order/order.schema";
+import { learners, tutories, tutors } from "./db/schema";
 
 interface RequestData {
   body?: unknown;
@@ -20,9 +16,9 @@ export interface Controller<T extends RequestData = RequestData> {
   ): Promise<void>;
 }
 
-export type Learner = z.infer<typeof learnerSchema>;
-export type Tutor = z.infer<typeof tutorSchema>;
-export type TutorService = z.infer<typeof tutorServiceSchema>;
+export type Learner = typeof learners.$inferInsert;
+export type Tutor = typeof tutors.$inferInsert;
+export type Tutories = typeof tutories.$inferInsert;
 
 export interface Subject {
   name: string;

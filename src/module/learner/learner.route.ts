@@ -1,6 +1,6 @@
 import * as learnerController from "@/module/learner/learner.controller";
 import {
-  firebaseAuthMiddleware,
+  jwtAuthMiddleware,
   verifyLearner,
 } from "@/module/auth/auth.middleware";
 import {
@@ -13,7 +13,7 @@ import { Router } from "express";
 
 // /api/v1/learners
 const learnerRouter = Router();
-learnerRouter.use(firebaseAuthMiddleware);
+learnerRouter.use(jwtAuthMiddleware);
 learnerRouter.use(verifyLearner);
 
 learnerRouter.patch(
@@ -28,8 +28,6 @@ learnerRouter.put(
   learnerController.updateProfilePicture,
 );
 
-// TODO: harus validasi dulu password lamanya. Di firebase-admin ga ada kayak compare password
-//       jadi harus di handle di client atau generate password reset link yang dikirim di email
 learnerRouter.put(
   "/password",
   validator(changePasswordSchema),

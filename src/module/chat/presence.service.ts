@@ -18,22 +18,18 @@ export class PresenceService {
     userId: string,
     presence: Partial<UserPresence>,
   ): Promise<void> {
-    try {
-      const userPresenceRef = this.realtimeDb.ref(`presence/${userId}`);
-      await userPresenceRef.update({
-        ...presence,
-        lastSeen: presence.lastSeen || Date.now(),
-      });
+    const userPresenceRef = this.realtimeDb.ref(`presence/${userId}`);
+    await userPresenceRef.update({
+      ...presence,
+      lastSeen: presence.lastSeen || Date.now(),
+    });
 
-      if (presence.isOnline) {
-        userPresenceRef.onDisconnect().update({
-          isOnline: false,
-          lastSeen: Date.now(),
-          currentChatRoom: null,
-        });
-      }
-    } catch (error) {
-      logger.error(`Failed to update user presence: ${error}`);
+    if (presence.isOnline) {
+      userPresenceRef.onDisconnect().update({
+        isOnline: false,
+        lastSeen: Date.now(),
+        currentChatRoom: null,
+      });
     }
   }
 
@@ -42,29 +38,25 @@ export class PresenceService {
     roomId: string,
     isTyping: boolean,
   ): Promise<void> {
-    try {
-      const roomPresenceRef = this.realtimeDb.ref(
-        `rooms/${roomId}/presence/${userId}`,
-      );
-      await roomPresenceRef.update({
-        isTyping,
-        lastTypingAt: Date.now(),
-      });
+    const roomPresenceRef = this.realtimeDb.ref(
+      `rooms/${roomId}/presence/${userId}`,
+    );
+    await roomPresenceRef.update({
+      isTyping,
+      lastTypingAt: Date.now(),
+    });
 
-      if (isTyping) {
-        setTimeout(async () => {
-          const snapshot = await roomPresenceRef.get();
-          const data = snapshot.val();
-          if (
-            data &&
-            Date.now() - data.lastTypingAt > PresenceService.TYPING_TIMEOUT
-          ) {
-            await roomPresenceRef.update({ isTyping: false });
-          }
-        }, PresenceService.TYPING_TIMEOUT);
-      }
-    } catch (error) {
-      logger.error(`Failed to update typing status: ${error}`);
+    if (isTyping) {
+      setTimeout(async () => {
+        const snapshot = await roomPresenceRef.get();
+        const data = snapshot.val();
+        if (
+          data &&
+          Date.now() - data.lastTypingAt > PresenceService.TYPING_TIMEOUT
+        ) {
+          await roomPresenceRef.update({ isTyping: false });
+        }
+      }, PresenceService.TYPING_TIMEOUT);
     }
   }
 

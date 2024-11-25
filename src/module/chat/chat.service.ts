@@ -1,301 +1,128 @@
 import { Bucket } from "@google-cloud/storage";
-import { logger } from "@middleware/logging.middleware";
-import { Firestore } from "firebase-admin/firestore";
+import { ChatRepository } from "./chat.repository";
 import { PresenceService } from "@/module/chat/presence.service";
 import { convertToJpg } from "@/helpers/image.helper";
 import { FCMService } from "@/common/fcm.service";
+import { UserRole } from "@/db/schema";
+import { MessageData } from "./chat.types";
 
 interface ChatServiceDependencies {
-  firestore: Firestore;
+  chatRepository: ChatRepository;
   bucket: Bucket;
   presenceService: PresenceService;
   fcmService: FCMService;
 }
 
-interface ChatRoom {
-  id: string;
-  learnerId: string;
-  tutorId: string;
-  learnerName: string;
-  tutorName: string;
-  lastMessageAt: Date;
-  lastMessage?: {
-    content: string;
-    type: "text" | "image";
-  };
-}
-
-interface ChatMessage {
-  id: string;
-  roomId: string;
-  senderId: string;
-  senderRole: "learner" | "tutor";
-  content: string;
-  type: "text" | "image";
-  sentAt: Date;
-  isRead: boolean;
-}
-
-interface MessageData {
-  content: string;
-  type: "text" | "image";
-}
-
 export class ChatService {
-  private firestore: Firestore;
-  private bucket: Bucket;
-  public presenceService: PresenceService;
-  private fcmService: FCMService;
+  private readonly chatRepository: ChatRepository;
+  private readonly bucket: Bucket;
+  public readonly presenceService: PresenceService;
+  private readonly fcmService: FCMService;
 
-  constructor({
-    firestore,
-    bucket,
-    presenceService,
-    fcmService,
-  }: ChatServiceDependencies) {
-    this.firestore = firestore;
-    this.bucket = bucket;
-    this.presenceService = presenceService;
-    this.fcmService = fcmService;
+  constructor(private readonly deps: ChatServiceDependencies) {
+    this.chatRepository = deps.chatRepository;
+    this.bucket = deps.bucket;
+    this.presenceService = deps.presenceService;
+    this.fcmService = deps.fcmService;
   }
 
-  async createRoom(learnerId: string, tutorId: string): Promise<ChatRoom> {
-    const [learnerDoc, tutorDoc] = await Promise.all([
-      this.firestore.collection("learners").doc(learnerId).get(),
-      this.firestore.collection("tutors").doc(tutorId).get(),
-    ]);
-
-    if (!learnerDoc.exists || !tutorDoc.exists) {
-      throw new Error("Learner or tutor not found");
+  async createRoom(learnerId: string, tutorId: string) {
+    try {
+      return await this.deps.chatRepository.createRoom(learnerId, tutorId);
+    } catch (error) {
+      throw new Error(`Failed to create chat room: ${error}`);
     }
-
-    const existingRoom = await this.firestore
-      .collection("chat_rooms")
-      .where("learnerId", "==", learnerId)
-      .where("tutorId", "==", tutorId)
-      .get();
-
-    if (!existingRoom.empty) {
-      const room = existingRoom.docs[0];
-      return {
-        id: room.id,
-        ...room.data(),
-      } as ChatRoom;
-    }
-
-    const roomData = {
-      learnerId,
-      tutorId,
-      learnerName: learnerDoc.data()?.name,
-      tutorName: tutorDoc.data()?.name,
-      createdAt: new Date(),
-      lastMessageAt: new Date(),
-    };
-
-    const roomRef = await this.firestore.collection("chat_rooms").add(roomData);
-
-    return {
-      id: roomRef.id,
-      ...roomData,
-    };
   }
 
-  async getRooms(
-    userId: string,
-    userRole: "learner" | "tutor",
-  ): Promise<ChatRoom[]> {
-    const query =
-      userRole === "learner"
-        ? this.firestore
-            .collection("chat_rooms")
-            .where("learnerId", "==", userId)
-        : this.firestore
-            .collection("chat_rooms")
-            .where("tutorId", "==", userId);
-
-    const rooms = await query.orderBy("lastMessageAt", "desc").get();
-
-    return rooms.docs.map((room) => ({
-      id: room.id,
-      ...room.data(),
-      lastMessageAt: room.data().lastMessageAt.toDate(),
-    })) as ChatRoom[];
+  async getRooms(userId: string, role: UserRole) {
+    return this.deps.chatRepository.getRoomsWithParticipants(userId, role);
   }
 
   async getRoomMessages(
     roomId: string,
     userId: string,
     before?: Date,
-    limit: string = "20",
-  ): Promise<ChatMessage[]> {
-    const limitNum = parseInt(limit, 10);
+    limit?: number,
+  ) {
+    try {
+      const room = await this.deps.chatRepository.getRoomById(roomId);
+      if (!room) {
+        throw new Error("Room not found");
+      }
 
-    const room = await this.firestore
-      .collection("chat_rooms")
-      .doc(roomId)
-      .get();
+      if (room.learnerId !== userId && room.tutorId !== userId) {
+        throw new Error("Unauthorized access to chat room");
+      }
 
-    if (!room.exists) {
-      throw new Error("Room not found");
+      await this.chatRepository.markMessagesAsRead(roomId, userId);
+      return this.deps.chatRepository.getRoomMessages(roomId, before, limit);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Room not found") {
+        throw error;
+      }
+      if (
+        error instanceof Error &&
+        error.message === "Unauthorized access to chat room"
+      ) {
+        throw error;
+      }
+      throw new Error(`Failed to get room messages: ${error}`);
     }
-
-    const roomData = room.data()!;
-    if (roomData.learnerId !== userId && roomData.tutorId !== userId) {
-      throw new Error("Unauthorized access to chat room");
-    }
-
-    let query = this.firestore
-      .collection("chat_messages")
-      .where("roomId", "==", roomId)
-      .orderBy("sentAt", "desc");
-
-    if (before) {
-      query = query.startAfter(before);
-    }
-
-    query = query.limit(limitNum);
-
-    const messages = await query.get();
-
-    const unreadMessages = messages.docs.filter(
-      (doc) => !doc.data().isRead && doc.data().senderId !== userId,
-    );
-
-    if (unreadMessages.length > 0) {
-      const batch = this.firestore.batch();
-      unreadMessages.forEach((doc) => {
-        batch.update(doc.ref, { isRead: true });
-      });
-      await batch.commit();
-    }
-
-    return messages.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      sentAt: doc.data().sentAt.toDate(),
-    })) as ChatMessage[];
   }
 
   async sendMessage(
     roomId: string,
     senderId: string,
-    senderRole: "learner" | "tutor",
+    senderRole: UserRole,
     message: MessageData,
-  ): Promise<ChatMessage> {
-    const room = await this.firestore
-      .collection("chat_rooms")
-      .doc(roomId)
-      .get();
-
-    if (!room.exists) {
-      throw new Error("Chat room not found");
-    }
-
-    const roomData = room.data()!;
-    const isParticipant =
-      senderRole === "learner"
-        ? roomData.learnerId === senderId
-        : roomData.tutorId === senderId;
-
-    if (!isParticipant) {
-      throw new Error("Not authorized to send messages in this room");
-    }
-
-    const now = new Date();
-    let finalContent = message.content;
+  ) {
+    const room = await this.deps.chatRepository.getRoomById(roomId);
+    if (!room) throw new Error("Room not found");
 
     if (message.type === "image") {
       try {
         const imageBuffer = Buffer.from(message.content, "base64");
-        const downgradedImage = await convertToJpg(imageBuffer);
-        const imagePath = `chat-images/${roomId}/${now.getTime()}.jpg`;
-        const file = this.bucket.file(imagePath);
+        const convertedImage = await convertToJpg(imageBuffer);
+        const filePath = `chat-images/${roomId}/${Date.now()}.jpg`;
+        const file = this.deps.bucket.file(filePath);
 
-        await file.save(downgradedImage, {
+        await file.save(convertedImage, {
           contentType: "image/jpeg",
           public: true,
         });
 
-        finalContent = file.publicUrl();
+        message.content = file.publicUrl();
       } catch (error) {
-        logger.error("Failed to upload image:", error);
         throw new Error("Failed to upload image");
       }
     }
 
-    const messageData: Omit<ChatMessage, "id"> = {
+    const newMessage = await this.deps.chatRepository.createMessage(
       roomId,
       senderId,
       senderRole,
-      content: finalContent,
-      type: message.type,
-      sentAt: now,
-      isRead: false,
-    };
+      message.content,
+      message.type,
+    );
 
-    const messageRef = await this.firestore
-      .collection("chat_messages")
-      .add(messageData);
+    const roomDetails =
+      await this.deps.chatRepository.getRoomWithParticipants(roomId);
+    if (roomDetails) {
+      const recipientId =
+        senderRole === "learner" ? room.tutorId : room.learnerId;
+      const senderName =
+        senderRole === "learner"
+          ? roomDetails.learnerName
+          : roomDetails.tutorName;
 
-    await this.firestore
-      .collection("chat_rooms")
-      .doc(roomId)
-      .update({
-        lastMessageAt: now,
-        lastMessage: {
-          content: finalContent,
-          type: message.type,
-        },
-      });
-
-    const recipientId =
-      senderRole === "learner" ? roomData.tutorId : roomData.learnerId;
-    const senderName =
-      senderRole === "learner" ? roomData.learnerName : roomData.tutorName;
-
-    try {
-      await this.fcmService.sendChatNotification(
+      this.deps.fcmService.sendChatNotification(
         recipientId,
         senderName,
-        {
-          content: message.type === "image" ? "📷 Image" : finalContent,
-          type: message.type,
-        },
+        message,
         roomId,
       );
-    } catch (error) {
-      logger.error(`Failed to send FCM notification: ${error}`);
     }
 
-    return {
-      id: messageRef.id,
-      ...messageData,
-    };
-  }
-
-  subscribeToRoomMessages(
-    roomId: string,
-    callback: (message: ChatMessage) => void,
-  ): () => void {
-    const messagesRef = this.firestore
-      .collection("chat_messages")
-      .where("roomId", "==", roomId)
-      .orderBy("sentAt", "desc")
-      .limit(1);
-
-    const unsubscribe = messagesRef.onSnapshot((snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const message = {
-            id: change.doc.id,
-            ...change.doc.data(),
-            sentAt: change.doc.data().sentAt.toDate(),
-          } as ChatMessage;
-          callback(message);
-        }
-      });
-    });
-
-    return unsubscribe;
+    return newMessage;
   }
 }

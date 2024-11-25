@@ -1,59 +1,47 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { getCityName } from "@/helpers/location.helper";
 import { Tutor } from "@/types";
 import { faker } from "@faker-js/faker";
-import { AuthService } from "@/module/auth/auth.service";
-import { TutorService } from "@/module/tutor/tutor.service";
-import { FCMService } from "@/common/fcm.service";
+import { container } from "@/container";
 
-const fcmService = new FCMService({ firestore });
-const authService = new AuthService({ firestore, auth, fcmService });
-const tutorService = new TutorService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-  getCityName,
-});
+const authRepository = container.authRepository;
+const tutorRepository = container.tutorRepository;
 
-// https://www.latlong.net/category/cities-103-15.html
-function generateRandomLocation(): { latitude: number; longitude: number } {
-  return faker.helpers.arrayElement([
-    { latitude: -7.250445, longitude: 112.768845 }, // Surabaya
-    { latitude: -0.502106, longitude: 117.153709 }, // Samarinda
-    { latitude: -6.2, longitude: 106.816666 }, // Jakarta
-  ]);
-}
+const cityDistricts = {
+  Surabaya: ["Asemrowo", "Benowo", "Bubutan", "Bulak"],
+  Samarinda: ["Samarinda Utara", "Samarinda Kota", "Samarinda Ilir"],
+};
 
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
   for (let i = 0; i < 25; i++) {
+    const city = faker.helpers.arrayElement(["Surabaya", "Samarinda"]);
+    const district = faker.helpers.arrayElement(cityDistricts[city]);
+
     tutors.push({
       name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
       gender: faker.helpers.arrayElement([
         "male",
         "female",
         "prefer not to say",
       ]),
-      createdAt: new Date(),
+      city,
+      district,
     });
-  }
-
-  const tutorSnapshot = await firestore.collection("tutors").get();
-  if (!tutorSnapshot.empty) {
-    return;
   }
 
   console.log(`Seeding tutors with ${tutors.length} data...`);
   for (const tutor of tutors) {
-    const { userId } = await authService.registerTutor(
-      tutor.name!,
-      faker.internet.email(),
-      "12345678",
-    );
-    tutorService.updateProfile(userId, {
-      location: generateRandomLocation(),
+    const { id } = await authRepository.registerUser({
+      name: tutor.name,
+      email: tutor.email,
+      password: "12345678",
+      role: "tutor",
+    });
+
+    tutorRepository.updateTutorProfile(id, {
+      city: tutor.city,
+      district: tutor.district,
     });
   }
 };

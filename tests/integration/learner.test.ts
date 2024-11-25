@@ -1,20 +1,14 @@
-import { firestore } from "@/config";
+import { container } from "@/container";
 import { app } from "@/main";
 import { faker } from "@faker-js/faker";
-import { SubjectService } from "@/module/subject/subject.service";
+import { generateUser } from "@tests/helpers/generate.helper";
 import supertest from "supertest";
-import { beforeAll, describe, expect, test } from "vitest";
-import { login } from "@tests/helpers/client.helper";
+import { describe, expect, test } from "vitest";
 
-const subjectService = new SubjectService({ firestore });
+const subjectRepository = container.subjectRepository;
 
-async function registerLearner() {
-  const newLearner = {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    role: "learner",
-  };
+async function registerAndLoginLearner() {
+  const newLearner = generateUser("learner");
 
   const res = await supertest(app)
     .post("/api/v1/auth/register")
@@ -24,18 +18,22 @@ async function registerLearner() {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await login(userId);
-  return { idToken, userId };
+  const loginRes = await supertest(app)
+    .post("/api/v1/auth/login")
+    .send({ email: newLearner.email, password: newLearner.password })
+    .expect(200);
+
+  const token = loginRes.body.data.token;
+  expect(token).toBeDefined();
+
+  return { learner: newLearner, token };
 }
 
 describe("Update learner profile", async () => {
-  let idToken: string;
+  const { token } = await registerAndLoginLearner();
 
   test("should be able to update learner profile", async () => {
-    const { idToken: token } = await registerLearner();
-    idToken = token;
-
-    const subjects = await subjectService.getAllSubjects();
+    const subjects = await subjectRepository.getAllSubjects();
 
     const updatedProfile = {
       name: faker.person.fullName(),
@@ -47,7 +45,7 @@ describe("Update learner profile", async () => {
 
     await supertest(app)
       .patch(`/api/v1/learners/profile`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send(updatedProfile)
       .expect(200);
   });
@@ -68,16 +66,11 @@ describe("Update learner profile", async () => {
   });
 
   test("should not be able to update learner profile with invalid data", async () => {
-    const { idToken: token } = await registerLearner();
-    idToken = token;
-
     const invalidData = {
       name: "a",
       phoneNum: "invalid",
-      location: {
-        latitude: "x",
-        longitude: "y",
-      },
+      latitude: "x",
+      longitude: "y",
       gender: "sigma",
       learningStyle: "invalid",
       interests: ["invalidId"],
@@ -85,7 +78,7 @@ describe("Update learner profile", async () => {
 
     const res = await supertest(app)
       .patch(`/api/v1/learners/profile`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send(invalidData)
       .expect(400);
 
@@ -96,17 +89,12 @@ describe("Update learner profile", async () => {
 });
 
 describe("Update learner profile picture", async () => {
-  let idToken: string;
-
-  beforeAll(async () => {
-    const { idToken: token } = await registerLearner();
-    idToken = token;
-  });
+  const { token } = await registerAndLoginLearner();
 
   test("should be able to update learner profile picture", async () => {
     const res = await supertest(app)
       .put(`/api/v1/learners/profile/picture`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .attach("picture", "tests/integration/pictures/bocchi.png")
       .expect(200);
 
@@ -131,17 +119,12 @@ describe("Update learner profile picture", async () => {
 });
 
 describe("Update learner password", async () => {
-  let idToken: string;
-
-  beforeAll(async () => {
-    const { idToken: token } = await registerLearner();
-    idToken = token;
-  });
+  const { learner, token } = await registerAndLoginLearner();
 
   test("should validate password", async () => {
     const res = await supertest(app)
       .put("/api/v1/learners/password")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
         currentPassword: "1234",
         newPassword: "123",
@@ -158,12 +141,25 @@ describe("Update learner password", async () => {
     const newPassword = faker.internet.password();
     await supertest(app)
       .put("/api/v1/learners/password")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
-        currentPassword: "1234",
+        currentPassword: learner.password,
         newPassword: newPassword,
         confirmPassword: newPassword,
       })
+      .expect(200);
+
+    // try to login with old password
+    const res = await supertest(app)
+      .post("/api/v1/auth/login")
+      .send({ email: learner.email, password: learner.password })
+      .expect(400);
+    expect(res.body.message).toEqual("Invalid email or password");
+
+    // try to login with new password
+    await supertest(app)
+      .post("/api/v1/auth/login")
+      .send({ email: learner.email, password: newPassword })
       .expect(200);
   });
 

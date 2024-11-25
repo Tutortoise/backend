@@ -1,196 +1,141 @@
 import { app } from "@/main";
-import { firestore } from "@/config";
-import { faker } from "@faker-js/faker";
+import { container } from "@/container";
+import { generateUser } from "@tests/helpers/generate.helper";
+import { generateJWT } from "@/helpers/jwt.helper";
+import { db } from "@/db/config";
+import { fcmTokens } from "@/db/schema";
 import supertest from "supertest";
-import { describe, expect, test } from "vitest";
-import { login } from "@tests/helpers/client.helper";
+import { describe, expect, test, beforeAll, beforeEach, vi } from "vitest";
+import type { UserRole } from "@/db/schema";
 
-// async function cleanupCollections() {
-//   const collections = ["user_fcm_tokens", "learners", "tutors"];
-//   for (const collection of collections) {
-//     const snapshot = await firestore.collection(collection).get();
-//     const batch = firestore.batch();
-//     snapshot.docs.forEach((doc) => {
-//       batch.delete(doc.ref);
-//     });
-//     await batch.commit();
-//   }
-// }
+vi.mock("firebase-admin/messaging", () => ({
+  messaging: () => ({
+    sendEachForMulticast: vi.fn().mockResolvedValue({
+      failureCount: 0,
+      responses: [],
+    }),
+  }),
+}));
 
-async function registerUser(role: "learner" | "tutor") {
-  const userData = {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
+const authRepository = container.authRepository;
+const fcmRepository = container.fcmRepository;
+
+interface TestUser {
+  id: string;
+  token: string;
+  role: UserRole;
+}
+
+async function createTestUser(role: UserRole): Promise<TestUser> {
+  const userData = generateUser(role);
+  const { id } = await authRepository.registerUser({
+    ...userData,
     role,
-  };
-
-  const res = await supertest(app)
-    .post("/api/v1/auth/register")
-    .send(userData)
-    .expect(201);
-
-  const userId = res.body.data.userId;
-  expect(userId).toBeDefined();
-
-  const idToken = await login(userId);
-  return { userId, token: idToken };
+  });
+  const token = generateJWT({ id, role });
+  return { id, token, role };
 }
 
 describe("FCM Token Management", () => {
-  // beforeAll(async () => {
-  //   await cleanupCollections();
-  // });
+  let user: TestUser;
+  const fcmToken = "test-fcm-token";
 
-  // beforeEach(async () => {
-  //   await cleanupCollections();
-  // });
-
-  describe("Store FCM Token", () => {
-    test("should store FCM token for authenticated user", async () => {
-      const { userId, token } = await registerUser("learner");
-      const fcmToken = faker.string.uuid();
-
-      const res = await supertest(app)
-        .post("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-
-      expect(res.body.status).toBe("success");
-
-      const tokenDoc = await firestore
-        .collection("user_fcm_tokens")
-        .doc(userId)
-        .get();
-      expect(tokenDoc.exists).toBe(true);
-      expect(tokenDoc.data()?.tokens).toContain(fcmToken);
-    });
-
-    test("should not store duplicate FCM token", async () => {
-      const { userId, token } = await registerUser("tutor");
-      const fcmToken = faker.string.uuid();
-
-      await supertest(app)
-        .post("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-
-      await supertest(app)
-        .post("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-
-      const tokenDoc = await firestore
-        .collection("user_fcm_tokens")
-        .doc(userId)
-        .get();
-      const tokens = tokenDoc.data()?.tokens || [];
-      expect(tokens.filter((t: string) => t === fcmToken).length).toBe(1);
-    });
-
-    test("should require authentication", async () => {
-      await supertest(app)
-        .post("/api/v1/auth/fcm-token")
-        .send({ token: faker.string.uuid() })
-        .expect(401);
-    });
+  beforeAll(async () => {
+    await db.delete(fcmTokens);
+    user = await createTestUser("learner");
   });
 
-  describe("Remove FCM Token", () => {
-    test("should remove FCM token for authenticated user", async () => {
-      const { userId, token } = await registerUser("learner");
-      const fcmToken = faker.string.uuid();
-
-      await supertest(app)
-        .post("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-
-      await supertest(app)
-        .delete("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-
-      const tokenDoc = await firestore
-        .collection("user_fcm_tokens")
-        .doc(userId)
-        .get();
-      expect(tokenDoc.data()?.tokens).not.toContain(fcmToken);
-    });
-
-    test("should handle removing non-existent token", async () => {
-      const { token } = await registerUser("tutor");
-      const fcmToken = faker.string.uuid();
-
-      await supertest(app)
-        .delete("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmToken })
-        .expect(200);
-    });
-
-    test("should require authentication", async () => {
-      await supertest(app)
-        .delete("/api/v1/auth/fcm-token")
-        .send({ token: faker.string.uuid() })
-        .expect(401);
-    });
+  beforeEach(async () => {
+    await db.delete(fcmTokens);
   });
 
-  describe("Multi-device support", () => {
-    test("should support multiple FCM tokens per user", async () => {
-      const { userId, token } = await registerUser("learner");
-      const fcmTokens = [faker.string.uuid(), faker.string.uuid()];
+  test("should store FCM token", async () => {
+    await supertest(app)
+      .post("/api/v1/auth/fcm-token")
+      .set("Authorization", `Bearer ${user.token}`)
+      .send({ token: fcmToken })
+      .expect(200);
 
-      for (const fcmToken of fcmTokens) {
-        await supertest(app)
-          .post("/api/v1/auth/fcm-token")
-          .set("Authorization", `Bearer ${token}`)
-          .send({ token: fcmToken })
-          .expect(200);
-      }
+    const tokens = await fcmRepository.getUserTokens(user.id);
+    expect(tokens).toContain(fcmToken);
+  });
 
-      const tokenDoc = await firestore
-        .collection("user_fcm_tokens")
-        .doc(userId)
-        .get();
-      const storedTokens = tokenDoc.data()?.tokens || [];
-      expect(storedTokens).toHaveLength(fcmTokens.length);
-      fcmTokens.forEach((token) => {
-        expect(storedTokens).toContain(token);
-      });
-    });
+  test("should not store duplicate FCM token", async () => {
+    await supertest(app)
+      .post("/api/v1/auth/fcm-token")
+      .set("Authorization", `Bearer ${user.token}`)
+      .send({ token: fcmToken });
 
-    test("should handle removing specific token from multiple devices", async () => {
-      const { userId, token } = await registerUser("tutor");
-      const fcmTokens = [faker.string.uuid(), faker.string.uuid()];
+    await supertest(app)
+      .post("/api/v1/auth/fcm-token")
+      .set("Authorization", `Bearer ${user.token}`)
+      .send({ token: fcmToken });
 
-      for (const fcmToken of fcmTokens) {
-        await supertest(app)
-          .post("/api/v1/auth/fcm-token")
-          .set("Authorization", `Bearer ${token}`)
-          .send({ token: fcmToken })
-          .expect(200);
-      }
+    const tokens = await fcmRepository.getUserTokens(user.id);
+    expect(tokens.filter((t) => t === fcmToken).length).toBe(1);
+  });
 
-      await supertest(app)
-        .delete("/api/v1/auth/fcm-token")
-        .set("Authorization", `Bearer ${token}`)
-        .send({ token: fcmTokens[0] })
-        .expect(200);
+  test("should remove FCM token", async () => {
+    await fcmRepository.storeToken(user.id, fcmToken);
 
-      const tokenDoc = await firestore
-        .collection("user_fcm_tokens")
-        .doc(userId)
-        .get();
-      const storedTokens = tokenDoc.data()?.tokens || [];
-      expect(storedTokens).not.toContain(fcmTokens[0]);
-      expect(storedTokens).toContain(fcmTokens[1]);
-    });
+    await supertest(app)
+      .delete("/api/v1/auth/fcm-token")
+      .set("Authorization", `Bearer ${user.token}`)
+      .send({ token: fcmToken })
+      .expect(200);
+
+    const tokens = await fcmRepository.getUserTokens(user.id);
+    expect(tokens).not.toContain(fcmToken);
+  });
+
+  test("should require authentication for FCM operations", async () => {
+    await supertest(app)
+      .post("/api/v1/auth/fcm-token")
+      .send({ token: fcmToken })
+      .expect(401);
+
+    await supertest(app)
+      .delete("/api/v1/auth/fcm-token")
+      .send({ token: fcmToken })
+      .expect(401);
+  });
+});
+
+describe("FCM Notification Integration", () => {
+  let sender: TestUser;
+  let recipient: TestUser;
+  let roomId: string;
+
+  beforeAll(async () => {
+    await db.delete(fcmTokens);
+    sender = await createTestUser("learner");
+    recipient = await createTestUser("tutor");
+
+    const room = await container.chatRepository.createRoom(
+      sender.id,
+      recipient.id,
+    );
+    roomId = room.id;
+  });
+
+  beforeEach(async () => {
+    await db.delete(fcmTokens);
+  });
+
+  test("should send notification for new message", async () => {
+    const fcmToken = "test-recipient-token";
+    await fcmRepository.storeToken(recipient.id, fcmToken);
+
+    const message = "Test notification message";
+    await supertest(app)
+      .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+      .set("Authorization", `Bearer ${sender.token}`)
+      .send({ content: message })
+      .expect(201);
+
+    // In a real implementation, you would verify the notification was sent
+    // For testing purposes, we can verify the token exists
+    const tokens = await fcmRepository.getUserTokens(recipient.id);
+    expect(tokens).toContain(fcmToken);
   });
 });

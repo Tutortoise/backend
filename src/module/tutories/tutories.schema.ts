@@ -1,29 +1,17 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { getCityName } from "@/helpers/location.helper";
-import { SubjectService } from "@/module/subject/subject.service";
-import { TutorService } from "@/module/tutor/tutor.service";
+import { container } from "@/container";
 import { z } from "zod";
 
-const subjectService = new SubjectService({
-  firestore,
-});
-const tutorService = new TutorService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-  getCityName,
-});
+const subjectRepository = container.subjectRepository;
+const tutorRepository = container.tutorRepository;
 
 const zodTimesArray = z
   .array(z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"))
   .optional();
 
-export const tutorServiceSchema = z.object({
+export const tutoriesSchema = z.object({
   id: z.string().optional(),
   tutorId: z.string().superRefine(async (tutorId, ctx) => {
-    const exists = await tutorService.checkTutorExists(tutorId);
+    const exists = await tutorRepository.checkTutorExists(tutorId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -32,7 +20,7 @@ export const tutorServiceSchema = z.object({
     }
   }),
   subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    const exists = await subjectService.checkSubjectExists(subjectId);
+    const exists = await subjectRepository.checkSubjectExists(subjectId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -89,10 +77,21 @@ export const tutorServiceSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
-export const getServicesSchema = z.object({
+export const getTutoriesSchema = z.object({
   query: z.object({
     q: z.string().optional(), // search query
-    subjectId: z.string().optional(),
+    subjectId: z
+      .string()
+      .superRefine(async (subjectId, ctx) => {
+        const exists = await subjectRepository.checkSubjectExists(subjectId);
+        if (!exists) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Subject does not exist",
+          });
+        }
+      })
+      .optional(),
     minHourlyRate: z.string().optional(),
     maxHourlyRate: z.string().optional(),
     minRating: z.string().optional(),
@@ -107,12 +106,12 @@ export const getServicesSchema = z.object({
 
 export const getServiceSchema = z.object({
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });
 
-export const createTutorServiceSchema = z.object({
-  body: tutorServiceSchema.omit({
+export const createTutoriesSchema = z.object({
+  body: tutoriesSchema.omit({
     id: true,
     tutorId: true, // can directly get from req.tutor.id
     createdAt: true,
@@ -120,8 +119,8 @@ export const createTutorServiceSchema = z.object({
   }),
 });
 
-export const updateTutorServiceSchema = z.object({
-  body: tutorServiceSchema
+export const updateTutoriesSchema = z.object({
+  body: tutoriesSchema
     .omit({
       id: true,
       tutorId: true,
@@ -131,12 +130,12 @@ export const updateTutorServiceSchema = z.object({
     })
     .partial(),
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });
 
 export const deleteTutorServiceSchema = z.object({
   params: z.object({
-    tutorServiceId: z.string(),
+    tutoriesId: z.string(),
   }),
 });

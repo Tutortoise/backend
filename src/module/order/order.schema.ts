@@ -1,29 +1,14 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { LearnerService } from "@/module/learner/learner.service";
-import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
+import { container } from "@/container";
 import { z, ZodIssueCode } from "zod";
-import { OrderService } from "./order.service";
 
-const learnerService = new LearnerService({
-  firestore,
-  auth,
-  downscaleImage,
-  bucket,
-});
-
-const tutorServiceService = new TutorServiceService({
-  firestore,
-});
-
-const orderService = new OrderService({
-  firestore,
-});
+const learnerRepository = container.learnerRepository;
+const tutoriesRepository = container.tutoriesRepository;
+const orderRepository = container.orderRepository;
 
 export const orderSchema = z.object({
   id: z.string().optional(),
   learnerId: z.string().superRefine(async (learnerId, ctx) => {
-    const exists = await learnerService.checkLearnerExists(learnerId);
+    const exists = await learnerRepository.checkLearnerExists(learnerId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -31,12 +16,12 @@ export const orderSchema = z.object({
       });
     }
   }),
-  tutorServiceId: z.string().superRefine(async (serviceId, ctx) => {
-    const exists = await tutorServiceService.checkServiceExists(serviceId);
+  tutoriesId: z.string().superRefine(async (tutoriesId, ctx) => {
+    const exists = await tutoriesRepository.checkTutoriesExists(tutoriesId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Tutor service does not exist",
+        message: "Tutories does not exist",
       });
     }
   }),
@@ -56,7 +41,7 @@ export const orderSchema = z.object({
     .string()
     .max(1000, { message: "Note must be at most 1000 characters" })
     .optional(),
-  status: z.enum(["pending", "declined", "canceled", "scheduled", "completed"]),
+  status: z.enum(["pending", "declined", "scheduled", "completed"]),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 });
@@ -78,10 +63,9 @@ export const createOrderSchema = z
     }),
   })
   .superRefine(async (data, ctx) => {
-    const availabilityList =
-      await tutorServiceService.getTutorServiceAvailability(
-        data.body.tutorServiceId,
-      );
+    const availabilityList = await tutoriesRepository.getTutoriesAvailability(
+      data.body.tutoriesId,
+    );
 
     const sessionDate = new Date(data.body.sessionTime);
     if (!availabilityList.includes(sessionDate.toISOString())) {
@@ -96,7 +80,7 @@ export const createOrderSchema = z
 export const cancelOrderSchema = z.object({
   params: z.object({
     orderId: z.string().superRefine(async (orderId, ctx) => {
-      const exists = await orderService.checkOrderExists(orderId);
+      const exists = await orderRepository.checkOrderExists(orderId);
       if (!exists) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -110,7 +94,7 @@ export const cancelOrderSchema = z.object({
 export const acceptOrderSchema = z.object({
   params: z.object({
     orderId: z.string().superRefine(async (orderId, ctx) => {
-      const exists = await orderService.checkOrderExists(orderId);
+      const exists = await orderRepository.checkOrderExists(orderId);
       if (!exists) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -124,7 +108,7 @@ export const acceptOrderSchema = z.object({
 export const declineOrderSchema = z.object({
   params: z.object({
     orderId: z.string().superRefine(async (orderId, ctx) => {
-      const exists = await orderService.checkOrderExists(orderId);
+      const exists = await orderRepository.checkOrderExists(orderId);
       if (!exists) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

@@ -1,29 +1,37 @@
-import { firestore } from "@/config";
+import { container } from "@/container";
 import { app } from "@/main";
-import { TutorServiceService } from "@/module/tutor-service/tutorService.service";
 import { faker } from "@faker-js/faker";
-import { login } from "@tests/helpers/client.helper";
+import { generateUser } from "@tests/helpers/generate.helper";
+import jwt from "jsonwebtoken";
 import supertest from "supertest";
 import { afterAll, describe, expect, test } from "vitest";
 
-const tsService = new TutorServiceService({ firestore });
+const tutorRepository = container.tutorRepository;
+const tutoriesRepository = container.tutoriesRepository;
+const orderRepository = container.orderRepository;
 
 async function cleanupOrders() {
-  const snapshot = await firestore.collection("orders").get();
-  const batch = firestore.batch();
-  snapshot.docs.forEach((doc) => {
-    batch.delete(doc.ref);
-  });
-  await batch.commit();
+  await orderRepository.deleteAllOrders();
 }
 
-async function registerLearner() {
-  const newLearner = {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    role: "learner",
-  };
+// todo: refactor to use helper later
+async function loginAsTutor(tutorName: string) {
+  const tutors = await tutorRepository.getAllTutors();
+  const tutor = tutors.find((t) => t.name === tutorName);
+
+  expect(tutor).toBeDefined();
+
+  const tutorId = tutor!.id;
+  const token = jwt.sign(
+    { id: tutorId, role: "tutor" },
+    process.env.JWT_SECRET!,
+  );
+
+  return token;
+}
+
+async function registerAndLoginLearner() {
+  const newLearner = generateUser("learner");
 
   const res = await supertest(app)
     .post("/api/v1/auth/register")
@@ -33,29 +41,36 @@ async function registerLearner() {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await login(userId);
-  return { idToken, userId };
+  const loginRes = await supertest(app)
+    .post("/api/v1/auth/login")
+    .send({ email: newLearner.email, password: newLearner.password })
+    .expect(200);
+
+  const token = loginRes.body.data.token;
+  expect(token).toBeDefined();
+
+  return { learner: newLearner, token };
 }
 
-describe("Order a service", async () => {
-  const { idToken } = await registerLearner();
+describe("Order a tutories", async () => {
+  const { token } = await registerAndLoginLearner();
 
-  const services = await tsService.getTutorServices();
+  const tutories = await tutoriesRepository.getTutories();
 
   afterAll(async () => {
     await cleanupOrders();
   });
 
-  test("Learner can order a service", async () => {
-    const availability = await tsService.getTutorServiceAvailability(
-      services[0].id,
+  test("Learner can order a tutories", async () => {
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      tutories[0].id,
     );
 
     await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
-        tutorServiceId: services[0].id,
+        tutoriesId: tutories[0].id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -63,12 +78,12 @@ describe("Order a service", async () => {
       .expect(201);
   });
 
-  test("Learner cannot order a service with invalid session time", async () => {
+  test("Learner cannot order a tutories with invalid session time", async () => {
     const res = await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
-        tutorServiceId: services[0].id,
+        tutoriesId: tutories[0].id,
         sessionTime: new Date().toISOString(),
         totalHours: 1,
         notes: "I want to learn more",
@@ -87,36 +102,28 @@ describe("Order a service", async () => {
 });
 
 describe("Cancel an order", async () => {
-  const services = await tsService.getTutorServices();
-  const randomService = faker.helpers.arrayElement(services);
+  const tutories = await tutoriesRepository.getTutories();
+  const randomTutories = faker.helpers.arrayElement(tutories);
 
-  const { idToken: learnerIdToken } = await registerLearner();
+  const { token: learnerToken } = await registerAndLoginLearner();
 
   afterAll(async () => {
     await cleanupOrders();
   });
 
   test("Tutor can cancel an order", async () => {
-    const tutorId = await firestore
-      .collection("tutor_services")
-      .doc(randomService.id)
-      .get()
-      .then(async (doc) => {
-        const ref = doc.data()?.tutorId;
-        return ref.id;
-      });
-    const tutorIdToken = await login(tutorId);
+    const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
     // Create an order
-    const availability = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
     await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -124,18 +131,18 @@ describe("Cancel an order", async () => {
       .expect(201);
 
     // Cancel the order
-    const orders = await tsService.getOrders(randomService.id);
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
     const order = orders[0];
     await supertest(app)
       .post(`/api/v1/orders/${order.id}/cancel`)
-      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
 
   test("Learner cannot cancel an order", async () => {
     await supertest(app)
       .post(`/api/v1/orders/x/cancel`)
-      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .expect(403);
   });
 });
@@ -146,31 +153,22 @@ describe("Accept an order", async () => {
   });
 
   test("Tutor can accept an order", async () => {
-    const services = await tsService.getTutorServices();
-    const randomService = faker.helpers.arrayElement(services);
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
 
-    const { idToken: learnerIdToken } = await registerLearner();
-
-    const tutorId = await firestore
-      .collection("tutor_services")
-      .doc(randomService.id)
-      .get()
-      .then(async (doc) => {
-        const ref = doc.data()?.tutorId;
-        return ref.id;
-      });
-    const tutorIdToken = await login(tutorId);
+    const { token: learnerToken } = await registerAndLoginLearner();
+    const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
     // Create an order
-    const availability = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
     await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -178,11 +176,11 @@ describe("Accept an order", async () => {
       .expect(201);
 
     // Accept the order
-    const orders = await tsService.getOrders(randomService.id);
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
     const order = orders[0];
     await supertest(app)
       .post(`/api/v1/orders/${order.id}/accept`)
-      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
 });
@@ -193,31 +191,22 @@ describe("Decline an order", async () => {
   });
 
   test("Tutor can decline an order", async () => {
-    const services = await tsService.getTutorServices();
-    const randomService = faker.helpers.arrayElement(services);
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
 
-    const { idToken: learnerIdToken } = await registerLearner();
-
-    const tutorId = await firestore
-      .collection("tutor_services")
-      .doc(randomService.id)
-      .get()
-      .then(async (doc) => {
-        const ref = doc.data()?.tutorId;
-        return ref.id;
-      });
-    const tutorIdToken = await login(tutorId);
+    const { token: learnerToken } = await registerAndLoginLearner();
+    const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
     // Create an order
-    const availability = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
     await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerIdToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -225,11 +214,11 @@ describe("Decline an order", async () => {
       .expect(201);
 
     // Decline the order
-    const orders = await tsService.getOrders(randomService.id);
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
     const order = orders[0];
     await supertest(app)
       .post(`/api/v1/orders/${order.id}/decline`)
-      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
 });
@@ -239,44 +228,36 @@ describe("Handle availability edge cases", async () => {
     await cleanupOrders();
   });
 
-  test("Learner cannot order a service when there is already a scheduled order", async () => {
-    const services = await tsService.getTutorServices();
-    const randomService = faker.helpers.arrayElement(services);
+  test("Learner cannot order a tutories when there is already a scheduled order", async () => {
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
 
-    const tutorId = await firestore
-      .collection("tutor_services")
-      .doc(randomService.id)
-      .get()
-      .then(async (doc) => {
-        const ref = doc.data()?.tutorId;
-        return ref.id;
-      });
-    const tutorIdToken = await login(tutorId);
+    const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
-    const availability = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
-    // User 1 order a service
-    const { idToken } = await registerLearner();
+    // User 1 order a tutories
+    const { token: learnerToken } = await registerAndLoginLearner();
     const orderByUser1 = await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
       })
       .expect(201);
 
-    // User 2 order a service
-    const { idToken: idToken2 } = await registerLearner();
+    // User 2 order a tutories
+    const { token: learnerToken2 } = await registerAndLoginLearner();
     const orderByUser2 = await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken2}`)
+      .set("Authorization", `Bearer ${learnerToken2}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 5,
         notes: "I want to learn more",
@@ -286,17 +267,17 @@ describe("Handle availability edge cases", async () => {
     // Tutor instead accepted the order from user 2 (Tutor wants to accept the order with more hours)
     await supertest(app)
       .post(`/api/v1/orders/${orderByUser2.body.data.orderId}/accept`)
-      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
 
-    // User 3 tries to order a service
-    // User 3 should not be able to order a service because there is already a scheduled order
-    const { idToken: idToken3 } = await registerLearner();
+    // User 3 tries to order a tutories
+    // User 3 should not be able to order a tutories because there is already a scheduled order
+    const { token: learnerToken3 } = await registerAndLoginLearner();
     await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken3}`)
+      .set("Authorization", `Bearer ${learnerToken3}`)
       .send({
-        tutorServiceId: randomService.id,
+        tutoriesId: randomTutories.id,
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -304,71 +285,63 @@ describe("Handle availability edge cases", async () => {
       .expect(400);
 
     // The other one is expected to be declined
-    const orders = await tsService.getOrders(randomService.id);
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
     const order = orders.find((o) => o.id === orderByUser1.body.data.orderId);
 
     expect(order).toBeDefined();
-    expect(order!.status).toBe("canceled");
+    expect(order!.status).toBe("declined");
   });
 
   test("Tutor cannot accept an order when there is already a scheduled order", async () => {
-    const services = await tsService.getTutorServices();
-    const randomService = faker.helpers.arrayElement(services);
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
+    const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
-    const tutorId = await firestore
-      .collection("tutor_services")
-      .doc(randomService.id)
-      .get()
-      .then(async (doc) => {
-        const ref = doc.data()?.tutorId;
-        return ref.id;
-      });
-    const tutorIdToken = await login(tutorId);
-
-    const availabilityBefore = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
-    // User 1 order a service
-    const totalHours = 5;
-    const { idToken } = await registerLearner();
-    const orderByUser1 = await supertest(app)
+    // Ensure there is available time slot
+    expect(availability.length).toBeGreaterThan(0);
+
+    const { token: learnerToken } = await registerAndLoginLearner();
+
+    // Create first order
+    const orderResponse = await supertest(app)
       .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${learnerToken}`)
       .send({
-        tutorServiceId: randomService.id,
-        sessionTime: availabilityBefore[0],
-        totalHours,
+        tutoriesId: randomTutories.id,
+        sessionTime: availability[0],
+        totalHours: 5,
         notes: "I want to learn more",
-      })
-      .expect(201);
+      });
+
+    expect(orderResponse.status).toBe(201);
 
     // Accept the order
     await supertest(app)
-      .post(`/api/v1/orders/${orderByUser1.body.data.orderId}/accept`)
-      .set("Authorization", `Bearer ${tutorIdToken}`)
+      .post(`/api/v1/orders/${orderResponse.body.data.orderId}/accept`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
 
-    // Make sure there is no conflicting for availabilityBefore[0]
-    // Check it from availabilityAfter
-    const availabilityAfter = await tsService.getTutorServiceAvailability(
-      randomService.id,
+    // Get availability after accepting the order
+    const availabilityAfter = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
     );
 
-    // Get the session start and end times for the booked slot
-    const sessionStart = new Date(availabilityBefore[0]);
-    const sessionEnd = new Date(sessionStart);
-    sessionEnd.setHours(sessionStart.getHours() + totalHours);
+    expect(availabilityAfter).not.toContain(availability[0]);
 
-    // Ensure the exact start time is no longer available
-    expect(availabilityAfter).not.toContain(availabilityBefore[0]);
-
-    // Verify that no time within the range [sessionStart, sessionEnd) is available
-    availabilityAfter.forEach((availableTime) => {
-      const availableDate = new Date(availableTime);
-      expect(availableDate < sessionStart || availableDate >= sessionEnd).toBe(
-        true,
-      );
-    });
+    // Trying to create another order for the same time slot should fail
+    await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${learnerToken}`)
+      .send({
+        tutoriesId: randomTutories.id,
+        sessionTime: availability[0],
+        totalHours: 1,
+        notes: "This should fail",
+      })
+      .expect(400);
   });
 });

@@ -1,58 +1,50 @@
-import { Firestore } from "firebase-admin/firestore";
-import { Auth } from "firebase-admin/lib/auth/auth";
 import { FCMService } from "@/common/fcm.service";
+import { AuthRepository } from "./auth.repository";
 
 type AuthServiceDependencies = {
-  auth: Auth;
-  firestore: Firestore;
+  authRepository: AuthRepository;
   fcmService: FCMService;
 };
 
 export class AuthService {
-  private auth: Auth;
-  private firestore: Firestore;
+  private authRepository: AuthRepository;
   private fcmService: FCMService;
 
-  constructor({ auth, firestore, fcmService }: AuthServiceDependencies) {
-    this.auth = auth;
-    this.firestore = firestore;
+  constructor({ authRepository, fcmService }: AuthServiceDependencies) {
+    this.authRepository = authRepository;
     this.fcmService = fcmService;
   }
 
   async registerLearner(name: string, email: string, password: string) {
-    const user = await this.auth.createUser({
-      displayName: name,
+    const learner = await this.authRepository.registerUser({
+      name,
       email,
       password,
+      role: "learner",
     });
 
-    await Promise.all([
-      this.auth.setCustomUserClaims(user.uid, { role: "learner" }), // to insert `role` into jwt payload
-      this.firestore.collection("learners").doc(user.uid).set({
-        name,
-        createdAt: new Date(),
-      }),
-    ]);
-
-    return { userId: user.uid };
+    return { userId: learner.id };
   }
 
   async registerTutor(name: string, email: string, password: string) {
-    const user = await this.auth.createUser({
-      displayName: name,
+    const tutor = await this.authRepository.registerUser({
+      name,
       email,
       password,
+      role: "tutor",
     });
 
-    await Promise.all([
-      this.auth.setCustomUserClaims(user.uid, { role: "tutor" }), // to insert `role` into jwt payload
-      this.firestore.collection("tutors").doc(user.uid).set({
-        name,
-        createdAt: new Date(),
-      }),
-    ]);
+    return { userId: tutor.id };
+  }
 
-    return { userId: user.uid };
+  async login(email: string, password: string) {
+    const user = await this.authRepository.login(email, password);
+
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    return { id: user.id, role: user.role };
   }
 
   async storeFCMToken(userId: string, token: string) {

@@ -1,21 +1,25 @@
-import { auth, firestore } from "@/config";
 import type { Controller } from "@/types";
-import { registerSchema } from "@/module/auth/auth.schema";
+import { LoginSchema, RegisterSchema } from "@/module/auth/auth.schema";
 import { AuthService } from "@/module/auth/auth.service";
 import { fcmTokenSchema } from "@/module/auth/auth.schema";
 import { z } from "zod";
 import { FCMService } from "@/common/fcm.service";
+import { container } from "@/container";
+import { generateJWT } from "@/helpers/jwt.helper";
 
-const fcmService = new FCMService({ firestore });
-const authService = new AuthService({ auth, firestore, fcmService });
+const fcmService = new FCMService({
+  fcmRepository: container.fcmRepository,
+});
+const authService = new AuthService({
+  authRepository: container.authRepository,
+  fcmService,
+});
 
-type RegisterSchema = z.infer<typeof registerSchema>;
 export const register: Controller<RegisterSchema> = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
     let result;
-    // TODO: instead of using role, use a separate endpoint for learner and tutor?
     if (role === "learner") {
       result = await authService.registerLearner(name, email, password);
     } else {
@@ -26,6 +30,25 @@ export const register: Controller<RegisterSchema> = async (req, res) => {
       status: "success",
       message: "Registration successful",
       data: result,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ status: "fail", message: error.message });
+    }
+  }
+};
+
+export const login: Controller<LoginSchema> = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const result = await authService.login(email, password);
+    const token = generateJWT(result);
+
+    res.json({
+      status: "success",
+      message: "Login successful",
+      data: { token },
     });
   } catch (error) {
     if (error instanceof Error) {

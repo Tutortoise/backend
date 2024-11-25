@@ -1,6 +1,4 @@
-import { firestore } from "@/config";
-import { Controller } from "@/types";
-import { logger } from "@middleware/logging.middleware";
+import { container } from "@/container";
 import {
   acceptOrderSchema,
   cancelOrderSchema,
@@ -9,9 +7,13 @@ import {
   getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { OrderService } from "@/module/order/order.service";
+import { Controller } from "@/types";
+import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 
-const orderService = new OrderService({ firestore });
+const orderService = new OrderService({
+  orderRepository: container.orderRepository,
+});
 
 type GetMyOrdersSchema = z.infer<typeof getMyOrdersSchema>;
 export const getMyOrders: Controller<GetMyOrdersSchema> = async (req, res) => {

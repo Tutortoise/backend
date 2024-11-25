@@ -1,28 +1,17 @@
-import { auth, bucket, firestore } from "@/config";
-import { downscaleImage } from "@/helpers/image.helper";
-import { LearnerService } from "@/module/learner/learner.service";
+import { container } from "@/container";
 import { z } from "zod";
 
-const learnerService = new LearnerService({
-  auth,
-  firestore,
-  downscaleImage,
-  bucket,
-});
+const subjectRepository = container.subjectRepository;
 
 export const learnerSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(3, "Name must be at least 3 characters").optional(),
+  name: z.string().min(3, "Name must be at least 3 characters"),
   phoneNum: z
     .string()
     .min(10, "Phone number must be at least 10 characters")
     .optional(),
-  location: z
-    .object({
-      latitude: z.number({ message: "Latitude must be a number" }),
-      longitude: z.number({ message: "Longitude must be a number" }),
-    })
-    .optional(),
+  latitude: z.number({ message: "Latitude must be a number" }).optional(),
+  longitude: z.number({ message: "Longitude must be a number" }).optional(),
   gender: z
     .enum(["male", "female", "prefer not to say"], {
       message:
@@ -32,7 +21,7 @@ export const learnerSchema = z.object({
   interests: z
     .array(z.string())
     .superRefine(async (interests, ctx) => {
-      const isValid = await learnerService.validateInterests(interests);
+      const isValid = await subjectRepository.validateInterests(interests);
 
       if (!isValid) {
         ctx.addIssue({

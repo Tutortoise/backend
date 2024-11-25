@@ -1,32 +1,27 @@
 import { Bucket } from "@google-cloud/storage";
-import { logger } from "@middleware/logging.middleware";
 import { updateProfileSchema } from "@/module/learner/learner.schema";
-import firebase from "firebase-admin";
-import { Firestore } from "firebase-admin/firestore";
-import { Auth } from "firebase-admin/lib/auth/auth";
 import { z } from "zod";
+import { LearnerRepository } from "./learner.repository";
+import { hash } from "bcryptjs";
+import { AuthRepository } from "../auth/auth.repository";
 
 export interface LearnerServiceDependencies {
-  auth: Auth;
-  firestore: Firestore;
+  learnerRepository: LearnerRepository;
   bucket: Bucket;
   downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
 }
 
 export class LearnerService {
-  private auth: Auth;
-  private firestore: Firestore;
+  private learnerRepository: LearnerRepository;
   private bucket: Bucket;
   private downscaleImage: (imageBuffer: Buffer) => Promise<Buffer>;
 
   constructor({
-    auth,
-    firestore,
+    learnerRepository,
     bucket,
     downscaleImage,
   }: LearnerServiceDependencies) {
-    this.auth = auth;
-    this.firestore = firestore;
+    this.learnerRepository = learnerRepository;
     this.bucket = bucket;
     this.downscaleImage = downscaleImage;
   }
@@ -35,27 +30,8 @@ export class LearnerService {
     userId: string,
     data: z.infer<typeof updateProfileSchema>["body"],
   ) {
-    const { location, ...restOfData } = data;
-
-    // Handle location separately if present
-    const newData = location
-      ? {
-          ...restOfData,
-          location: new firebase.firestore.GeoPoint(
-            location.latitude,
-            location.longitude,
-          ),
-        }
-      : restOfData;
-
     try {
-      await this.firestore
-        .collection("learners")
-        .doc(userId)
-        .update({
-          ...newData,
-          updatedAt: new Date(),
-        });
+      await this.learnerRepository.updateLearnerProfile(userId, data);
     } catch (error) {
       throw new Error(`Failed to update profile: ${error}`);
     }
@@ -64,41 +40,35 @@ export class LearnerService {
   async updateLearnerProfilePicture(file: Express.Multer.File, userId: string) {
     const name = `profile-pictures/${userId}.jpg`;
 
-    const image = await this.downscaleImage(file.buffer);
-    const bucketFile = this.bucket.file(name);
-    await bucketFile.save(image, { public: true });
+    try {
+      const image = await this.downscaleImage(file.buffer);
+      const bucketFile = this.bucket.file(name);
+      await bucketFile.save(image, { public: true });
 
-    return bucketFile.publicUrl();
+      return bucketFile.publicUrl();
+    } catch (error) {
+      throw new Error(`Failed to update profile picture: ${error}`);
+    }
+  }
+
+  async verifyPassword(userId: string, password: string) {
+    const user = await this.learnerRepository.getLearnerById(userId);
+
+    const isPasswordMatch = await AuthRepository.comparePassword(
+      password,
+      user.password,
+    );
+
+    return isPasswordMatch;
   }
 
   async changePassword(userId: string, newPassword: string) {
     try {
-      await this.auth.updateUser(userId, { password: newPassword });
+      await this.learnerRepository.updateLearnerProfile(userId, {
+        password: await hash(newPassword, AuthRepository.SALT_ROUNDS),
+      });
     } catch (error) {
       throw new Error(`Failed to change password: ${error}`);
-    }
-  }
-
-  async checkLearnerExists(learnerId: string) {
-    const learnerSnapshot = await this.firestore
-      .collection("learners")
-      .doc(learnerId)
-      .get();
-
-    return learnerSnapshot.exists;
-  }
-
-  async validateInterests(interests: string[]) {
-    try {
-      const subjectsSnapshot = await this.firestore
-        .collection("subjects")
-        .get();
-      const validSubjects = subjectsSnapshot.docs.map((doc) => doc.id);
-
-      return interests.every((interest) => validSubjects.includes(interest));
-    } catch (error) {
-      logger.error(`Failed to validate interests: ${error}`);
-      return false;
     }
   }
 }

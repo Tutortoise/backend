@@ -1,16 +1,11 @@
 import { app } from "@/main";
 import { faker } from "@faker-js/faker";
-import { login } from "@tests/helpers/client.helper";
+import { generateUser } from "@tests/helpers/generate.helper";
 import supertest from "supertest";
-import { beforeAll, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
-async function registerTutor() {
-  const newTutor = {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-    role: "tutor",
-  };
+async function registerAndLoginTutor() {
+  const newTutor = generateUser("tutor");
 
   const res = await supertest(app)
     .post("/api/v1/auth/register")
@@ -20,27 +15,30 @@ async function registerTutor() {
   const userId = res.body.data.userId;
   expect(userId).toBeDefined();
 
-  const idToken = await login(userId);
-  return { idToken, userId };
+  const loginRes = await supertest(app)
+    .post("/api/v1/auth/login")
+    .send({ email: newTutor.email, password: newTutor.password })
+    .expect(200);
+
+  const token = loginRes.body.data.token;
+  expect(token).toBeDefined();
+
+  return { tutor: newTutor, token };
 }
 
 describe("Update tutor profile", async () => {
-  let idToken: string;
+  const { token } = await registerAndLoginTutor();
 
   test("should be able to update tutor profile", async () => {
-    const { idToken: token } = await registerTutor();
-    idToken = token;
-
     const updatedProfile = {
       name: faker.person.fullName(),
       phoneNum: "+62812121212",
       gender: "male",
-      learningStyle: "visual",
     };
 
     await supertest(app)
       .patch(`/api/v1/tutors/profile`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send(updatedProfile)
       .expect(200);
   });
@@ -61,22 +59,17 @@ describe("Update tutor profile", async () => {
   });
 
   test("should not be able to update tutor profile with invalid data", async () => {
-    const { idToken: token } = await registerTutor();
-    idToken = token;
-
     const invalidData = {
       name: "a",
       phoneNum: "invalid",
-      location: {
-        latitude: "x",
-        longitude: "y",
-      },
+      latitude: "x",
+      longitude: "y",
       gender: "sigma",
     };
 
     const res = await supertest(app)
       .patch(`/api/v1/tutors/profile`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send(invalidData)
       .expect(400);
 
@@ -87,17 +80,12 @@ describe("Update tutor profile", async () => {
 });
 
 describe("Update tutor profile picture", async () => {
-  let idToken: string;
-
-  beforeAll(async () => {
-    const { idToken: token } = await registerTutor();
-    idToken = token;
-  });
+  const { token } = await registerAndLoginTutor();
 
   test("should be able to update tutor profile picture", async () => {
     const res = await supertest(app)
       .put(`/api/v1/tutors/profile/picture`)
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .attach("picture", "tests/integration/pictures/bocchi.png")
       .expect(200);
 
@@ -122,17 +110,12 @@ describe("Update tutor profile picture", async () => {
 });
 
 describe("Update tutor password", async () => {
-  let idToken: string;
-
-  beforeAll(async () => {
-    const { idToken: token } = await registerTutor();
-    idToken = token;
-  });
+  const { tutor, token } = await registerAndLoginTutor();
 
   test("should validate password", async () => {
     const res = await supertest(app)
       .put("/api/v1/tutors/password")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
         currentPassword: "1234",
         newPassword: "123",
@@ -149,12 +132,25 @@ describe("Update tutor password", async () => {
     const newPassword = faker.internet.password();
     await supertest(app)
       .put("/api/v1/tutors/password")
-      .set("Authorization", `Bearer ${idToken}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({
-        currentPassword: "1234",
+        currentPassword: tutor.password,
         newPassword: newPassword,
         confirmPassword: newPassword,
       })
+      .expect(200);
+
+    // try to login with old password
+    const res = await supertest(app)
+      .post("/api/v1/auth/login")
+      .send({ email: tutor.email, password: tutor.password })
+      .expect(400);
+    expect(res.body.message).toEqual("Invalid email or password");
+
+    // try to login with new password
+    await supertest(app)
+      .post("/api/v1/auth/login")
+      .send({ email: tutor.email, password: newPassword })
       .expect(200);
   });
 

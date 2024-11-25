@@ -1,243 +1,355 @@
-import { auth, firestore, bucket, realtimeDb } from "@/config";
-import { beforeEach } from "vitest";
 import { app } from "@/main";
-import { faker } from "@faker-js/faker";
+import { container } from "@/container";
+import { generateUser } from "@tests/helpers/generate.helper";
+import { generateJWT } from "@/helpers/jwt.helper";
 import supertest from "supertest";
-import { beforeAll, describe, expect, test } from "vitest";
-import { ChatService } from "@/module/chat/chat.service";
-import { PresenceService } from "@/module/chat/presence.service";
-import { AuthService } from "@/module/auth/auth.service";
-import { FCMService } from "@/common/fcm.service";
-import { login } from "@tests/helpers/client.helper";
+import { describe, expect, test, beforeAll, beforeEach, vi } from "vitest";
+import { db } from "@/db/config";
+import { chatRooms, chatMessages } from "@/db/schema";
+import type { UserRole } from "@/db/schema";
+import { messaging } from "firebase-admin";
+import { BatchResponse } from "firebase-admin/lib/messaging/messaging-api";
 
-const presenceService = new PresenceService({ realtimeDb });
-const fcmService = new FCMService({ firestore });
-const chatService = new ChatService({
-  firestore,
-  bucket,
-  presenceService,
-  fcmService,
-});
-const authService = new AuthService({ auth, firestore, fcmService });
+const chatRepository = container.chatRepository;
+const authRepository = container.authRepository;
 
-// async function cleanupCollections() {
-//   const collections = ["chat_rooms", "chat_messages", "learners", "tutors"];
-//   for (const collection of collections) {
-//     const snapshot = await firestore.collection(collection).get();
-//     const batch = firestore.batch();
-//     snapshot.docs.forEach((doc) => {
-//       batch.delete(doc.ref);
-//     });
-//     await batch.commit();
-//   }
-// }
-
-async function createTestUser(role: "learner" | "tutor") {
-  const userData = {
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
-  };
-
-  let result;
-  try {
-    if (role === "learner") {
-      result = await authService.registerLearner(
-        userData.name,
-        userData.email,
-        userData.password,
-      );
-
-      const learnerDoc = await firestore
-        .collection("learners")
-        .doc(result.userId)
-        .get();
-      if (!learnerDoc.exists) {
-        throw new Error("Learner document was not created");
-      }
-    } else {
-      result = await authService.registerTutor(
-        userData.name,
-        userData.email,
-        userData.password,
-      );
-
-      const tutorDoc = await firestore
-        .collection("tutors")
-        .doc(result.userId)
-        .get();
-      if (!tutorDoc.exists) {
-        throw new Error("Tutor document was not created");
-      }
-    }
-
-    const idToken = await login(result.userId);
-    return { id: result.userId, token: idToken, name: userData.name };
-  } catch (error) {
-    console.error(`Failed to create ${role}:`, error);
-    throw error;
-  }
+interface TestUser {
+  id: string;
+  token: string;
+  name: string;
+  role: UserRole;
 }
 
-describe("Chat Features", () => {
-  let learner: { id: string; token: string; name: string };
-  let tutor: { id: string; token: string; name: string };
+async function createTestUser(role: UserRole): Promise<TestUser> {
+  const userData = generateUser(role);
+
+  const { id } = await authRepository.registerUser({
+    name: userData.name,
+    email: userData.email,
+    password: userData.password,
+    role,
+  });
+
+  const token = generateJWT({ id, role });
+
+  return {
+    id,
+    token,
+    name: userData.name,
+    role,
+  };
+}
+
+const mockSendEachForMulticast = vi.fn().mockResolvedValue({
+  failureCount: 0,
+  successCount: 1,
+  responses: [{ success: true }],
+});
+
+vi.mock("firebase-admin/messaging", () => ({
+  getMessaging: vi.fn(() => ({
+    sendEachForMulticast: mockSendEachForMulticast,
+  })),
+}));
+
+describe("Chat Module", () => {
+  let learner: TestUser;
+  let tutor: TestUser;
   let roomId: string;
 
   beforeAll(async () => {
-    //   await cleanupCollections();
-    //
-    [learner, tutor] = await Promise.all([
-      createTestUser("learner"),
-      createTestUser("tutor"),
-    ]);
+    await db.delete(chatMessages);
+    await db.delete(chatRooms);
+
+    learner = await createTestUser("learner");
+    tutor = await createTestUser("tutor");
   });
 
   beforeEach(async () => {
-    try {
-      const room = await chatService.createRoom(learner.id, tutor.id);
+    await db.delete(chatMessages);
+    mockSendEachForMulticast.mockClear();
+
+    if (!roomId) {
+      const room = await chatRepository.createRoom(learner.id, tutor.id);
       roomId = room.id;
-    } catch (error) {
-      console.error("Failed to create chat room:", error);
-      throw error;
     }
   });
 
-  // afterAll(async () => {
-  //   await cleanupCollections();
-  // });
-
-  describe("Create chat room", () => {
-    test("should create a new chat room", async () => {
+  describe("Create Chat Room", () => {
+    test("should create a chat room between learner and tutor", async () => {
       const res = await supertest(app)
         .post("/api/v1/chat/rooms")
         .set("Authorization", `Bearer ${learner.token}`)
         .send({
           learnerId: learner.id,
           tutorId: tutor.id,
-        })
-        .expect(201);
+        });
 
-      expect(res.body.status).toBe("success");
+      expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty("id");
-      expect(res.body.data.learnerId).toBe(learner.id);
-      expect(res.body.data.tutorId).toBe(tutor.id);
-      expect(res.body.data.learnerName).toBe(learner.name);
-      expect(res.body.data.tutorName).toBe(tutor.name);
+
+      const room = await chatRepository.getRoomById(res.body.data.id);
+      expect(room).toBeDefined();
+      expect(room?.learnerId).toBe(learner.id);
+      expect(room?.tutorId).toBe(tutor.id);
     });
 
-    test("should not allow creating room for other users", async () => {
-      const otherLearnerId = faker.string.uuid();
+    test("should not create room if user is not a participant", async () => {
+      const otherLearner = await createTestUser("learner");
+
       await supertest(app)
         .post("/api/v1/chat/rooms")
-        .set("Authorization", `Bearer ${learner.token}`)
+        .set("Authorization", `Bearer ${otherLearner.token}`)
         .send({
-          learnerId: otherLearnerId,
+          learnerId: learner.id,
           tutorId: tutor.id,
         })
         .expect(403);
     });
+  });
 
-    test("should require authentication", async () => {
-      await supertest(app)
-        .post("/api/v1/chat/rooms")
-        .send({
-          learnerId: learner.id,
-          tutorId: tutor.id,
-        })
-        .expect(401);
+  describe("Send Messages", () => {
+    test("should send text message", async () => {
+      const message = "Hello, this is a test message";
+      const res = await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .send({ content: message });
+
+      expect(res.status).toBe(201);
+
+      const messages = await chatRepository.getRoomMessages(roomId);
+      const lastMessage = messages[0];
+      expect(lastMessage).toMatchObject({
+        content: message,
+        type: "text",
+        senderId: learner.id,
+        senderRole: "learner",
+        isRead: false,
+      });
+    });
+
+    test("should send image message", async () => {
+      const res = await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/image`)
+        .set("Authorization", `Bearer ${tutor.token}`)
+        .attach("image", "tests/integration/pictures/bocchi.png")
+        .expect(201);
+
+      expect(res.body.data).toMatchObject({
+        type: "image",
+        senderId: tutor.id,
+        senderRole: "tutor",
+        isRead: false,
+      });
+
+      const storageHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+      const bucketName = process.env.GCS_BUCKET_NAME;
+      expect(res.body.data.content).toContain(
+        `http://${storageHost}/${bucketName}`,
+      );
     });
   });
 
-  describe("Send and receive messages", () => {
-    test("should send an image message", async () => {
-      const response = await supertest(app)
-        .post(`/api/v1/chat/rooms/${roomId}/messages/image`)
-        .set("Authorization", `Bearer ${learner.token}`)
-        .attach("image", "tests/integration/pictures/bocchi.png");
-
-      expect(response.status).toBe(201);
-      expect(response.body.status).toBe("success");
-      expect(response.body.data).toHaveProperty("id");
-      expect(response.body.data.type).toBe("image");
-    });
-
-    test("should send a text message", async () => {
-      const message = {
-        content: faker.lorem.sentence(),
-      };
+  describe("Get Messages", () => {
+    test("should get room messages", async () => {
+      const message = "Test message";
+      await chatRepository.createMessage(
+        roomId,
+        learner.id,
+        "learner",
+        message,
+        "text",
+      );
 
       const res = await supertest(app)
-        .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+        .get(`/api/v1/chat/rooms/${roomId}/messages`)
         .set("Authorization", `Bearer ${learner.token}`)
-        .send(message)
-        .expect(201);
+        .expect(200);
 
-      expect(res.body.status).toBe("success");
-      expect(res.body.data).toHaveProperty("id");
-      expect(res.body.data.content).toBe(message.content);
-      expect(res.body.data.type).toBe("text");
-      expect(res.body.data.senderId).toBe(learner.id);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
     });
 
-    test("should get room messages", async () => {
-      const message = {
-        content: "Test message content",
-      };
+    test("should mark messages as read", async () => {
+      await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .send({ content: "Unread message" });
+
+      await supertest(app)
+        .get(`/api/v1/chat/rooms/${roomId}/messages`)
+        .set("Authorization", `Bearer ${tutor.token}`)
+        .expect(200);
+
+      const messages = await chatRepository.getRoomMessages(roomId);
+      expect(
+        messages.every((msg) => msg.senderId !== tutor.id && msg.isRead),
+      ).toBe(true);
+    });
+  });
+
+  describe("Get Chat Rooms", () => {
+    beforeEach(async () => {
+      await chatRepository.createMessage(
+        roomId,
+        learner.id,
+        "learner",
+        "Test message",
+        "text",
+      );
+    });
+
+    test("should get user's chat rooms", async () => {
+      const res = await supertest(app)
+        .get("/api/v1/chat/rooms")
+        .set("Authorization", `Bearer ${learner.token}`)
+        .expect(200);
+
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+
+      const room = res.body.data[0];
+      expect(room).toHaveProperty("id");
+      expect(room).toHaveProperty("learnerId");
+      expect(room).toHaveProperty("tutorId");
+      expect(room).toHaveProperty("learnerName");
+      expect(room).toHaveProperty("tutorName");
+      expect(room).toHaveProperty("lastMessage");
+    });
+  });
+
+  describe("Message Pagination", () => {
+    beforeEach(async () => {
+      const messages = Array.from({ length: 25 }, (_, i) => ({
+        roomId,
+        senderId: learner.id,
+        senderRole: "learner" as const,
+        content: `Message ${i}`,
+        type: "text" as const,
+        sentAt: new Date(Date.now() - i * 1000),
+        isRead: false,
+      }));
+
+      for (const msg of messages) {
+        await chatRepository.createMessage(
+          msg.roomId,
+          msg.senderId,
+          msg.senderRole,
+          msg.content,
+          msg.type,
+        );
+      }
+    });
+
+    test("should paginate messages correctly", async () => {
+      const firstPage = await supertest(app)
+        .get(`/api/v1/chat/rooms/${roomId}/messages?limit=10`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .expect(200);
+
+      expect(firstPage.body.data.length).toBe(10);
+
+      const lastMessage = firstPage.body.data[firstPage.body.data.length - 1];
+      const secondPage = await supertest(app)
+        .get(`/api/v1/chat/rooms/${roomId}/messages`)
+        .query({
+          limit: 10,
+          before: lastMessage.sentAt,
+        })
+        .set("Authorization", `Bearer ${learner.token}`)
+        .expect(200);
+
+      expect(secondPage.body.data.length).toBe(10);
+      expect(new Date(secondPage.body.data[0].sentAt).getTime()).toBeLessThan(
+        new Date(lastMessage.sentAt).getTime(),
+      );
+    });
+  });
+
+  describe("Chat Notifications", () => {
+    test("should send notification when receiving message", async () => {
+      const fcmToken = "test-token";
+      await container.fcmRepository.storeToken(tutor.id, fcmToken);
 
       await supertest(app)
         .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
         .set("Authorization", `Bearer ${learner.token}`)
-        .send(message)
+        .send({ content: "Test notification" })
         .expect(201);
-
-      const res = await supertest(app)
-        .get(`/api/v1/chat/rooms/${roomId}/messages`)
-        .set("Authorization", `Bearer ${learner.token}`)
-        .expect(200);
-
-      expect(res.body.status).toBe("success");
-      expect(Array.isArray(res.body.data)).toBe(true);
-      expect(res.body.data.length).toBeGreaterThan(0);
-      expect(res.body.data[0]).toHaveProperty("id");
-      expect(res.body.data[0].content).toBe(message.content);
     });
 
-    test("should paginate messages", async () => {
-      const messages = [
-        { type: "text" as const, content: "First message" },
-        { type: "text" as const, content: "Second message" },
-      ];
+    test("should handle invalid FCM tokens", async () => {
+      const invalidToken = "invalid-token";
+      await container.fcmRepository.storeToken(tutor.id, invalidToken);
 
-      for (const msg of messages) {
-        await supertest(app)
-          .post(`/api/v1/chat/rooms/${roomId}/messages`)
-          .set("Authorization", `Bearer ${learner.token}`)
-          .send(msg);
+      mockSendEachForMulticast.mockResolvedValueOnce({
+        failureCount: 1,
+        successCount: 0,
+        responses: [{ success: false }],
+      });
+
+      await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .send({ content: "Test notification" });
+
+      // TODO: handles the race condition properly
+      const maxRetries = 50;
+      const retryInterval = 100; // ms
+
+      for (let i = 0; i < maxRetries; i++) {
+        const tokens = await container.fcmRepository.getUserTokens(tutor.id);
+
+        if (!tokens.includes(invalidToken)) {
+          // Test passes - token was removed
+          expect(tokens).not.toContain(invalidToken);
+          return;
+        }
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
       }
 
-      const firstRes = await supertest(app)
-        .get(`/api/v1/chat/rooms/${roomId}/messages`)
+      // If we get here, the token was never removed
+      throw new Error("Invalid token was not removed after multiple retries");
+    });
+
+    test("should handle sending notifications for image messages", async () => {
+      const fcmToken = "test-token";
+      await container.fcmRepository.storeToken(tutor.id, fcmToken);
+
+      await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/image`)
         .set("Authorization", `Bearer ${learner.token}`)
-        .query({ limit: "1" })
-        .expect(200);
+        .attach("image", "tests/integration/pictures/bocchi.png")
+        .expect(201);
+    });
+  });
 
-      expect(firstRes.body.data).toHaveLength(1);
-      const firstMessage = firstRes.body.data[0];
+  describe("Chat Error Handling", () => {
+    test("should handle unauthorized room access", async () => {
+      const unauthorizedUser = await createTestUser("learner");
 
-      const secondRes = await supertest(app)
+      await supertest(app)
         .get(`/api/v1/chat/rooms/${roomId}/messages`)
-        .set("Authorization", `Bearer ${learner.token}`)
-        .query({
-          before: new Date(firstMessage.sentAt).toISOString(),
-          limit: "1",
-        })
-        .expect(200);
+        .set("Authorization", `Bearer ${unauthorizedUser.token}`)
+        .expect(401);
+    });
 
-      expect(secondRes.body.data).toHaveLength(1);
-      expect(new Date(secondRes.body.data[0].sentAt).getTime()).toBeLessThan(
-        new Date(firstMessage.sentAt).getTime(),
-      );
+    test("should handle invalid room ID", async () => {
+      await supertest(app)
+        .get(`/api/v1/chat/rooms/invalid-id/messages`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .expect(404);
+    });
+
+    test("should handle invalid message content", async () => {
+      await supertest(app)
+        .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
+        .set("Authorization", `Bearer ${learner.token}`)
+        .send({ content: "" })
+        .expect(400);
     });
   });
 });

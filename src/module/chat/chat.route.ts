@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as chatController from "@/module/chat/chat.controller";
-import { firebaseAuthMiddleware } from "@/module/auth/auth.middleware";
+import { jwtAuthMiddleware } from "@/module/auth/auth.middleware";
 import {
   validateChatImageUpload,
   validator,
@@ -14,7 +14,7 @@ import { z } from "zod";
 
 const chatRouter = Router();
 
-chatRouter.use(firebaseAuthMiddleware);
+chatRouter.use(jwtAuthMiddleware);
 
 chatRouter.post(
   "/rooms",

@@ -3,35 +3,24 @@ import { AuthService } from "@/module/auth/auth.service";
 import { describe, expect, it, vi } from "vitest";
 
 describe("AuthService", () => {
-  const mockAuth = {
-    createUser: vi.fn(),
-    setCustomUserClaims: vi.fn(),
-  };
-
-  const mockFirestore = {
-    collection: vi.fn().mockReturnValue({
-      doc: vi.fn().mockReturnValue({
-        set: vi.fn(),
-      }),
-    }),
+  const mockAuthRepository = {
+    registerUser: vi.fn(),
   };
 
   const mockFCMService = {
     storeUserToken: vi.fn(),
     removeUserToken: vi.fn(),
-    sendChatNotification: vi.fn(),
   };
 
   const authService = new AuthService({
-    auth: mockAuth as any,
-    firestore: mockFirestore as any,
+    authRepository: mockAuthRepository as any,
     fcmService: mockFCMService as any,
   });
 
   describe("registerLearner", () => {
-    it("should create a learner and store details in the learners collection", async () => {
-      const mockUser = { uid: faker.string.uuid() };
-      mockAuth.createUser.mockResolvedValue(mockUser);
+    it("should register a learner with the provided details", async () => {
+      const learnerId = faker.string.uuid();
+      mockAuthRepository.registerUser.mockResolvedValue({ id: learnerId });
 
       const learnerData = {
         name: faker.person.fullName(),
@@ -45,24 +34,20 @@ describe("AuthService", () => {
         learnerData.password,
       );
 
-      expect(mockAuth.createUser).toHaveBeenCalledWith({
-        displayName: learnerData.name,
+      expect(mockAuthRepository.registerUser).toHaveBeenCalledWith({
+        name: learnerData.name,
         email: learnerData.email,
         password: learnerData.password,
+        role: "learner",
       });
-      expect(mockFirestore.collection().doc).toHaveBeenCalledWith(mockUser.uid);
-      expect(mockFirestore.collection().doc().set).toHaveBeenCalledWith({
-        name: learnerData.name,
-        createdAt: expect.any(Date),
-      });
-      expect(result).toEqual({ userId: mockUser.uid });
+      expect(result).toEqual({ userId: learnerId });
     });
   });
 
   describe("registerTutor", () => {
-    it("should create a tutor and store details in the tutors collection", async () => {
-      const mockUser = { uid: faker.string.uuid() };
-      mockAuth.createUser.mockResolvedValue(mockUser);
+    it("should register a tutor with the provided details", async () => {
+      const tutorId = faker.string.uuid();
+      mockAuthRepository.registerUser.mockResolvedValue({ id: tutorId });
 
       const tutorData = {
         name: faker.person.fullName(),
@@ -76,17 +61,38 @@ describe("AuthService", () => {
         tutorData.password,
       );
 
-      expect(mockAuth.createUser).toHaveBeenCalledWith({
-        displayName: tutorData.name,
+      expect(mockAuthRepository.registerUser).toHaveBeenCalledWith({
+        name: tutorData.name,
         email: tutorData.email,
         password: tutorData.password,
+        role: "tutor",
       });
-      expect(mockFirestore.collection().doc).toHaveBeenCalledWith(mockUser.uid);
-      expect(mockFirestore.collection().doc().set).toHaveBeenCalledWith({
-        name: tutorData.name,
-        createdAt: expect.any(Date),
-      });
-      expect(result).toEqual({ userId: mockUser.uid });
+      expect(result).toEqual({ userId: tutorId });
+    });
+  });
+
+  describe("storeFCMToken", () => {
+    it("should store the FCM token for the given user", async () => {
+      const userId = faker.string.uuid();
+      const token = faker.string.alphanumeric(20);
+
+      await authService.storeFCMToken(userId, token);
+
+      expect(mockFCMService.storeUserToken).toHaveBeenCalledWith(userId, token);
+    });
+  });
+
+  describe("removeFCMToken", () => {
+    it("should remove the FCM token for the given user", async () => {
+      const userId = faker.string.uuid();
+      const token = faker.string.alphanumeric(20);
+
+      await authService.removeFCMToken(userId, token);
+
+      expect(mockFCMService.removeUserToken).toHaveBeenCalledWith(
+        userId,
+        token,
+      );
     });
   });
 });

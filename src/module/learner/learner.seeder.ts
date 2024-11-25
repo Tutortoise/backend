@@ -1,12 +1,17 @@
-import { firestore } from "@/config";
+import { container } from "@/container";
 import { Learner } from "@/types";
 import { faker } from "@faker-js/faker";
+
+const authRepository = container.authRepository;
+const learnerRepository = container.learnerRepository;
 
 export const seedLearners = async () => {
   const learners: Learner[] = [];
   for (let i = 0; i < 25; i++) {
     learners.push({
       name: faker.person.fullName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
       gender: faker.helpers.arrayElement([
         "male",
         "female",
@@ -17,19 +22,20 @@ export const seedLearners = async () => {
         "auditory",
         "kinesthetic",
       ]),
-      createdAt: new Date(),
     });
   }
 
   console.log(`Seeding learners with ${learners.length} data...`);
-  await firestore
-    .collection("learners")
-    .get()
-    .then((snapshot) => {
-      if (snapshot.empty) {
-        learners.forEach((learner) => {
-          firestore.collection("learners").add(learner);
-        });
-      }
+  for (const learner of learners) {
+    const { id } = await authRepository.registerUser({
+      name: learner.name,
+      email: learner.email,
+      password: learner.password,
+      role: "learner",
     });
+    await learnerRepository.updateLearnerProfile(id, {
+      gender: learner.gender,
+      learningStyle: learner.learningStyle,
+    });
+  }
 };
