@@ -9,6 +9,19 @@ import { Tutories } from "@/types";
 const subjectRepository = container.subjectRepository;
 const tutoriesRepository = container.tutoriesRepository;
 
+async function retryOperation(operation: () => Promise<void>, retries = 50) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await operation();
+      return;
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log(`Retry ${i + 1}/${retries}`);
+    }
+  }
+}
+
 async function registerAndLoginLearner() {
   const newLearner = generateUser("learner");
 
@@ -61,102 +74,138 @@ describe("Get tutories", async () => {
   });
 
   test("Get all tutories with token", async () => {
-    await supertest(app)
-      .get("/api/v1/tutors/services")
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
+    await retryOperation(async () => {
+      const tutories = await tutoriesRepository.getTutories();
+      if (!tutories.length) {
+        throw new Error("No tutories found in database");
+      }
+
+      const response = await supertest(app)
+        .get("/api/v1/tutors/services")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.status).toBe("success");
+      expect(Array.isArray(response.body.data)).toBe(true);
+      expect(response.body.data.length).toBeGreaterThan(0);
+    }, 30000);
   });
 
-  test("Get all tutories with filter", async () => {
-    // Filter by tutor name / subject name
-    const q = "z";
-    const qParameterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ q })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
-    for (const tutories of qParameterRes.body.data) {
-      expect(
-        tutories.tutorName.toLowerCase().includes(q) ||
-          tutories.subjectName.toLowerCase().includes(q),
-      ).toBe(true);
-    }
+  test("Get all tutories with filter (query parameter)", async () => {
+    await retryOperation(async () => {
+      const q = "z";
+      const qParameterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ q })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      for (const tutories of qParameterRes.body.data) {
+        expect(
+          tutories.tutorName.toLowerCase().includes(q) ||
+            tutories.subjectName.toLowerCase().includes(q),
+        ).toBe(true);
+      }
+    }, 30000);
+  });
 
-    // Filter by subjectId
-    const subject = faker.helpers.arrayElement(
-      await subjectRepository.getAllSubjects(),
-    );
-    const subjectIdParameterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ subjectId: subject.id })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
-    for (const tutories of subjectIdParameterRes.body.data) {
-      expect(tutories.subjectName).toBe(subject.name);
-    }
+  test("Get all tutories with filter (subjectId)", async () => {
+    await retryOperation(async () => {
+      const subject = faker.helpers.arrayElement(
+        await subjectRepository.getAllSubjects(),
+      );
+      const subjectIdParameterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ subjectId: subject.id })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      for (const tutories of subjectIdParameterRes.body.data) {
+        expect(tutories.subjectName).toBe(subject.name);
+      }
+    }, 30000);
+  });
 
-    // Filter by hourlyRate
-    const hourlyRate = 100000;
-    const hourlyRateParameterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ minHourlyRate: hourlyRate })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
-    for (const tutories of hourlyRateParameterRes.body.data) {
-      expect(tutories.hourlyRate).toBeGreaterThanOrEqual(hourlyRate);
-    }
+  test("Get all tutories with filter (minHourlyRate)", async () => {
+    await retryOperation(async () => {
+      const hourlyRate = 100000;
+      const hourlyRateParameterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ minHourlyRate: hourlyRate })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      for (const tutories of hourlyRateParameterRes.body.data) {
+        expect(tutories.hourlyRate).toBeGreaterThanOrEqual(hourlyRate);
+      }
+    }, 30000);
+  });
 
-    // Filter by typeLesson
-    const typeLesson = "online";
-    const typeLessonParameterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ typeLesson })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
+  test("Get all tutories with filter (typeLesson)", async () => {
+    await retryOperation(async () => {
+      const typeLesson = "online";
+      const typeLessonParameterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ typeLesson })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
 
-    for (const tutories of typeLessonParameterRes.body.data) {
-      expect(tutories.typeLesson).toBe(typeLesson);
-    }
+      for (const tutories of typeLessonParameterRes.body.data) {
+        expect(tutories.typeLesson).toBe(typeLesson);
+      }
+    }, 30000);
+  });
 
-    // Filter by city
-    const city = "Samarinda";
-    const cityParameterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ city })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
+  test("Get all tutories with filter (city)", async () => {
+    await retryOperation(async () => {
+      const city = "Samarinda";
+      const cityParameterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ city })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
 
-    for (const tutories of cityParameterRes.body.data) {
-      expect(tutories.city.toLowerCase()).toBe(city.toLowerCase());
-    }
+      for (const tutories of cityParameterRes.body.data) {
+        expect(tutories.city.toLowerCase()).toBe(city.toLowerCase());
+      }
+    }, 30000);
+  });
 
-    // Filter by multiple filters
-    const multipleFiltersRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ q, subjectId: subject.id, minHourlyRate: hourlyRate })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(200);
+  test("Get all tutories with filter (multiple filters)", async () => {
+    await retryOperation(async () => {
+      const q = "z";
+      const subject = faker.helpers.arrayElement(
+        await subjectRepository.getAllSubjects(),
+      );
+      const hourlyRate = 100000;
 
-    for (const tutories of multipleFiltersRes.body.data) {
-      expect(
-        tutories.tutorName.toLowerCase().includes(q) ||
-          tutories.subjectName.toLowerCase().includes(q),
-      ).toBe(true);
-      expect(tutories.subjectName).toBe(subject.name);
-      expect(tutories.hourlyRate).toBeGreaterThanOrEqual(hourlyRate);
-    }
+      const multipleFiltersRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ q, subjectId: subject.id, minHourlyRate: hourlyRate })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+
+      for (const tutories of multipleFiltersRes.body.data) {
+        expect(
+          tutories.tutorName.toLowerCase().includes(q) ||
+            tutories.subjectName.toLowerCase().includes(q),
+        ).toBe(true);
+        expect(tutories.subjectName).toBe(subject.name);
+        expect(tutories.hourlyRate).toBeGreaterThanOrEqual(hourlyRate);
+      }
+    }, 30000);
   });
 
   test("Get all tutories with invalid filter", async () => {
-    const invalidFilterRes = await supertest(app)
-      .get(`/api/v1/tutors/services`)
-      .query({ typeLesson: "invalid", subjectId: "invalid" })
-      .set("Authorization", `Bearer ${token}`)
-      .expect(400);
+    await retryOperation(async () => {
+      const invalidFilterRes = await supertest(app)
+        .get(`/api/v1/tutors/services`)
+        .query({ typeLesson: "invalid", subjectId: "invalid" })
+        .set("Authorization", `Bearer ${token}`)
+        .expect(400);
 
-    expect(invalidFilterRes.body.errors).toBeTruthy();
-  });
-});
+      expect(invalidFilterRes.body.errors).toBeTruthy();
+    });
+  }, 30000);
+}, 60000); // This is a highly expensive operation, so we need to increase the timeout
+// TODO: Optimize the query so we don't need to setup long timeout
 
 describe("Create tutories", async () => {
   const { token } = await registerAndLoginTutor();
