@@ -20,4 +20,9 @@ WORKDIR /app
 COPY --from=prod-deps /app/node_modules /app/node_modules
 COPY --from=build /app/package.json package.json
 COPY --from=build /app/dist /app/dist
-CMD ["node", "dist/src/main.js"]
+
+# Include migration files and config
+COPY drizzle /app/drizzle
+COPY drizzle.config.ts /app/drizzle.config.ts
+
+CMD ["sh", "-c", "npx drizzle-kit migrate && node dist/src/main.js"]
