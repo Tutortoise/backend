@@ -2,12 +2,12 @@ name: Deploy API Documentation
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:
       - "src/**"
       - ".github/workflows/api-docs.yml"
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -66,9 +66,9 @@ jobs:
           </html>
           EOF
 
-      - if: github.ref == 'refs/heads/main'
+      - if: github.ref == 'refs/heads/master'
         run: |
-          echo "Documentation built from main branch at $(date)" > docs/api/build-info.txt
+          echo "Documentation built from master branch at $(date)" > docs/api/build-info.txt
 
       - if: github.event_name == 'pull_request'
         run: |
@@ -82,7 +82,7 @@ jobs:
           retention-days: 5
 
       - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
       - name: Create Job Summary
         run: |
           echo "### 📚 API Documentation" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "The documentation has been deployed to GitHub Pages:" >> $GITHUB_STEP_SUMMARY
             echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/api/" >> $GITHUB_STEP_SUMMARY
