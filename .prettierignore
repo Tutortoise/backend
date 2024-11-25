@@ -6,3 +6,5 @@ coverage
 *.yml
 .pnpm-store
 drizzle
+
+src/swagger/specs.json
