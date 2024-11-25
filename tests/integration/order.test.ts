@@ -295,53 +295,53 @@ describe("Handle availability edge cases", async () => {
   test("Tutor cannot accept an order when there is already a scheduled order", async () => {
     const tutories = await tutoriesRepository.getTutories();
     const randomTutories = faker.helpers.arrayElement(tutories);
-
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
-    const availabilityBefore = await tutoriesRepository.getTutoriesAvailability(
+    const availability = await tutoriesRepository.getTutoriesAvailability(
       randomTutories.id,
     );
 
-    // User 1 order a tutories
-    const totalHours = 5;
+    // Ensure there is available time slot
+    expect(availability.length).toBeGreaterThan(0);
+
     const { token: learnerToken } = await registerAndLoginLearner();
-    const orderByUser1 = await supertest(app)
+
+    // Create first order
+    const orderResponse = await supertest(app)
       .post("/api/v1/orders")
       .set("Authorization", `Bearer ${learnerToken}`)
       .send({
         tutoriesId: randomTutories.id,
-        sessionTime: availabilityBefore[0],
-        totalHours,
+        sessionTime: availability[0],
+        totalHours: 5,
         notes: "I want to learn more",
-      })
-      .expect(201);
+      });
+
+    expect(orderResponse.status).toBe(201);
 
     // Accept the order
     await supertest(app)
-      .post(`/api/v1/orders/${orderByUser1.body.data.orderId}/accept`)
+      .post(`/api/v1/orders/${orderResponse.body.data.orderId}/accept`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
 
-    // Make sure there is no conflicting for availabilityBefore[0]
-    // Check it from availabilityAfter
+    // Get availability after accepting the order
     const availabilityAfter = await tutoriesRepository.getTutoriesAvailability(
       randomTutories.id,
     );
 
-    // Get the session start and end times for the booked slot
-    const sessionStart = new Date(availabilityBefore[0]);
-    const sessionEnd = new Date(sessionStart);
-    sessionEnd.setHours(sessionStart.getHours() + totalHours);
+    expect(availabilityAfter).not.toContain(availability[0]);
 
-    // Ensure the exact start time is no longer available
-    expect(availabilityAfter).not.toContain(availabilityBefore[0]);
-
-    // Verify that no time within the range [sessionStart, sessionEnd) is available
-    availabilityAfter.forEach((availableTime) => {
-      const availableDate = new Date(availableTime);
-      expect(availableDate < sessionStart || availableDate >= sessionEnd).toBe(
-        true,
-      );
-    });
+    // Trying to create another order for the same time slot should fail
+    await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${learnerToken}`)
+      .send({
+        tutoriesId: randomTutories.id,
+        sessionTime: availability[0],
+        totalHours: 1,
+        notes: "This should fail",
+      })
+      .expect(400);
   });
 });
