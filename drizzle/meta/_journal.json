@@ -43,6 +43,13 @@
       "when": 1732475286318,
       "tag": "0005_groovy_talos",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1732503171308,
+      "tag": "0006_dry_brother_voodoo",
+      "breakpoints": true
     }
   ]
 }

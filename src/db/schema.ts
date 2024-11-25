@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -9,6 +9,8 @@ import {
   text,
   jsonb,
   boolean,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { v4 as uuidv4 } from "uuid";
@@ -99,41 +101,61 @@ export type TutorAvailability = {
   [key: number]: string[]; // day index: array of time slots
 };
 
-export const tutories = pgTable("tutories", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
-  tutorId: uuid()
-    .notNull()
-    .references(() => tutors.id, { onDelete: "cascade" }),
-  subjectId: uuid()
-    .notNull()
-    .references(() => subjects.id, { onDelete: "cascade" }),
-  aboutYou: text("about_you").notNull(),
-  teachingMethodology: text("teaching_methodology").notNull(),
-  hourlyRate: integer("hourly_rate").notNull(),
-  typeLesson: typeLessonEnum("type_lesson"),
-  availability: jsonb("availability").$type<TutorAvailability>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-});
+export const tutories = pgTable(
+  "tutories",
+  {
+    id: uuid()
+      .primaryKey()
+      .$default(() => uuidv4()),
+    tutorId: uuid()
+      .notNull()
+      .references(() => tutors.id, { onDelete: "cascade" }),
+    subjectId: uuid()
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    aboutYou: text("about_you").notNull(),
+    teachingMethodology: text("teaching_methodology").notNull(),
+    hourlyRate: integer("hourly_rate").notNull(),
+    typeLesson: typeLessonEnum("type_lesson"),
+    availability: jsonb("availability").$type<TutorAvailability>(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => ({
+    hourlyRateIdx: index().on(table.hourlyRate),
+    typeLessonIdx: index().on(table.typeLesson),
+    createdAtIdx: index().on(table.createdAt),
+    tutorIdSubjectIdx: index().on(table.tutorId, table.subjectId),
+  }),
+);
 
-export const orders = pgTable("orders", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
-  learnerId: uuid()
-    .notNull()
-    .references(() => learners.id, { onDelete: "cascade" }),
-  tutoriesId: uuid()
-    .notNull()
-    .references(() => tutories.id, { onDelete: "cascade" }),
-  sessionTime: timestamp("session_time").notNull(),
-  totalHours: integer("total_hours").notNull(),
-  notes: text("notes"),
-  status: orderStatusEnum("status"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid()
+      .primaryKey()
+      .$default(() => uuidv4()),
+    learnerId: uuid()
+      .notNull()
+      .references(() => learners.id, { onDelete: "cascade" }),
+    tutoriesId: uuid()
+      .notNull()
+      .references(() => tutories.id, { onDelete: "cascade" }),
+    sessionTime: timestamp("session_time").notNull(),
+    totalHours: integer("total_hours").notNull(),
+    notes: text("notes"),
+    status: orderStatusEnum("status"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    learnerIdIdx: index().on(table.learnerId),
+    tutoriesIdIdx: index().on(table.tutoriesId),
+    statusIdx: index().on(table.status),
+    sessionTimeIdx: index().on(table.sessionTime),
+    statusCreatedAtIdx: index().on(table.status, table.createdAt),
+    learnerStatusIdx: index().on(table.learnerId, table.status),
+  }),
+);
 
 export const chatRooms = pgTable("chat_rooms", {
   id: uuid()
@@ -149,43 +171,69 @@ export const chatRooms = pgTable("chat_rooms", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const chatMessages = pgTable("chat_messages", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
-  roomId: uuid()
-    .notNull()
-    .references(() => chatRooms.id),
-  senderId: uuid().notNull(),
-  senderRole: userRoleEnum("sender_role").notNull(),
-  content: text("content").notNull(),
-  type: messageTypeEnum("type").notNull(),
-  sentAt: timestamp("sent_at").notNull().defaultNow(),
-  isRead: boolean("is_read").notNull().default(false),
-});
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid()
+      .primaryKey()
+      .$default(() => uuidv4()),
+    roomId: uuid()
+      .notNull()
+      .references(() => chatRooms.id),
+    senderId: uuid().notNull(),
+    senderRole: userRoleEnum("sender_role").notNull(),
+    content: text("content").notNull(),
+    type: messageTypeEnum("type").notNull(),
+    sentAt: timestamp("sent_at").notNull().defaultNow(),
+    isRead: boolean("is_read").notNull().default(false),
+  },
+  (table) => {
+    return {
+      roomIdSentAtIdx: index("chat_messages_room_sent_idx").on(
+        table.roomId,
+        table.sentAt,
+      ),
+      senderIdIdx: index("chat_messages_sender_idx").on(table.senderId),
+    };
+  },
+);
 
-export const fcmTokens = pgTable("fcm_tokens", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
-  userId: uuid().notNull(),
-  token: varchar({ length: 255 }).notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at"),
-});
+export const fcmTokens = pgTable(
+  "fcm_tokens",
+  {
+    id: uuid()
+      .primaryKey()
+      .$default(() => uuidv4()),
+    userId: uuid().notNull(),
+    token: varchar({ length: 255 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at"),
+  },
+  (table) => ({
+    tokenUserIdx: uniqueIndex().on(table.userId, table.token),
+    userIdIdx: index().on(table.userId),
+  }),
+);
 
-export const reviews = pgTable("reviews", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
-  orderId: uuid()
-    .notNull()
-    .unique()
-    .references(() => orders.id, { onDelete: "cascade" }),
-  rating: integer("rating").notNull(),
-  message: text("message"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: uuid()
+      .primaryKey()
+      .$default(() => uuidv4()),
+    orderId: uuid()
+      .notNull()
+      .unique()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(),
+    message: text("message"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    ratingIdx: index().on(table.rating),
+    createdAtIdx: index().on(table.createdAt),
+  }),
+);
 
 export const interestRelations = relations(interests, ({ one }) => ({
   learner: one(learners, {
