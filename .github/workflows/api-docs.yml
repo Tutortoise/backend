@@ -6,6 +6,12 @@ on:
     paths:
       - "backend/src/**"
       - ".github/workflows/api-docs.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/src/**"
+      - ".github/workflows/api-docs.yml"
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
