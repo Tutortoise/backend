@@ -20,6 +20,14 @@ export const createReview: Controller<CreateReviewSchema> = async (
     const { orderId } = req.params;
     const { rating, message } = req.body;
 
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      res.status(400).json({
+        status: "fail",
+        message: "Rating must be a whole number between 1 and 5",
+      });
+      return;
+    }
+
     // Validate that the learner owns this order
     const isValidOrder = await reviewService.validateOrderOwnership(
       orderId,

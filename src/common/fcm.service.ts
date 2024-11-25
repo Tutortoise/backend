@@ -55,7 +55,7 @@ export class FCMService {
         .filter((token): token is string => token !== null);
 
       if (invalidTokens.length > 0) {
-        await this.removeInvalidTokens(recipientId, invalidTokens);
+        return await this.removeInvalidTokens(recipientId, invalidTokens);
       }
     }
   }

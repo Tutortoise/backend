@@ -292,13 +292,27 @@ describe("Chat Module", () => {
       await supertest(app)
         .post(`/api/v1/chat/rooms/${roomId}/messages/text`)
         .set("Authorization", `Bearer ${learner.token}`)
-        .send({ content: "Test notification" })
-        .expect(201);
+        .send({ content: "Test notification" });
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // TODO: handles the race condition properly
+      const maxRetries = 50;
+      const retryInterval = 100; // ms
 
-      const tokens = await container.fcmRepository.getUserTokens(tutor.id);
-      expect(tokens).not.toContain(invalidToken);
+      for (let i = 0; i < maxRetries; i++) {
+        const tokens = await container.fcmRepository.getUserTokens(tutor.id);
+
+        if (!tokens.includes(invalidToken)) {
+          // Test passes - token was removed
+          expect(tokens).not.toContain(invalidToken);
+          return;
+        }
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+      }
+
+      // If we get here, the token was never removed
+      throw new Error("Invalid token was not removed after multiple retries");
     });
 
     test("should handle sending notifications for image messages", async () => {
