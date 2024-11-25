@@ -1,8 +1,11 @@
-import { Router } from "express";
 import * as authController from "@/module/auth/auth.controller";
+import {
+  fcmTokenSchema,
+  loginSchema,
+  registerSchema,
+} from "@/module/auth/auth.schema";
 import { validator } from "@middleware/validation.middleware";
-import { loginSchema, registerSchema } from "@/module/auth/auth.schema";
-import { fcmTokenSchema } from "@/module/auth/auth.schema";
+import { Router } from "express";
 import { jwtAuthMiddleware } from "./auth.middleware";
 
 // /api/v1/auth
@@ -10,14 +13,21 @@ const authRouter = Router();
 
 authRouter.post(
   "/register",
+  // #swagger.tags = ['auth']
   validator(registerSchema),
   authController.register,
 );
 
-authRouter.post("/login", validator(loginSchema), authController.login);
+authRouter.post(
+  "/login",
+  // #swagger.tags = ['auth']
+  validator(loginSchema),
+  authController.login,
+);
 
 authRouter.post(
   "/fcm-token",
+  // #swagger.tags = ['auth']
   jwtAuthMiddleware,
   validator(fcmTokenSchema),
   authController.updateFCMToken,
@@ -25,6 +35,7 @@ authRouter.post(
 
 authRouter.delete(
   "/fcm-token",
+  // #swagger.tags = ['auth']
   jwtAuthMiddleware,
   validator(fcmTokenSchema),
   authController.removeFCMToken,

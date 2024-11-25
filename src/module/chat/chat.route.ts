@@ -1,15 +1,15 @@
-import { Router } from "express";
-import * as chatController from "@/module/chat/chat.controller";
 import { jwtAuthMiddleware } from "@/module/auth/auth.middleware";
-import {
-  validateChatImageUpload,
-  validator,
-} from "@middleware/validation.middleware";
+import * as chatController from "@/module/chat/chat.controller";
 import {
   createRoomSchema,
   getRoomMessagesSchema,
   sendTextMessageSchema,
 } from "@/module/chat/chat.schema";
+import {
+  validateChatImageUpload,
+  validator,
+} from "@middleware/validation.middleware";
+import { Router } from "express";
 import { z } from "zod";
 
 const chatRouter = Router();
@@ -18,12 +18,18 @@ chatRouter.use(jwtAuthMiddleware);
 
 chatRouter.post(
   "/rooms",
+  // #swagger.tags = ['chat']
   validator(createRoomSchema),
   chatController.createRoom,
 );
-chatRouter.get("/rooms", chatController.getRooms);
+chatRouter.get(
+  "/rooms",
+  // #swagger.tags = ['chat']
+  chatController.getRooms,
+);
 chatRouter.get(
   "/rooms/:roomId/messages",
+  // #swagger.tags = ['chat']
   validator(getRoomMessagesSchema),
   chatController.getRoomMessages,
 );
@@ -32,17 +38,20 @@ chatRouter.get(
 // - For now i seperate it because of issue in zod that can't validate the request body properly
 chatRouter.post(
   "/rooms/:roomId/messages/text",
+  // #swagger.tags = ['chat']
   validator(sendTextMessageSchema),
   chatController.sendMessage,
 );
 chatRouter.post(
   "/rooms/:roomId/messages/image",
+  // #swagger.tags = ['chat']
   validateChatImageUpload,
   chatController.sendMessage,
 );
 
 chatRouter.post(
   "/rooms/:roomId/typing",
+  // #swagger.tags = ['chat']
   validator(
     z.object({
       params: z.object({
@@ -58,6 +67,7 @@ chatRouter.post(
 
 chatRouter.get(
   "/rooms/:roomId/presence",
+  // #swagger.tags = ['chat']
   validator(
     z.object({
       params: z.object({

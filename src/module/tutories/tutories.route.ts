@@ -3,7 +3,7 @@ import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
   createTutoriesSchema,
   getTutoriesSchema,
-  updateTutoriesSchema as updateTutoriesSchema,
+  updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { validator } from "@middleware/validation.middleware";
 import { Router } from "express";
@@ -14,29 +14,45 @@ tutoriesRouter.use(jwtAuthMiddleware);
 
 tutoriesRouter.get(
   "/",
+  // #swagger.tags = ['tutors/services']
   validator(getTutoriesSchema),
   tutoriesController.getAllTutories,
 );
-tutoriesRouter.get("/:tutoriesId", tutoriesController.getTutories);
+tutoriesRouter.get(
+  "/:tutoriesId",
+  // #swagger.tags = ['tutors/services']
+  tutoriesController.getTutories,
+);
 tutoriesRouter.get(
   "/:tutoriesId/availability",
+  // #swagger.tags = ['tutors/services']
   tutoriesController.getTutoriesAvailability,
 );
 
 tutoriesRouter.use(verifyTutor);
 
-tutoriesRouter.get("/me", tutoriesController.getMyTutories);
+tutoriesRouter.get(
+  "/me",
+  // #swagger.tags = ['tutors/services']
+  tutoriesController.getMyTutories,
+);
 
 tutoriesRouter.post(
   "/",
+  // #swagger.tags = ['tutors/services']
   validator(createTutoriesSchema),
   tutoriesController.createTutories,
 );
 tutoriesRouter.patch(
   "/:tutoriesId",
+  // #swagger.tags = ['tutors/services']
   validator(updateTutoriesSchema),
   tutoriesController.updateTutories,
 );
-tutoriesRouter.delete("/:tutoriesId", tutoriesController.deleteTutories);
+tutoriesRouter.delete(
+  "/:tutoriesId",
+  // #swagger.tags = ['tutors/services']
+  tutoriesController.deleteTutories,
+);
 
 export default tutoriesRouter;

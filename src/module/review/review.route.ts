@@ -1,10 +1,10 @@
-import { Router } from "express";
-import * as reviewController from "./review.controller";
 import {
   jwtAuthMiddleware,
   verifyLearner,
 } from "@/module/auth/auth.middleware";
 import { validator } from "@middleware/validation.middleware";
+import { Router } from "express";
+import * as reviewController from "./review.controller";
 import { createReviewSchema, getReviewsSchema } from "./review.schema";
 
 const reviewRouter = Router();
@@ -12,6 +12,7 @@ const reviewRouter = Router();
 // Public routes
 reviewRouter.get(
   "/tutories/:tutoriesId",
+  // #swagger.tags = ['reviews']
   validator(getReviewsSchema),
   reviewController.getTutoriesReviews,
 );
@@ -22,6 +23,7 @@ reviewRouter.use(verifyLearner);
 
 reviewRouter.post(
   "/orders/:orderId",
+  // #swagger.tags = ['reviews']
   validator(createReviewSchema),
   reviewController.createReview,
 );
