@@ -4,18 +4,16 @@ on:
   push:
     branches: [main]
     paths:
-      - "backend/src/**"
+      - "src/**"
       - ".github/workflows/api-docs.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "backend/src/**"
-      - ".github/workflows/api-docs.yml"
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,19 +23,17 @@ jobs:
           node-version: "20"
 
       - name: Install dependencies
-        working-directory: backend
         run: |
           npm install -g pnpm
           pnpm install
 
       - name: Generate Swagger documentation
-        working-directory: backend
         run: pnpm run swagger
 
       - name: Create documentation site
         run: |
           mkdir -p docs/api
-          cp backend/src/swagger/specs.json docs/api/
+          mv src/swagger/specs.json docs/api/
           cat > docs/api/index.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -70,9 +66,43 @@ jobs:
           </html>
           EOF
 
+      - if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Documentation built from main branch at $(date)" > docs/api/build-info.txt
+
+      - if: github.event_name == 'pull_request'
+        run: |
+          echo "Documentation preview for PR #${{ github.event.pull_request.number }} built at $(date)" > docs/api/build-info.txt
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation-${{ github.sha }}
+          path: docs/api
+          retention-days: 5
+
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
-          enable_jekyll: true
+          force_orphan: true
+
+      - name: Create Job Summary
+        run: |
+          echo "### 📚 API Documentation" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The documentation has been deployed to GitHub Pages:" >> $GITHUB_STEP_SUMMARY
+            echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/api/" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Preview the documentation locally:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Go to the Actions tab" >> $GITHUB_STEP_SUMMARY
+            echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
+            echo "3. Scroll down to the Artifacts section" >> $GITHUB_STEP_SUMMARY
+            echo "4. Download 'api-documentation-${{ github.sha }}'" >> $GITHUB_STEP_SUMMARY
+            echo "5. Extract the zip file" >> $GITHUB_STEP_SUMMARY
+            echo "6. Open index.html in your browser" >> $GITHUB_STEP_SUMMARY
+          fi
