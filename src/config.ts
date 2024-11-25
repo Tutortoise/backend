@@ -9,7 +9,13 @@ export const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
 export const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME!;
 
+export const DATABASE_URL = process.env.DATABASE_URL!;
+
 export const JWT_SECRET = process.env.JWT_SECRET!;
+
+if (!DATABASE_URL) {
+  throw new Error("Missing Database URL");
+}
 
 if (!JWT_SECRET) {
   throw new Error("Missing JWT Secret");
