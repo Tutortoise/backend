@@ -1,11 +1,5 @@
 {
   "emulators": {
-    "auth": {
-      "port": 9099
-    },
-    "firestore": {
-      "port": 9090
-    },
     "database": {
       "port": 9000
     },
