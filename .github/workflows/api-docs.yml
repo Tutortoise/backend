@@ -1,0 +1,72 @@
+name: Deploy API Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/src/**"
+      - ".github/workflows/api-docs.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Generate Swagger documentation
+        working-directory: backend
+        run: pnpm run swagger
+
+      - name: Create documentation site
+        run: |
+          mkdir -p docs/api
+          cp backend/src/swagger/specs.json docs/api/
+          cat > docs/api/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>Tutortoise API Documentation</title>
+            <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.8/swagger-ui.css">
+            <style>
+              body { margin: 0; }
+              .swagger-ui .topbar { display: none; }
+            </style>
+          </head>
+          <body>
+            <div id="swagger-ui"></div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.8/swagger-ui-bundle.js"></script>
+            <script>
+              window.onload = () => {
+                window.ui = SwaggerUIBundle({
+                  url: "./specs.json",
+                  dom_id: "#swagger-ui",
+                  deepLinking: true,
+                  presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                  ],
+                });
+              };
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          enable_jekyll: true

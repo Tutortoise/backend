@@ -9,7 +9,7 @@ const definitions = {
     version: "1.0.0",
     description: "API documentation for Tutortoise",
   },
-  host: `localhost:${PORT}`,
+  schemes: ["https", "http"],
   tags: [
     {
       name: "auth",
