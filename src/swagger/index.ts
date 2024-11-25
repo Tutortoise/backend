@@ -10,6 +10,29 @@ const definitions = {
     description: "API documentation for Tutortoise",
   },
   schemes: ["https", "http"],
+  servers: [
+    {
+      url: "http://localhost:8080", // default local development server
+      description: "Local Development Server",
+    },
+    {
+      // Make it configurable with variables
+      url: "{protocol}://{host}:{port}",
+      description: "Custom Server",
+      variables: {
+        protocol: {
+          enum: ["http", "https"],
+          default: "http",
+        },
+        host: {
+          default: "localhost",
+        },
+        port: {
+          default: "8080",
+        },
+      },
+    },
+  ],
   tags: [
     {
       name: "auth",
