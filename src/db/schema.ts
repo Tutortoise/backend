@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -142,6 +142,7 @@ export const orders = pgTable(
       .notNull()
       .references(() => tutories.id, { onDelete: "cascade" }),
     sessionTime: timestamp("session_time").notNull(),
+    estimatedEndTime: timestamp("estimated_end_time"),
     totalHours: integer("total_hours").notNull(),
     notes: text("notes"),
     status: orderStatusEnum("status"),

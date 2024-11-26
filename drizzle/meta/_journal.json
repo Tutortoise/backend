@@ -50,6 +50,13 @@
       "when": 1732503171308,
       "tag": "0006_dry_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1732580364629,
+      "tag": "0007_strong_saracen",
+      "breakpoints": true
     }
   ]
 }

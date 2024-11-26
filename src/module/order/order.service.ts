@@ -38,10 +38,14 @@ export class OrderService {
     data: z.infer<typeof createOrderSchema>["body"],
   ) {
     try {
+      const estimatedEndTime = new Date(data.sessionTime);
+      estimatedEndTime.setHours(estimatedEndTime.getHours() + data.totalHours);
+
       const order = await this.orderRepository.createOrder({
         ...data,
         learnerId,
         sessionTime: new Date(data.sessionTime),
+        estimatedEndTime,
         status: "pending",
       });
 

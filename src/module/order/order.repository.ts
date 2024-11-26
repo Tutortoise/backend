@@ -1,6 +1,6 @@
 import { db as dbType } from "@/db/config";
 import { orders, tutories as tutoriesTable, tutors } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, lte } from "drizzle-orm";
 
 export class OrderRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -30,6 +30,8 @@ export class OrderRepository {
     orderId?: string;
     status?: "pending" | "scheduled" | "completed";
   }) {
+    await this.updateStatusToCompleted();
+
     const conditions = [];
 
     if (status === "pending") {
@@ -99,5 +101,12 @@ export class OrderRepository {
       .from(orders)
       .limit(1);
     return result.length > 0;
+  }
+
+  async updateStatusToCompleted() {
+    await this.db
+      .update(orders)
+      .set({ status: "scheduled" })
+      .where(lte(orders.estimatedEndTime, new Date()));
   }
 }
