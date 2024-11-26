@@ -35,7 +35,6 @@
     "pg": "^8.13.1",
     "qs": "^6.13.1",
     "sharp": "^0.33.5",
-    "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.3",
     "winston": "^3.16.0",
     "zod": "^3.23.8"
@@ -52,7 +51,6 @@
     "@types/pg": "^8.11.10",
     "@types/qs": "^6.9.17",
     "@types/supertest": "^6.0.2",
-    "@types/swagger-ui-express": "^4.1.7",
     "drizzle-kit": "^0.28.1",
     "firebase-tools": "^13.27.0",
     "husky": "^9.1.7",

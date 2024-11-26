@@ -1,0 +1,240 @@
+name: Deploy API Documentation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "src/**"
+      - ".github/workflows/api-docs.yml"
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
+
+      - name: Generate Swagger documentation
+        run: pnpm run swagger
+
+      - name: Create documentation site
+        run: |
+          mkdir -p docs/api
+          mv src/swagger/specs.json docs/api/
+          cat > docs/api/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <title>Tutortoise API Documentation</title>
+            <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.8/swagger-ui.css">
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+              }
+              .swagger-ui .topbar { display: none; }
+
+              #server-selection {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 4px;
+                box-shadow: 0 1px 2px 0 rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border: 1px solid #eee;
+              }
+
+              #server-selection label {
+                font-size: 14px;
+                font-weight: 600;
+                color: #3b4151;
+                min-width: 80px;
+              }
+
+              #server-url {
+                padding: 8px 12px;
+                border: 1px solid #d9d9d9;
+                border-radius: 4px;
+                font-size: 14px;
+                color: #3b4151;
+                transition: all 0.3s ease;
+                outline: none;
+                flex: 1;
+                box-sizing: border-box;
+                min-width: 0; /* Prevents flex item from overflowing */
+              }
+
+              #server-url:focus {
+                border-color: #49cc90;
+                box-shadow: 0 0 0 2px rgba(73, 204, 144, 0.1);
+              }
+
+              #update-server {
+                background-color: #49cc90;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+              }
+
+              #update-server:hover {
+                background-color: #41b883;
+              }
+
+              #update-server:active {
+                transform: translateY(1px);
+              }
+
+              .server-info {
+                font-size: 12px;
+                color: #999;
+                margin-top: 8px;
+              }
+
+              @media (max-width: 768px) {
+                #server-selection {
+                  flex-direction: column;
+                  align-items: stretch;
+                  gap: 8px;
+                }
+
+                #server-selection label {
+                  min-width: auto;
+                }
+
+                #server-url {
+                  width: 100%;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div id="server-selection">
+              <label for="server-url">Server URL</label>
+              <input
+                type="text"
+                id="server-url"
+                placeholder="Enter server URL (e.g., http://localhost:8080)"
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button id="update-server" onclick="updateServer()">Update</button>
+            </div>
+            <div id="swagger-ui"></div>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.8/swagger-ui-bundle.js"></script>
+            <script>
+              let ui;
+
+              function updateServer() {
+                const serverUrl = document.getElementById('server-url').value.trim();
+                if (!serverUrl) {
+                  alert('Please enter a valid server URL');
+                  return;
+                }
+
+                try {
+                  new URL(serverUrl);
+                  localStorage.setItem('api-server', serverUrl);
+                  location.reload();
+                } catch (e) {
+                  alert('Please enter a valid URL');
+                }
+              }
+
+              // Allow Enter key to trigger update
+              document.getElementById('server-url').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                  updateServer();
+                }
+              });
+
+              window.onload = () => {
+                const serverUrl = localStorage.getItem('api-server') || 'http://localhost:8080';
+                document.getElementById('server-url').value = serverUrl;
+
+                fetch('./specs.json')
+                  .then(response => response.json())
+                  .then(spec => {
+                    spec.host = serverUrl.replace(/^https?:\/\//, '');
+                    ui = SwaggerUIBundle({
+                      spec: spec,
+                      dom_id: "#swagger-ui",
+                      deepLinking: true,
+                      presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.SwaggerUIStandalonePreset
+                      ],
+                      defaultModelsExpandDepth: -1,
+                      displayRequestDuration: true,
+                      filter: true,
+                      tryItOutEnabled: true
+                    });
+                  });
+              };
+            </script>
+          </body>
+          </html>
+          EOF
+
+      - if: github.ref == 'refs/heads/master'
+        run: |
+          echo "Documentation built from master branch at $(date)" > docs/api/build-info.txt
+
+      - if: github.event_name == 'pull_request'
+        run: |
+          echo "Documentation preview for PR #${{ github.event.pull_request.number }} built at $(date)" > docs/api/build-info.txt
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation-${{ github.sha }}
+          path: docs/api
+          retention-days: 5
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          force_orphan: true
+
+      - name: Create Job Summary
+        run: |
+          echo "### 📚 API Documentation" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The documentation has been deployed to GitHub Pages:" >> $GITHUB_STEP_SUMMARY
+            echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/api/" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Preview the documentation locally:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Go to the Actions tab" >> $GITHUB_STEP_SUMMARY
+            echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
+            echo "3. Scroll down to the Artifacts section" >> $GITHUB_STEP_SUMMARY
+            echo "4. Download 'api-documentation-${{ github.sha }}'" >> $GITHUB_STEP_SUMMARY
+            echo "5. Extract the zip file" >> $GITHUB_STEP_SUMMARY
+            echo "6. Open index.html in your browser" >> $GITHUB_STEP_SUMMARY
+          fi
