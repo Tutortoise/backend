@@ -8,6 +8,8 @@ import { FCMRepository } from "./common/fcm.repository";
 import { TutoriesRepository } from "./module/tutories/tutories.repository";
 import { OrderRepository } from "./module/order/order.repository";
 import { ReviewRepository } from "./module/review/review.repository";
+import { FaceValidationService } from "./module/face-validation/face-validation.interface";
+import { createFaceValidationService } from "./module/face-validation/face-validation.factory";
 
 interface Container {
   authRepository: AuthRepository;
@@ -19,6 +21,7 @@ interface Container {
   chatRepository: ChatRepository;
   fcmRepository: FCMRepository;
   reviewRepository: ReviewRepository;
+  faceValidationService: FaceValidationService;
 }
 
 let containerInstance: Container | null = null;
@@ -35,6 +38,7 @@ export const setupContainer = (): Container => {
       chatRepository: new ChatRepository(db),
       fcmRepository: new FCMRepository(db),
       reviewRepository: new ReviewRepository(db),
+      faceValidationService: createFaceValidationService(),
     };
   }
 

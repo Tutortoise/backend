@@ -8,11 +8,13 @@ import { TutorService } from "@/module/tutor/tutor.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
 import { container } from "@/container";
+import { ValidationError } from "./tutor.error";
 
 const tutorService = new TutorService({
   tutorRepository: container.tutorRepository,
   downscaleImage,
   bucket,
+  faceValidation: container.faceValidationService,
 });
 
 type UpdateTutorProfileSchema = z.infer<typeof updateProfileSchema>;
@@ -50,8 +52,15 @@ export const updateProfilePicture: RequestHandler = async (req, res) => {
       data: { url },
     });
   } catch (error) {
-    logger.error(`Failed to upload profile picture: ${error}`);
+    if (error instanceof ValidationError) {
+      res.status(400).json({
+        status: "fail",
+        message: error.message,
+      });
+      return;
+    }
 
+    logger.error(`Failed to upload profile picture: ${error}`);
     res.status(500).json({
       status: "error",
       message: "Failed to upload profile picture",
