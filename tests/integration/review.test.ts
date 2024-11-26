@@ -54,7 +54,6 @@ describe("Review Module", () => {
   beforeAll(async () => {
     // Clean up existing data
     await db.delete(reviews);
-    await db.delete(orders);
 
     // Create test users
     learner = await createTestUser("learner");

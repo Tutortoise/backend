@@ -4,14 +4,41 @@ import { faker } from "@faker-js/faker";
 import { generateUser } from "@tests/helpers/generate.helper";
 import jwt from "jsonwebtoken";
 import supertest from "supertest";
-import { afterAll, describe, expect, test } from "vitest";
+import { afterAll, afterEach, describe, expect, test } from "vitest";
 
 const tutorRepository = container.tutorRepository;
 const tutoriesRepository = container.tutoriesRepository;
 const orderRepository = container.orderRepository;
 
-async function cleanupOrders() {
-  await orderRepository.deleteAllOrders();
+function cleanupOrders(createdOrders: string[]): unknown {
+  return Promise.all(
+    createdOrders.map((orderId) => orderRepository.deleteOrder(orderId)),
+  );
+}
+
+async function createOrder({
+  learnerToken,
+  tutoriesId,
+  sessionTime,
+  totalHours,
+}: {
+  learnerToken: string;
+  tutoriesId: string;
+  sessionTime: string;
+  totalHours?: number;
+}) {
+  const orderRes = await supertest(app)
+    .post("/api/v1/orders")
+    .set("Authorization", `Bearer ${learnerToken}`)
+    .send({
+      tutoriesId,
+      sessionTime,
+      totalHours: totalHours || 1,
+      notes: "I want to learn more",
+    })
+    .expect(201);
+
+  return { orderId: orderRes.body.data.orderId as string };
 }
 
 // todo: refactor to use helper later
@@ -30,12 +57,11 @@ async function loginAsTutor(tutorName: string) {
   return token;
 }
 
-async function registerAndLoginLearner() {
-  const newLearner = generateUser("learner");
-
+async function registerAndLoginUser(role: "learner" | "tutor") {
+  const newUser = generateUser(role);
   const res = await supertest(app)
     .post("/api/v1/auth/register")
-    .send(newLearner)
+    .send(newUser)
     .expect(201);
 
   const userId = res.body.data.userId;
@@ -43,61 +69,38 @@ async function registerAndLoginLearner() {
 
   const loginRes = await supertest(app)
     .post("/api/v1/auth/login")
-    .send({ email: newLearner.email, password: newLearner.password })
+    .send({ email: newUser.email, password: newUser.password })
     .expect(200);
 
   const token = loginRes.body.data.token;
   expect(token).toBeDefined();
 
-  return { learner: newLearner, token };
-}
-
-async function registerAndLoginTutor() {
-  const newTutor = generateUser("tutor");
-
-  const res = await supertest(app)
-    .post("/api/v1/auth/register")
-    .send(newTutor)
-    .expect(201);
-
-  const userId = res.body.data.userId;
-  expect(userId).toBeDefined();
-
-  const loginRes = await supertest(app)
-    .post("/api/v1/auth/login")
-    .send({ email: newTutor.email, password: newTutor.password })
-    .expect(200);
-
-  const token = loginRes.body.data.token;
-  expect(token).toBeDefined();
-
-  return { tutor: newTutor, token };
+  return { user: newUser, token };
 }
 
 describe("Order a tutories", async () => {
-  const { token } = await registerAndLoginLearner();
+  const { token } = await registerAndLoginUser("learner");
 
-  const tutories = await tutoriesRepository.getTutories();
+  const randomTutories = faker.helpers.arrayElement(
+    await tutoriesRepository.getTutories(),
+  );
 
-  afterAll(async () => {
-    await cleanupOrders();
-  });
+  const createdOrders: string[] = [];
+  afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Learner can order a tutories", async () => {
     const availability = await tutoriesRepository.getTutoriesAvailability(
-      tutories[0].id,
+      randomTutories.id,
     );
 
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${token}`)
-      .send({
-        tutoriesId: tutories[0].id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { orderId } = await createOrder({
+      learnerToken: token,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
   });
 
   test("Learner cannot order a tutories with invalid session time", async () => {
@@ -105,7 +108,7 @@ describe("Order a tutories", async () => {
       .post("/api/v1/orders")
       .set("Authorization", `Bearer ${token}`)
       .send({
-        tutoriesId: tutories[0].id,
+        tutoriesId: randomTutories.id,
         sessionTime: new Date().toISOString(),
         totalHours: 1,
         notes: "I want to learn more",
@@ -124,15 +127,14 @@ describe("Order a tutories", async () => {
 });
 
 describe("Accept an order", async () => {
-  afterAll(async () => {
-    await cleanupOrders();
-  });
+  const createdOrders: string[] = [];
+  afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Tutor can accept an order", async () => {
     const tutories = await tutoriesRepository.getTutories();
     const randomTutories = faker.helpers.arrayElement(tutories);
 
-    const { token: learnerToken } = await registerAndLoginLearner();
+    const { token: learnerToken } = await registerAndLoginUser("learner");
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
     // Create an order
@@ -140,22 +142,18 @@ describe("Accept an order", async () => {
       randomTutories.id,
     );
 
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { orderId } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
 
     // Accept the order
-    const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders[0];
     await supertest(app)
-      .post(`/api/v1/orders/${order.id}/accept`)
+      .post(`/api/v1/orders/${orderId}/accept`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
@@ -169,36 +167,29 @@ describe("Accept an order", async () => {
       randomTutories.id,
     );
 
-    const { token: learnerToken } = await registerAndLoginLearner();
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { token: learnerToken } = await registerAndLoginUser("learner");
 
-    // Get the order
-    const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders[0];
+    const { orderId } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
 
-    const { token } = await registerAndLoginTutor();
+    const { token: tutorToken } = await registerAndLoginUser("tutor");
     await supertest(app)
-      .post(`/api/v1/orders/${order.id}/accept`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/api/v1/orders/${orderId}/accept`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(403);
   });
 });
 
 describe("Decline an order", async () => {
-  const { token: learnerToken } = await registerAndLoginLearner();
+  const { token: learnerToken } = await registerAndLoginUser("learner");
 
-  afterAll(async () => {
-    await cleanupOrders();
-  });
+  const createdOrders: string[] = [];
+  afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Tutor can decline an order", async () => {
     const tutories = await tutoriesRepository.getTutories();
@@ -211,22 +202,16 @@ describe("Decline an order", async () => {
       randomTutories.id,
     );
 
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { orderId } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
 
-    // Decline the order
-    const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders[0];
     await supertest(app)
-      .post(`/api/v1/orders/${order.id}/decline`)
+      .post(`/api/v1/orders/${orderId}/decline`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
@@ -247,33 +232,25 @@ describe("Decline an order", async () => {
       randomTutories.id,
     );
 
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { orderId } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
 
-    // Decline the order
-    const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders[0];
-
-    const { token } = await registerAndLoginTutor();
+    const { token: tutorToken } = await registerAndLoginUser("tutor");
     await supertest(app)
-      .post(`/api/v1/orders/${order.id}/decline`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/api/v1/orders/${orderId}/decline`)
+      .set("Authorization", `Bearer ${tutorToken}`)
       .expect(403);
   });
 });
 
 describe("Handle availability edge cases", async () => {
-  afterAll(async () => {
-    await cleanupOrders();
-  });
+  const createdOrders: string[] = [];
+  afterEach(async () => await cleanupOrders(createdOrders));
 
   test("Learner cannot order a tutories when there is already a scheduled order", async () => {
     const tutories = await tutoriesRepository.getTutories();
@@ -286,40 +263,35 @@ describe("Handle availability edge cases", async () => {
     );
 
     // User 1 order a tutories
-    const { token: learnerToken } = await registerAndLoginLearner();
-    const orderByUser1 = await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { token: learnerToken } = await registerAndLoginUser("learner");
+    const { orderId: orderId1 } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+    expect(orderId1).toBeDefined();
+    createdOrders.push(orderId1);
 
     // User 2 order a tutories
-    const { token: learnerToken2 } = await registerAndLoginLearner();
-    const orderByUser2 = await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken2}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 5,
-        notes: "I want to learn more",
-      })
-      .expect(201);
+    const { token: learnerToken2 } = await registerAndLoginUser("learner");
+    const { orderId: orderId2 } = await createOrder({
+      learnerToken: learnerToken2,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+      totalHours: 5,
+    });
+    expect(orderId2).toBeDefined();
+    createdOrders.push(orderId2);
 
     // Tutor instead accepted the order from user 2 (Tutor wants to accept the order with more hours)
     await supertest(app)
-      .post(`/api/v1/orders/${orderByUser2.body.data.orderId}/accept`)
+      .post(`/api/v1/orders/${orderId2}/accept`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
 
     // User 3 tries to order a tutories
     // User 3 should not be able to order a tutories because there is already a scheduled order
-    const { token: learnerToken3 } = await registerAndLoginLearner();
+    const { token: learnerToken3 } = await registerAndLoginUser("learner");
     await supertest(app)
       .post("/api/v1/orders")
       .set("Authorization", `Bearer ${learnerToken3}`)
@@ -333,7 +305,7 @@ describe("Handle availability edge cases", async () => {
 
     // The other one is expected to be declined
     const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders.find((o) => o.id === orderByUser1.body.data.orderId);
+    const order = orders.find((o) => o.id === orderId1);
 
     expect(order).toBeDefined();
     expect(order!.status).toBe("declined");
@@ -351,24 +323,20 @@ describe("Handle availability edge cases", async () => {
     // Ensure there is available time slot
     expect(availability.length).toBeGreaterThan(0);
 
-    const { token: learnerToken } = await registerAndLoginLearner();
+    const { token: learnerToken } = await registerAndLoginUser("learner");
 
     // Create first order
-    const orderResponse = await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 5,
-        notes: "I want to learn more",
-      });
-
-    expect(orderResponse.status).toBe(201);
+    const { orderId } = await createOrder({
+      learnerToken,
+      tutoriesId: randomTutories.id,
+      sessionTime: availability[0],
+    });
+    expect(orderId).toBeDefined();
+    createdOrders.push(orderId);
 
     // Accept the order
     await supertest(app)
-      .post(`/api/v1/orders/${orderResponse.body.data.orderId}/accept`)
+      .post(`/api/v1/orders/${orderId}/accept`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
 

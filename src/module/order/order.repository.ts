@@ -91,8 +91,8 @@ export class OrderRepository {
   }
 
   // Used for testing
-  async deleteAllOrders() {
-    return this.db.delete(orders).execute();
+  async deleteOrder(orderId: string) {
+    return this.db.delete(orders).where(eq(orders.id, orderId)).execute();
   }
 
   async checkOrderExists(orderId: string) {
