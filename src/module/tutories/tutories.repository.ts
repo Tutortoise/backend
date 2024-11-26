@@ -144,7 +144,7 @@ export class TutoriesRepository {
       }
 
       const today = new Date();
-      const next7DaysAvailability: string[] = [];
+      const next2WeeksAvailability: string[] = [];
 
       const existingOrders = await this.getOrdersByTutor(service.tutorId);
       const existingOrderTimes = existingOrders
@@ -156,7 +156,7 @@ export class TutoriesRepository {
           ),
         }));
 
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
 
@@ -191,11 +191,11 @@ export class TutoriesRepository {
             }
           }
 
-          next7DaysAvailability.push(datetime.toISOString());
+          next2WeeksAvailability.push(datetime.toISOString());
         });
       }
 
-      return next7DaysAvailability;
+      return next2WeeksAvailability;
     } catch (error) {
       throw new Error(`Failed to get tutor service availability: ${error}`);
     }
