@@ -1,5 +1,6 @@
 import { FCMService } from "@/common/fcm.service";
 import { AuthRepository } from "./auth.repository";
+import { logger } from "@middleware/logging.middleware";
 
 type AuthServiceDependencies = {
   authRepository: AuthRepository;
@@ -35,6 +36,16 @@ export class AuthService {
     });
 
     return { userId: tutor.id };
+  }
+
+  async getUser(userId: string) {
+    try {
+      const user = await this.authRepository.getUser(userId);
+      return user;
+    } catch (error) {
+      logger.error(`Failed to get user: ${error}`);
+      return null;
+    }
   }
 
   async login(email: string, password: string) {

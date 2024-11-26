@@ -81,6 +81,25 @@ export const updateFCMToken: Controller<FCMTokenSchema> = async (req, res) => {
   }
 };
 
+export const getUser: Controller = async (req, res) => {
+  try {
+    const userId = req.learner?.id || req.tutor?.id;
+    const role = req.learner ? "learner" : "tutor";
+
+    const user = await authService.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    res.json({ status: "success", data: { ...user, role } });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Failed to get current user",
+    });
+  }
+};
+
 export const removeFCMToken: Controller<FCMTokenSchema> = async (req, res) => {
   try {
     const userId = req.learner?.id || req.tutor?.id;

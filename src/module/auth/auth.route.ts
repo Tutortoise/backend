@@ -11,6 +11,13 @@ import { jwtAuthMiddleware } from "./auth.middleware";
 // /api/v1/auth
 const authRouter = Router();
 
+authRouter.get(
+  "/me",
+  // #swagger.tags = ['auth']
+  jwtAuthMiddleware,
+  authController.getUser,
+);
+
 authRouter.post(
   "/register",
   // #swagger.tags = ['auth']

@@ -37,6 +37,23 @@ export class AuthRepository {
     return this.registerTutor(data);
   }
 
+  public async getUser(userId: string) {
+    const [learner, tutor] = await Promise.all([
+      this.db
+        .select({ id: learners.id, name: learners.name })
+        .from(learners)
+        .where(eq(learners.id, userId))
+        .limit(1),
+      this.db
+        .select({ id: tutors.name, name: tutors.name })
+        .from(tutors)
+        .where(eq(tutors.id, userId))
+        .limit(1),
+    ]);
+
+    return learner[0] || tutor[0];
+  }
+
   public async login(email: string, password: string) {
     const [learner, tutor] = await Promise.all([
       this.db.select().from(learners).where(eq(learners.email, email)).limit(1),
