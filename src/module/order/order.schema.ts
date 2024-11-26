@@ -77,20 +77,6 @@ export const createOrderSchema = z
     }
   });
 
-export const cancelOrderSchema = z.object({
-  params: z.object({
-    orderId: z.string().superRefine(async (orderId, ctx) => {
-      const exists = await orderRepository.checkOrderExists(orderId);
-      if (!exists) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Order does not exist",
-        });
-      }
-    }),
-  }),
-});
-
 export const acceptOrderSchema = z.object({
   params: z.object({
     orderId: z.string().superRefine(async (orderId, ctx) => {

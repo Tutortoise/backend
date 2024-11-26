@@ -1,18 +1,22 @@
 import { container } from "@/container";
 import {
   acceptOrderSchema,
-  cancelOrderSchema,
   createOrderSchema,
   declineOrderSchema,
   getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { OrderService } from "@/module/order/order.service";
+import { TutoriesService } from "@/module/tutories/tutories.service";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 
 const orderService = new OrderService({
   orderRepository: container.orderRepository,
+});
+const tutoriesService = new TutoriesService({
+  tutoriesRepository: container.tutoriesRepository,
+  reviewRepository: container.reviewRepository,
 });
 
 type GetMyOrdersSchema = z.infer<typeof getMyOrdersSchema>;
@@ -49,27 +53,25 @@ export const createOrder: Controller<CreateOrderSchema> = async (req, res) => {
   }
 };
 
-type CancelOrderSchema = z.infer<typeof cancelOrderSchema>;
-export const cancelOrder: Controller<CancelOrderSchema> = async (req, res) => {
-  try {
-    await orderService.cancelOrder(req.params.orderId);
-
-    res.json({
-      status: "success",
-      message: "Order has been canceled successfully",
-    });
-  } catch (error) {
-    logger.error(`Failed to cancel order: ${error}`);
-
-    res
-      .status(500)
-      .json({ status: "error", message: "Failed to cancel order" });
-  }
-};
-
 type AcceptOrderSchema = z.infer<typeof acceptOrderSchema>;
 export const acceptOrder: Controller<AcceptOrderSchema> = async (req, res) => {
   try {
+    // Check if the tutor owns the tutories
+    const orderId = req.params.orderId;
+    const order = await orderService.getOrderById(orderId);
+    const isOwner = await tutoriesService.validateTutoriesOwnership({
+      tutorId: req.tutor.id,
+      tutoriesId: order[0].tutories.id,
+    });
+
+    if (!isOwner) {
+      res.status(403).json({
+        status: "error",
+        message: "You are not authorized to accept this order",
+      });
+      return;
+    }
+
     await orderService.acceptOrder(req.params.orderId);
 
     res.json({ status: "success", message: "Order has been scheduled" });
@@ -88,6 +90,22 @@ export const declineOrder: Controller<DeclineOrderSchema> = async (
   res,
 ) => {
   try {
+    // Check if the tutor owns the tutories
+    const orderId = req.params.orderId;
+    const order = await orderService.getOrderById(orderId);
+    const isOwner = await tutoriesService.validateTutoriesOwnership({
+      tutorId: req.tutor.id,
+      tutoriesId: order[0].tutories.id,
+    });
+
+    if (!isOwner) {
+      res.status(403).json({
+        status: "error",
+        message: "You are not authorized to decline this order",
+      });
+      return;
+    }
+
     await orderService.declineOrder(req.params.orderId);
 
     res.json({ status: "success", message: "Order has been declined" });

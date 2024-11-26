@@ -52,6 +52,28 @@ async function registerAndLoginLearner() {
   return { learner: newLearner, token };
 }
 
+async function registerAndLoginTutor() {
+  const newTutor = generateUser("tutor");
+
+  const res = await supertest(app)
+    .post("/api/v1/auth/register")
+    .send(newTutor)
+    .expect(201);
+
+  const userId = res.body.data.userId;
+  expect(userId).toBeDefined();
+
+  const loginRes = await supertest(app)
+    .post("/api/v1/auth/login")
+    .send({ email: newTutor.email, password: newTutor.password })
+    .expect(200);
+
+  const token = loginRes.body.data.token;
+  expect(token).toBeDefined();
+
+  return { tutor: newTutor, token };
+}
+
 describe("Order a tutories", async () => {
   const { token } = await registerAndLoginLearner();
 
@@ -101,52 +123,6 @@ describe("Order a tutories", async () => {
   });
 });
 
-describe("Cancel an order", async () => {
-  const tutories = await tutoriesRepository.getTutories();
-  const randomTutories = faker.helpers.arrayElement(tutories);
-
-  const { token: learnerToken } = await registerAndLoginLearner();
-
-  afterAll(async () => {
-    await cleanupOrders();
-  });
-
-  test("Tutor can cancel an order", async () => {
-    const tutorToken = await loginAsTutor(randomTutories.tutorName);
-
-    // Create an order
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
-
-    await supertest(app)
-      .post("/api/v1/orders")
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .send({
-        tutoriesId: randomTutories.id,
-        sessionTime: availability[0],
-        totalHours: 1,
-        notes: "I want to learn more",
-      })
-      .expect(201);
-
-    // Cancel the order
-    const orders = await tutoriesRepository.getOrders(randomTutories.id);
-    const order = orders[0];
-    await supertest(app)
-      .post(`/api/v1/orders/${order.id}/cancel`)
-      .set("Authorization", `Bearer ${tutorToken}`)
-      .expect(200);
-  });
-
-  test("Learner cannot cancel an order", async () => {
-    await supertest(app)
-      .post(`/api/v1/orders/x/cancel`)
-      .set("Authorization", `Bearer ${learnerToken}`)
-      .expect(403);
-  });
-});
-
 describe("Accept an order", async () => {
   afterAll(async () => {
     await cleanupOrders();
@@ -183,9 +159,43 @@ describe("Accept an order", async () => {
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
   });
+
+  test("Other tutor cannot accept the order", async () => {
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
+
+    // Create an order
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
+    );
+
+    const { token: learnerToken } = await registerAndLoginLearner();
+    await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${learnerToken}`)
+      .send({
+        tutoriesId: randomTutories.id,
+        sessionTime: availability[0],
+        totalHours: 1,
+        notes: "I want to learn more",
+      })
+      .expect(201);
+
+    // Get the order
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
+    const order = orders[0];
+
+    const { token } = await registerAndLoginTutor();
+    await supertest(app)
+      .post(`/api/v1/orders/${order.id}/accept`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403);
+  });
 });
 
 describe("Decline an order", async () => {
+  const { token: learnerToken } = await registerAndLoginLearner();
+
   afterAll(async () => {
     await cleanupOrders();
   });
@@ -194,7 +204,6 @@ describe("Decline an order", async () => {
     const tutories = await tutoriesRepository.getTutories();
     const randomTutories = faker.helpers.arrayElement(tutories);
 
-    const { token: learnerToken } = await registerAndLoginLearner();
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
 
     // Create an order
@@ -220,6 +229,44 @@ describe("Decline an order", async () => {
       .post(`/api/v1/orders/${order.id}/decline`)
       .set("Authorization", `Bearer ${tutorToken}`)
       .expect(200);
+  });
+
+  test("Learner cannot decline an order", async () => {
+    await supertest(app)
+      .post(`/api/v1/orders/x/decline`)
+      .set("Authorization", `Bearer ${learnerToken}`)
+      .expect(403);
+  });
+
+  test("Other tutor cannot decline the order", async () => {
+    const tutories = await tutoriesRepository.getTutories();
+    const randomTutories = faker.helpers.arrayElement(tutories);
+
+    // Create an order
+    const availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
+    );
+
+    await supertest(app)
+      .post("/api/v1/orders")
+      .set("Authorization", `Bearer ${learnerToken}`)
+      .send({
+        tutoriesId: randomTutories.id,
+        sessionTime: availability[0],
+        totalHours: 1,
+        notes: "I want to learn more",
+      })
+      .expect(201);
+
+    // Decline the order
+    const orders = await tutoriesRepository.getOrders(randomTutories.id);
+    const order = orders[0];
+
+    const { token } = await registerAndLoginTutor();
+    await supertest(app)
+      .post(`/api/v1/orders/${order.id}/decline`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403);
   });
 });
 

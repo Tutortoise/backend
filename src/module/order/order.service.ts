@@ -13,6 +13,14 @@ export class OrderService {
     this.orderRepository = orderRepository;
   }
 
+  async getOrderById(orderId: string) {
+    try {
+      return this.orderRepository.getOrderById(orderId);
+    } catch (error) {
+      throw new Error(`Failed to get order: ${error}`);
+    }
+  }
+
   async getOrders(params: {
     learnerId?: string;
     tutorId?: string;
@@ -42,14 +50,6 @@ export class OrderService {
       };
     } catch (error) {
       throw new Error(`Failed to create order: ${error}`);
-    }
-  }
-
-  async cancelOrder(orderId: string) {
-    try {
-      return this.orderRepository.updateOrder(orderId, { status: "declined" });
-    } catch (error) {
-      throw new Error(`Failed to cancel order: ${error}`);
     }
   }
 
