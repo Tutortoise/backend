@@ -40,12 +40,12 @@ export class AuthRepository {
   public async getUser(userId: string) {
     const [learner, tutor] = await Promise.all([
       this.db
-        .select({ id: learners.id, name: learners.name })
+        .select({ id: learners.id, name: learners.name, email: learners.email })
         .from(learners)
         .where(eq(learners.id, userId))
         .limit(1),
       this.db
-        .select({ id: tutors.name, name: tutors.name })
+        .select({ id: tutors.name, name: tutors.name, email: tutors.email })
         .from(tutors)
         .where(eq(tutors.id, userId))
         .limit(1),
