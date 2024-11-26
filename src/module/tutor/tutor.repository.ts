@@ -49,9 +49,28 @@ export class TutorRepository {
     }
   }
 
+  public async getPassword(tutorId: string) {
+    const result = await this.db
+      .select({ password: tutors.password })
+      .from(tutors)
+      .where(eq(tutors.id, tutorId))
+      .limit(1);
+
+    return result[0];
+  }
+
   public async getTutorById(tutorId: string) {
     const result = await this.db
-      .select()
+      .select({
+        id: tutors.id,
+        name: tutors.name,
+        email: tutors.email,
+        gender: tutors.gender,
+        phoneNumber: tutors.phoneNumber,
+        city: tutors.city,
+        district: tutors.district,
+        createdAt: tutors.createdAt,
+      })
       .from(tutors)
       .where(eq(tutors.id, tutorId))
       .limit(1);

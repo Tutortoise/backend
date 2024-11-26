@@ -16,6 +16,12 @@ const learnerRouter = Router();
 learnerRouter.use(jwtAuthMiddleware);
 learnerRouter.use(verifyLearner);
 
+learnerRouter.get(
+  "/profile",
+  // #swagger.tags = ['learners']
+  learnerController.getProfile,
+);
+
 learnerRouter.patch(
   "/profile",
   // #swagger.tags = ['learners']

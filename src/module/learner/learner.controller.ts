@@ -15,6 +15,24 @@ const learnerService = new LearnerService({
   downscaleImage,
 });
 
+export const getProfile: Controller = async (req, res) => {
+  try {
+    const learner = await learnerService.getProfile(req.learner.id);
+
+    res.json({
+      status: "success",
+      data: learner,
+    });
+  } catch (error) {
+    logger.error(`Failed to get learner profile: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: "Failed to get learner profile",
+    });
+  }
+};
+
 type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 export const updateProfile: Controller<UpdateProfileSchema> = async (
   req,

@@ -41,9 +41,29 @@ export class LearnerRepository {
     return results.map((subject) => subject.id);
   }
 
+  public async getPassword(learnerId: string) {
+    const result = await this.db
+      .select({ password: learners.password })
+      .from(learners)
+      .where(eq(learners.id, learnerId))
+      .limit(1);
+
+    return result[0];
+  }
+
   public async getLearnerById(learnerId: string) {
     const result = await this.db
-      .select()
+      .select({
+        id: learners.id,
+        name: learners.name,
+        email: learners.email,
+        learningStyle: learners.learningStyle,
+        gender: learners.gender,
+        phoneNumber: learners.phoneNumber,
+        city: learners.city,
+        district: learners.district,
+        createdAt: learners.createdAt,
+      })
       .from(learners)
       .where(eq(learners.id, learnerId))
       .limit(1);

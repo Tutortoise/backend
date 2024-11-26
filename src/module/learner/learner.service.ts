@@ -26,6 +26,14 @@ export class LearnerService {
     this.downscaleImage = downscaleImage;
   }
 
+  async getProfile(learnerId: string) {
+    try {
+      return await this.learnerRepository.getLearnerById(learnerId);
+    } catch (error) {
+      throw new Error(`Failed to get learner profile: ${error}`);
+    }
+  }
+
   async updateLearnerProfile(
     userId: string,
     data: z.infer<typeof updateProfileSchema>["body"],
@@ -52,7 +60,7 @@ export class LearnerService {
   }
 
   async verifyPassword(userId: string, password: string) {
-    const user = await this.learnerRepository.getLearnerById(userId);
+    const user = await this.learnerRepository.getPassword(userId);
 
     const isPasswordMatch = await AuthRepository.comparePassword(
       password,

@@ -17,6 +17,24 @@ const tutorService = new TutorService({
   faceValidation: container.faceValidationService,
 });
 
+export const getProfile: Controller = async (req, res) => {
+  try {
+    const profile = await tutorService.getProfile(req.tutor.id);
+
+    res.json({
+      status: "success",
+      data: profile,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor profile: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: "Failed to get tutor profile",
+    });
+  }
+};
+
 type UpdateTutorProfileSchema = z.infer<typeof updateProfileSchema>;
 export const updateProfile: Controller<UpdateTutorProfileSchema> = async (
   req,

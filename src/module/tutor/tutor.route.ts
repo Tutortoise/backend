@@ -13,6 +13,12 @@ const tutorRouter = Router();
 tutorRouter.use(jwtAuthMiddleware);
 tutorRouter.use(verifyTutor);
 
+tutorRouter.get(
+  "/profile",
+  // #swagger.tags = ['tutors']
+  tutorController.getProfile,
+);
+
 tutorRouter.patch(
   "/profile",
   // #swagger.tags = ['tutors']

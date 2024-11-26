@@ -32,6 +32,14 @@ export class TutorService {
     this.faceValidation = faceValidation;
   }
 
+  async getProfile(tutorId: string) {
+    try {
+      return await this.tutorRepository.getTutorById(tutorId);
+    } catch (error) {
+      throw new Error(`Failed to get tutor profile: ${error}`);
+    }
+  }
+
   async updateProfile(
     userId: string,
     data: z.infer<typeof updateProfileSchema>["body"],
@@ -67,7 +75,7 @@ export class TutorService {
   }
 
   async verifyPassword(userId: string, password: string) {
-    const user = await this.tutorRepository.getTutorById(userId);
+    const user = await this.tutorRepository.getPassword(userId);
 
     const isPasswordMatch = await AuthRepository.comparePassword(
       password,
