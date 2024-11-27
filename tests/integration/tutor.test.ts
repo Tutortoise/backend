@@ -32,7 +32,7 @@ describe("Update tutor profile", async () => {
   test("should be able to update tutor profile", async () => {
     const updatedProfile = {
       name: faker.person.fullName(),
-      phoneNum: "+62812121212",
+      phoneNumber: "+62812121212",
       gender: "male",
     };
 
@@ -61,7 +61,7 @@ describe("Update tutor profile", async () => {
   test("should not be able to update tutor profile with invalid data", async () => {
     const invalidData = {
       name: "a",
-      phoneNum: "invalid",
+      phoneNumber: "invalid",
       latitude: "x",
       longitude: "y",
       gender: "sigma",

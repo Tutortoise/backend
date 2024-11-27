@@ -37,7 +37,7 @@ describe("Update learner profile", async () => {
 
     const updatedProfile = {
       name: faker.person.fullName(),
-      phoneNum: "+62812121212",
+      phoneNumber: "+62812121212",
       gender: "male",
       learningStyle: "visual",
       interests: [subjects[0].id, subjects[1].id],
@@ -68,7 +68,7 @@ describe("Update learner profile", async () => {
   test("should not be able to update learner profile with invalid data", async () => {
     const invalidData = {
       name: "a",
-      phoneNum: "invalid",
+      phoneNumber: "invalid",
       latitude: "x",
       longitude: "y",
       gender: "sigma",
