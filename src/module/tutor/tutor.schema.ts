@@ -32,19 +32,6 @@ export const tutorSchema = z.object({
         "Gender must be one of the following: male, female, or prefer not to say",
     })
     .optional(),
-  services: z
-    .array(z.string())
-    .superRefine(async (services, ctx) => {
-      const isServicesValid = await tutorRepository.validateServices(services);
-      if (!isServicesValid) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Invalid services",
-        });
-      }
-    })
-    .optional(),
-  coverageRange: z.number().optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
   lastSeen: z.date().optional(),
@@ -53,8 +40,6 @@ export const tutorSchema = z.object({
 export const updateProfileSchema = z.object({
   body: tutorSchema.omit({
     id: true,
-    services: true,
-    coverageRange: true,
     city: true,
     createdAt: true,
     updatedAt: true,
