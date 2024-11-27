@@ -84,7 +84,7 @@ describe("Update learner profile", async () => {
 
     expect(res.body.status).toEqual("fail");
     expect(res.body.message).toEqual("Validation error");
-    expect(res.body.errors.length).toEqual(7);
+    expect(res.body.errors.length).toEqual(5);
   });
 });
 

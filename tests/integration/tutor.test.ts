@@ -75,7 +75,7 @@ describe("Update tutor profile", async () => {
 
     expect(res.body.status).toEqual("fail");
     expect(res.body.message).toEqual("Validation error");
-    expect(res.body.errors.length).toEqual(5);
+    expect(res.body.errors.length).toEqual(3);
   });
 });
 
