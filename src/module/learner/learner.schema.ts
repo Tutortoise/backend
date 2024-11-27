@@ -24,8 +24,8 @@ export const learnerSchema = z.object({
     .string()
     .min(10, "Phone number must be at least 10 characters")
     .optional(),
-  latitude: z.number({ message: "Latitude must be a number" }).optional(),
-  longitude: z.number({ message: "Longitude must be a number" }).optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
   gender: z
     .enum(["male", "female", "prefer not to say"], {
       message:
