@@ -1,11 +1,25 @@
 import { container } from "@/container";
 import { z } from "zod";
 
+const authRepository = container.authRepository;
 const tutorRepository = container.tutorRepository;
 
 export const tutorSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(3, "Name must be at least 3 characters").optional(),
+  email: z
+    .string()
+    .email("Invalid email address")
+    .superRefine(async (email, ctx) => {
+      const exists = await authRepository.checkEmailExists(email);
+      if (exists) {
+        return ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Email already exists",
+        });
+      }
+    })
+    .optional(),
   phoneNumber: z
     .string()
     .min(10, "Phone number must be at least 10 characters")
