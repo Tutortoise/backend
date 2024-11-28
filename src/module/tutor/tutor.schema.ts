@@ -40,7 +40,6 @@ export const tutorSchema = z.object({
 export const updateProfileSchema = z.object({
   body: tutorSchema.omit({
     id: true,
-    city: true,
     createdAt: true,
     updatedAt: true,
     lastSeen: true,
