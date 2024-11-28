@@ -1,6 +1,6 @@
 import type { db as dbType } from "@/db/config";
-import { desc, eq, inArray, sql } from "drizzle-orm";
 import { subjects, tutories } from "@/db/schema";
+import { and, desc, eq, inArray, notExists, sql } from "drizzle-orm";
 
 export class SubjectRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -32,6 +32,31 @@ export class SubjectRepository {
       name: subject.name,
       iconUrl: subject.iconUrl,
       tutoriesCount: subject.tutoriesCount,
+    }));
+  }
+
+  public async getAvailableSubjects(tutorId: string) {
+    const results = await this.db
+      .select()
+      .from(subjects)
+      .where(
+        notExists(
+          this.db
+            .select()
+            .from(tutories)
+            .where(
+              and(
+                eq(tutories.subjectId, subjects.id),
+                eq(tutories.tutorId, tutorId),
+              ),
+            ),
+        ),
+      );
+
+    return results.map((subject) => ({
+      id: subject.id,
+      name: subject.name,
+      iconUrl: subject.iconUrl,
     }));
   }
 

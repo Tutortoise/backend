@@ -27,6 +27,14 @@ export class SubjectService {
     }
   }
 
+  public async getAvailableSubjects(tutorId: string) {
+    try {
+      return await this.subjectRepository.getAvailableSubjects(tutorId);
+    } catch (error) {
+      throw new Error(`Error when getting available subjects: ${error}`);
+    }
+  }
+
   public async checkSubjectExists(subjectId: string) {
     return this.subjectRepository.checkSubjectExists(subjectId);
   }

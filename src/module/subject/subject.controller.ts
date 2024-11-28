@@ -37,3 +37,20 @@ export const getPopularSubjects: Controller = async (_req, res) => {
     });
   }
 };
+
+export const getAvailableSubjects: Controller = async (req, res) => {
+  try {
+    const subjects = await subjectService.getAvailableSubjects(req.tutor.id);
+
+    res.json({
+      status: "success",
+      data: subjects,
+    });
+  } catch (error) {
+    logger.error(`Error when getting available subjects: ${error}`);
+    res.status(400).json({
+      status: "fail",
+      message: "Failed to get available subjects",
+    });
+  }
+};
