@@ -45,7 +45,7 @@ export class AuthRepository {
         .where(eq(learners.id, userId))
         .limit(1),
       this.db
-        .select({ id: tutors.name, name: tutors.name, email: tutors.email })
+        .select({ id: tutors.id, name: tutors.name, email: tutors.email })
         .from(tutors)
         .where(eq(tutors.id, userId))
         .limit(1),
