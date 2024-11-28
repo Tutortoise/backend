@@ -14,7 +14,7 @@ export const app = express();
 // Security middlewares
 app.use(helmetMiddleware);
 app.use(corsMiddleware);
-app.use(rateLimitMiddleware);
+// app.use(rateLimitMiddleware);
 app.use(compressionMiddleware);
 
 // Log HTTP requests
