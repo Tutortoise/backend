@@ -59,8 +59,16 @@ export class LearnerService {
     }
   }
 
+  async getPassword(userId: string) {
+    return await this.learnerRepository.getPassword(userId);
+  }
+
   async verifyPassword(userId: string, password: string) {
     const user = await this.learnerRepository.getPassword(userId);
+
+    if (!user.password || user.password === "") {
+      return true;
+    }
 
     const isPasswordMatch = await AuthRepository.comparePassword(
       password,

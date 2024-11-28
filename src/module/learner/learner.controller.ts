@@ -83,20 +83,28 @@ export const changePassword: Controller<ChangePasswordSchema> = async (
   res,
 ) => {
   try {
-    const isPasswordCorrect = await learnerService.verifyPassword(
-      req.learner.id,
-      req.body.currentPassword,
-    );
+    const userId = req.learner.id;
+    const { currentPassword, newPassword } = req.body;
 
-    if (!isPasswordCorrect) {
-      res.status(400).json({
-        status: "fail",
-        message: "Current password is incorrect",
-      });
-      return;
+    const hasPassword = !!(await learnerService.getPassword(userId));
+
+    // Only verify current password if user already has one
+    if (hasPassword) {
+      const isPasswordCorrect = await learnerService.verifyPassword(
+        userId,
+        currentPassword ?? "",
+      );
+
+      if (!isPasswordCorrect) {
+        res.status(400).json({
+          status: "fail",
+          message: "Current password is incorrect",
+        });
+        return;
+      }
     }
 
-    await learnerService.changePassword(req.learner.id, req.body.newPassword);
+    await learnerService.changePassword(userId, newPassword);
 
     res.json({
       status: "success",

@@ -36,7 +36,7 @@ export const loginSchema = z.object({
 export const changePasswordSchema = z
   .object({
     body: z.object({
-      currentPassword: z.string(),
+      currentPassword: z.string().optional(),
       newPassword: z.string().min(8, "Password must be at least 8 characters"),
       confirmPassword: z.string(),
     }),
@@ -55,3 +55,12 @@ export const fcmTokenSchema = z.object({
 export type RegisterSchema = z.infer<typeof registerSchema>;
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type FCMTokenSchema = z.infer<typeof fcmTokenSchema>;
+
+export const oAuthSchema = z.object({
+  body: z.object({
+    idToken: z.string(),
+    role: z.enum(["learner", "tutor"]),
+  }),
+});
+
+export type OAuthSchema = z.infer<typeof oAuthSchema>;

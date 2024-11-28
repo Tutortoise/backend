@@ -2,6 +2,7 @@ import * as authController from "@/module/auth/auth.controller";
 import {
   fcmTokenSchema,
   loginSchema,
+  oAuthSchema,
   registerSchema,
 } from "@/module/auth/auth.schema";
 import { validator } from "@middleware/validation.middleware";
@@ -30,6 +31,13 @@ authRouter.post(
   // #swagger.tags = ['auth']
   validator(loginSchema),
   authController.login,
+);
+
+authRouter.post(
+  "/google",
+  // #swagger.tags = ['auth']
+  validator(oAuthSchema),
+  authController.googleAuth,
 );
 
 authRouter.post(

@@ -61,5 +61,7 @@ export const bucket =
     ? admin.storage().bucket(GCS_BUCKET_NAME) // use the firebase storage emulator
     : new Storage().bucket(GCS_BUCKET_NAME);
 
+export const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID!;
+
 export const FACE_VALIDATION_URL = process.env.FACE_VALIDATION_URL;
 export const FACE_VALIDATION_ENABLED = !!FACE_VALIDATION_URL;

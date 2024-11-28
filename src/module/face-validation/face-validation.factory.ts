@@ -7,7 +7,7 @@ import { logger } from "@middleware/logging.middleware";
 import axios from "axios";
 
 export const createFaceValidationService = () => {
-  if (!FACE_VALIDATION_ENABLED) {
+  if (process.env.NODE_ENV === "test" || !FACE_VALIDATION_ENABLED) {
     logger.info("Face validation is disabled, using NoOp service");
     return new NoOpFaceValidationService();
   }

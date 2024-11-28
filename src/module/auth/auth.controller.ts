@@ -1,11 +1,18 @@
 import type { Controller } from "@/types";
-import { LoginSchema, RegisterSchema } from "@/module/auth/auth.schema";
+import {
+  LoginSchema,
+  oAuthSchema,
+  RegisterSchema,
+} from "@/module/auth/auth.schema";
 import { AuthService } from "@/module/auth/auth.service";
 import { fcmTokenSchema } from "@/module/auth/auth.schema";
 import { z } from "zod";
 import { FCMService } from "@/common/fcm.service";
 import { container } from "@/container";
 import { generateJWT } from "@/helpers/jwt.helper";
+import { OAuthService } from "@/common/oauth.service";
+import { GOOGLE_OAUTH_CLIENT_ID } from "@/config";
+import { logger } from "@middleware/logging.middleware";
 
 const fcmService = new FCMService({
   fcmRepository: container.fcmRepository,
@@ -118,6 +125,32 @@ export const removeFCMToken: Controller<FCMTokenSchema> = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Failed to remove FCM token",
+    });
+  }
+};
+
+type OAuthSchema = z.infer<typeof oAuthSchema>;
+
+export const googleAuth: Controller<OAuthSchema> = async (req, res) => {
+  try {
+    const { idToken, role } = req.body;
+
+    const oAuthService = new OAuthService({
+      authRepository: container.authRepository,
+      clientId: GOOGLE_OAUTH_CLIENT_ID,
+    });
+
+    const result = await oAuthService.authenticateWithGoogle(idToken, role);
+
+    res.json({
+      status: "success",
+      data: result,
+    });
+  } catch (error) {
+    logger.error(`Google OAuth authentication failed: ${error}`);
+    res.status(400).json({
+      status: "error",
+      message: "Authentication failed",
     });
   }
 };

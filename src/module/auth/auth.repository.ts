@@ -125,4 +125,28 @@ export class AuthRepository {
   ) {
     return compare(password, hashedPassword);
   }
+
+  async findUserByEmail(email: string) {
+    const [learner, tutor] = await Promise.all([
+      this.db
+        .select({ id: learners.id })
+        .from(learners)
+        .where(eq(learners.email, email))
+        .limit(1),
+      this.db
+        .select({ id: tutors.id })
+        .from(tutors)
+        .where(eq(tutors.email, email))
+        .limit(1),
+    ]);
+
+    if (learner[0]) {
+      return { id: learner[0].id, role: "learner" as const };
+    }
+    if (tutor[0]) {
+      return { id: tutor[0].id, role: "tutor" as const };
+    }
+
+    return null;
+  }
 }

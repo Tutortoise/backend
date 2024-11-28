@@ -28,6 +28,7 @@
     "express": "^4.21.1",
     "express-rate-limit": "^7.4.1",
     "firebase-admin": "^12.7.0",
+    "google-auth-library": "^9.15.0",
     "groq-sdk": "^0.8.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
