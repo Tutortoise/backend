@@ -10,4 +10,11 @@ subjectRouter.get(
   subjectController.getAllSubjects,
 );
 
+subjectRouter.get(
+  "/popular",
+  // #swagger.tags = ['subjects']
+  // #swagger.description = 'Get subjects sorted by number of available tutories'
+  subjectController.getPopularSubjects,
+);
+
 export default subjectRouter;

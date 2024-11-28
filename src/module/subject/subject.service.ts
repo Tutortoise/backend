@@ -19,6 +19,14 @@ export class SubjectService {
     }
   }
 
+  public async getPopularSubjects() {
+    try {
+      return await this.subjectRepository.getPopularSubjects();
+    } catch (error) {
+      throw new Error(`Error when getting popular subjects: ${error}`);
+    }
+  }
+
   public async checkSubjectExists(subjectId: string) {
     return this.subjectRepository.checkSubjectExists(subjectId);
   }

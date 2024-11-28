@@ -20,3 +20,20 @@ export const getAllSubjects: Controller = async (_req, res) => {
     });
   }
 };
+
+export const getPopularSubjects: Controller = async (_req, res) => {
+  try {
+    const subjects = await subjectService.getPopularSubjects();
+
+    res.json({
+      status: "success",
+      data: subjects,
+    });
+  } catch (error) {
+    logger.error(`Error when getting popular subjects: ${error}`);
+    res.status(400).json({
+      status: "fail",
+      message: "Failed to get popular subjects",
+    });
+  }
+};

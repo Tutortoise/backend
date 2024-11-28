@@ -1,6 +1,6 @@
 import type { db as dbType } from "@/db/config";
-import { eq, inArray } from "drizzle-orm";
-import { subjects } from "@/db/schema";
+import { desc, eq, inArray, sql } from "drizzle-orm";
+import { subjects, tutories } from "@/db/schema";
 
 export class SubjectRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -11,6 +11,27 @@ export class SubjectRepository {
       id: subject.id,
       name: subject.name,
       iconUrl: subject.iconUrl,
+    }));
+  }
+
+  public async getPopularSubjects() {
+    const results = await this.db
+      .select({
+        id: subjects.id,
+        name: subjects.name,
+        iconUrl: subjects.iconUrl,
+        tutoriesCount: sql<number>`COUNT(${tutories.id})::int`,
+      })
+      .from(subjects)
+      .leftJoin(tutories, eq(subjects.id, tutories.subjectId))
+      .groupBy(subjects.id)
+      .orderBy(desc(sql`COUNT(${tutories.id})`));
+
+    return results.map((subject) => ({
+      id: subject.id,
+      name: subject.name,
+      iconUrl: subject.iconUrl,
+      tutoriesCount: subject.tutoriesCount,
     }));
   }
 
