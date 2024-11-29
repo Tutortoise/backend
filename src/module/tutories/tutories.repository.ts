@@ -73,6 +73,7 @@ export class TutoriesRepository {
       return await this.db
         .select({
           id: tutories.id,
+          tutorId: tutors.id,
           tutorName: tutors.name,
           subjectName: subjects.name,
           hourlyRate: tutories.hourlyRate,
