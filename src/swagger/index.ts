@@ -1,7 +1,8 @@
-import { PORT } from "@/config";
 import swagger from "swagger-autogen";
+import { components } from "./components";
+import { tags } from "./tags";
 
-const swaggerAutogen = swagger();
+const swaggerAutogen = swagger({ openapi: "3.0.0" });
 
 const definitions = {
   info: {
@@ -33,40 +34,8 @@ const definitions = {
       },
     },
   ],
-  tags: [
-    {
-      name: "auth",
-      description: "Authentication related endpoints",
-    },
-    {
-      name: "chat",
-      description: "Chat related endpoints",
-    },
-    {
-      name: "subjects",
-      description: "Subject related endpoints",
-    },
-    {
-      name: "learners",
-      description: "Learner related endpoints",
-    },
-    {
-      name: "tutors",
-      description: "Tutor related endpoints",
-    },
-    {
-      name: "tutors/services",
-      description: "Tutor services related endpoints",
-    },
-    {
-      name: "orders",
-      description: "Order related endpoints",
-    },
-    {
-      name: "reviews",
-      description: "Review related endpoints",
-    },
-  ],
+  tags,
+  components,
 };
 
 const outputFile = "./specs.json";
