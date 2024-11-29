@@ -21,28 +21,40 @@ authRouter.get(
 
 authRouter.post(
   "/register",
-  // #swagger.tags = ['auth']
+  /* #swagger.tags = ['auth']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/RegisterSchema" }
+  } */
   validator(registerSchema),
   authController.register,
 );
 
 authRouter.post(
   "/login",
-  // #swagger.tags = ['auth']
+  /* #swagger.tags = ['auth']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/LoginSchema" }
+  } */
   validator(loginSchema),
   authController.login,
 );
 
 authRouter.post(
   "/google",
-  // #swagger.tags = ['auth']
+  /* #swagger.tags = ['auth']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/OAuthSchema" }
+  } */
   validator(oAuthSchema),
   authController.googleAuth,
 );
 
 authRouter.post(
   "/fcm-token",
-  // #swagger.tags = ['auth']
+  /* #swagger.tags = ['auth']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/FCMTokenSchema" }
+  } */
   jwtAuthMiddleware,
   validator(fcmTokenSchema),
   authController.updateFCMToken,

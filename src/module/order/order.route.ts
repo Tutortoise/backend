@@ -26,7 +26,10 @@ orderRouter.get(
 
 orderRouter.post(
   "/",
-  // #swagger.tags = ['orders']
+  /* #swagger.tags = ['orders'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/CreateOrderSchema" }
+  } */
   verifyLearner,
   validator(createOrderSchema),
   orderController.createOrder,

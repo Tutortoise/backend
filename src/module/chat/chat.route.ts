@@ -18,7 +18,10 @@ chatRouter.use(jwtAuthMiddleware);
 
 chatRouter.post(
   "/rooms",
-  // #swagger.tags = ['chat']
+  /* #swagger.tags = ['chat'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/CreateRoomSchema" }
+  } */
   validator(createRoomSchema),
   chatController.createRoom,
 );
@@ -38,20 +41,34 @@ chatRouter.get(
 // - For now i seperate it because of issue in zod that can't validate the request body properly
 chatRouter.post(
   "/rooms/:roomId/messages/text",
-  // #swagger.tags = ['chat']
+  /* #swagger.tags = ['chat'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/SendTextMessageSchema" }
+  } */
   validator(sendTextMessageSchema),
   chatController.sendMessage,
 );
 chatRouter.post(
   "/rooms/:roomId/messages/image",
-  // #swagger.tags = ['chat']
+  /* #swagger.tags = ['chat']
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        'image/jpg': {
+          schema: {  type: 'string', format: 'binary' }
+        }
+      }
+    } */
   validateChatImageUpload,
   chatController.sendMessage,
 );
 
 chatRouter.post(
   "/rooms/:roomId/typing",
-  // #swagger.tags = ['chat']
+  /* #swagger.tags = ['chat'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/SetIsTypingSchema" }
+  } */
   validator(
     z.object({
       params: z.object({

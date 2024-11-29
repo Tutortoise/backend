@@ -23,7 +23,10 @@ reviewRouter.use(verifyLearner);
 
 reviewRouter.post(
   "/orders/:orderId",
-  // #swagger.tags = ['reviews']
+  /* #swagger.tags = ['reviews']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/CreateReviewSchema" }
+  } */
   validator(createReviewSchema),
   reviewController.createReview,
 );

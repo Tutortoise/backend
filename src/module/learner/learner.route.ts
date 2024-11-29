@@ -24,21 +24,35 @@ learnerRouter.get(
 
 learnerRouter.patch(
   "/profile",
-  // #swagger.tags = ['learners']
+  /* #swagger.tags = ['learners'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/UpdateLearnerProfileSchema" }
+  } */
   validator(updateProfileSchema),
   learnerController.updateProfile,
 );
 
 learnerRouter.put(
   "/profile/picture",
-  // #swagger.tags = ['learners']
+  /* #swagger.tags = ['learners'] 
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        'image/jpg': {
+          schema: {  type: 'string', format: 'binary' }
+        }
+      }
+    } */
   validateProfilePictureUpload,
   learnerController.updateProfilePicture,
 );
 
 learnerRouter.put(
   "/password",
-  // #swagger.tags = ['learners']
+  /* #swagger.tags = ['learners'] 
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/ChangePasswordSchema" }
+  } */
   validator(changePasswordSchema),
   learnerController.changePassword,
 );

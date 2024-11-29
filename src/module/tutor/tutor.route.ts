@@ -22,20 +22,34 @@ tutorRouter.get(
 tutorRouter.patch(
   "/profile",
   // #swagger.tags = ['tutors']
+  /* #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/UpdateTutorProfileSchema" }
+  } */
   validator(updateProfileSchema),
   tutorController.updateProfile,
 );
 
 tutorRouter.put(
   "/profile/picture",
-  // #swagger.tags = ['tutors']
+  /* #swagger.tags = ['tutors']
+  #swagger.requestBody = {
+    required: true,
+    content: {
+      'image/jpg': {
+        schema: {  type: 'string', format: 'binary' }
+      }
+    }
+  } */
   validateProfilePictureUpload,
   tutorController.updateProfilePicture,
 );
 
 tutorRouter.put(
   "/password",
-  // #swagger.tags = ['tutors']
+  /* #swagger.tags = ['tutors']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/ChangePasswordSchema" }
+  } */
   validator(changePasswordSchema),
   tutorController.changePassword,
 );

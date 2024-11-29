@@ -39,13 +39,19 @@ tutoriesRouter.get(
 
 tutoriesRouter.post(
   "/",
-  // #swagger.tags = ['tutors/services']
+  /* #swagger.tags = ['tutors/services']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/CreateTutoriesSchema" }
+  } */
   validator(createTutoriesSchema),
   tutoriesController.createTutories,
 );
 tutoriesRouter.patch(
   "/:tutoriesId",
-  // #swagger.tags = ['tutors/services']
+  /* #swagger.tags = ['tutors/services']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/UpdateTutoriesSchema" }
+  } */
   validator(updateTutoriesSchema),
   tutoriesController.updateTutories,
 );
