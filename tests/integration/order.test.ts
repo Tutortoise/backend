@@ -10,6 +10,23 @@ const tutorRepository = container.tutorRepository;
 const tutoriesRepository = container.tutoriesRepository;
 const orderRepository = container.orderRepository;
 
+async function getRandomTutories() {
+  const tutories = await tutoriesRepository.getTutories();
+  let randomTutories;
+  let availability;
+  do {
+    randomTutories = faker.helpers.arrayElement(tutories);
+    availability = await tutoriesRepository.getTutoriesAvailability(
+      randomTutories.id,
+    );
+
+    if (availability.length === 0) {
+      console.log("No availability found for this tutories, retrying...");
+    }
+  } while (availability.length === 0);
+  return { randomTutories, availability };
+}
+
 function cleanupOrders(createdOrders: string[]): unknown {
   return Promise.all(
     createdOrders.map((orderId) => orderRepository.deleteOrder(orderId)),
@@ -81,18 +98,12 @@ async function registerAndLoginUser(role: "learner" | "tutor") {
 describe("Order a tutories", async () => {
   const { token } = await registerAndLoginUser("learner");
 
-  const randomTutories = faker.helpers.arrayElement(
-    await tutoriesRepository.getTutories(),
-  );
+  const { randomTutories, availability } = await getRandomTutories();
 
   const createdOrders: string[] = [];
   afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Learner can order a tutories", async () => {
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
-
     const { orderId } = await createOrder({
       learnerToken: token,
       tutoriesId: randomTutories.id,
@@ -131,16 +142,10 @@ describe("Accept an order", async () => {
   afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Tutor can accept an order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
+    const { randomTutories, availability } = await getRandomTutories();
 
     const { token: learnerToken } = await registerAndLoginUser("learner");
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
-
-    // Create an order
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
 
     const { orderId } = await createOrder({
       learnerToken,
@@ -159,13 +164,7 @@ describe("Accept an order", async () => {
   });
 
   test("Other tutor cannot accept the order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
-
-    // Create an order
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
+    const { randomTutories, availability } = await getRandomTutories();
 
     const { token: learnerToken } = await registerAndLoginUser("learner");
 
@@ -192,15 +191,9 @@ describe("Decline an order", async () => {
   afterAll(async () => await cleanupOrders(createdOrders));
 
   test("Tutor can decline an order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
+    const { randomTutories, availability } = await getRandomTutories();
 
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
-
-    // Create an order
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
 
     const { orderId } = await createOrder({
       learnerToken,
@@ -224,14 +217,8 @@ describe("Decline an order", async () => {
   });
 
   test("Other tutor cannot decline the order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
-
+    const { randomTutories, availability } = await getRandomTutories();
     // Create an order
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
-
     const { orderId } = await createOrder({
       learnerToken,
       tutoriesId: randomTutories.id,
@@ -253,14 +240,8 @@ describe("Handle availability edge cases", async () => {
   afterEach(async () => await cleanupOrders(createdOrders));
 
   test("Learner cannot order a tutories when there is already a scheduled order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
-
+    const { randomTutories, availability } = await getRandomTutories();
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
-
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
 
     // User 1 order a tutories
     const { token: learnerToken } = await registerAndLoginUser("learner");
@@ -312,13 +293,8 @@ describe("Handle availability edge cases", async () => {
   });
 
   test("Tutor cannot accept an order when there is already a scheduled order", async () => {
-    const tutories = await tutoriesRepository.getTutories();
-    const randomTutories = faker.helpers.arrayElement(tutories);
+    const { randomTutories, availability } = await getRandomTutories();
     const tutorToken = await loginAsTutor(randomTutories.tutorName);
-
-    const availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
-    );
 
     // Ensure there is available time slot
     expect(availability.length).toBeGreaterThan(0);
