@@ -92,6 +92,26 @@ export class TutoriesService {
     }
   }
 
+  async getAverageRate({
+    subjectId,
+    city,
+    district,
+  }: {
+    subjectId: string;
+    city?: string;
+    district?: string;
+  }) {
+    try {
+      return await this.tutoriesRepository.getAverageHourlyRate({
+        subjectId,
+        city,
+        district,
+      });
+    } catch (error) {
+      logger.error(`Failed to get average rate: ${error}`);
+    }
+  }
+
   async createTutorService(
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],

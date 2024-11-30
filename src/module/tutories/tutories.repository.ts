@@ -10,7 +10,7 @@ import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
-import { and, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
+import { and, avg, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
 
 type GetTutoriesFilters = {
@@ -200,6 +200,33 @@ export class TutoriesRepository {
     } catch (error) {
       throw new Error(`Failed to get tutor service availability: ${error}`);
     }
+  }
+
+  async getAverageHourlyRate({
+    subjectId,
+    city,
+    district,
+  }: {
+    subjectId: string;
+    city?: string;
+    district?: string;
+  }) {
+    let locationCondition;
+    if (city) {
+      locationCondition = eq(tutors.city, city);
+    } else if (district) {
+      locationCondition = eq(tutors.district, district);
+    }
+
+    const [result] = await this.db
+      .select({
+        avgHourlyRate: avg(tutories.hourlyRate),
+      })
+      .from(tutories)
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .where(and(eq(tutories.subjectId, subjectId), locationCondition));
+
+    return parseFloat(result.avgHourlyRate ?? "0");
   }
 
   async createTutories(

@@ -2,6 +2,7 @@ import { jwtAuthMiddleware, verifyTutor } from "@/module/auth/auth.middleware";
 import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
   createTutoriesSchema,
+  getAverageRateSchema,
   getTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
@@ -18,6 +19,14 @@ tutoriesRouter.get(
   validator(getTutoriesSchema),
   tutoriesController.getAllTutories,
 );
+
+tutoriesRouter.get(
+  "/avg-rate",
+  // #swagger.tags = ['tutors/services']
+  validator(getAverageRateSchema),
+  tutoriesController.getAverageRate,
+);
+
 tutoriesRouter.get(
   "/:tutoriesId",
   // #swagger.tags = ['tutors/services']

@@ -2,6 +2,7 @@ import { container } from "@/container";
 import {
   createTutoriesSchema,
   deleteTutorServiceSchema,
+  getAverageRateSchema,
   getServiceSchema,
   getTutoriesSchema,
   updateTutoriesSchema,
@@ -123,6 +124,32 @@ export const getTutoriesAvailability: Controller<GetServiceSchema> = async (
     res.status(500).json({
       status: "error",
       message: `Failed to get tutor service availability`,
+    });
+  }
+};
+
+type GetAverageRateSchema = z.infer<typeof getAverageRateSchema>;
+export const getAverageRate: Controller<GetAverageRateSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    const averageRate = await tutoriesService.getAverageRate({
+      subjectId: req.query.subjectId,
+      city: req.query.city,
+      district: req.query.district,
+    });
+
+    res.json({
+      status: "success",
+      data: averageRate,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor services: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor services`,
     });
   }
 };

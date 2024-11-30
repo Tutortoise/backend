@@ -110,6 +110,22 @@ export const getServiceSchema = z.object({
   }),
 });
 
+export const getAverageRateSchema = z.object({
+  query: z.object({
+    subjectId: z.string().superRefine(async (subjectId, ctx) => {
+      const exists = await subjectRepository.checkSubjectExists(subjectId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Subject does not exist",
+        });
+      }
+    }),
+    city: z.string().optional(),
+    district: z.string().optional(),
+  }),
+});
+
 export const createTutoriesSchema = z.object({
   body: tutoriesSchema.omit({
     id: true,
