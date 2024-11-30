@@ -10,7 +10,7 @@ import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
-import { and, eq, gte, like, lte, not, or } from "drizzle-orm";
+import { and, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
 
 type GetTutoriesFilters = {
@@ -64,8 +64,8 @@ export class TutoriesRepository {
       if (filters.q) {
         conditions.push(
           or(
-            like(tutors.name, `%${filters.q}%`),
-            like(subjects.name, `%${filters.q}%`),
+            ilike(tutors.name, `%${filters.q}%`),
+            ilike(subjects.name, `%${filters.q}%`),
           ),
         );
       }
