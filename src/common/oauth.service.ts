@@ -36,13 +36,13 @@ export class OAuthService {
     }
   }
 
-  async authenticateWithGoogle(idToken: string, role: "learner" | "tutor") {
+  async authenticateWithGoogle(idToken: string, role?: "learner" | "tutor") {
     const userData = await this.verifyGoogleToken(idToken);
 
     // Check if user exists
     let user = await this.authRepository.findUserByEmail(userData.email);
 
-    if (!user) {
+    if (!user && role) {
       // Register new user
       const result = await this.authRepository.registerUser({
         email: userData.email,
@@ -57,16 +57,18 @@ export class OAuthService {
       };
     }
 
+    if (!user) throw new Error("Role is required for new users");
+
     const token = generateJWT({
-      id: user!.id,
-      role: user!.role,
+      id: user.id,
+      role: user.role,
     });
 
     return {
       token,
       user: {
-        id: user!.id,
-        role: user!.role,
+        id: user.id,
+        role: user.role,
       },
     };
   }

@@ -59,7 +59,7 @@ export type FCMTokenSchema = z.infer<typeof fcmTokenSchema>;
 export const oAuthSchema = z.object({
   body: z.object({
     idToken: z.string(),
-    role: z.enum(["learner", "tutor"]),
+    role: z.enum(["learner", "tutor"]).optional(),
   }),
 });
 
