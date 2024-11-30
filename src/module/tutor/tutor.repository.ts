@@ -1,11 +1,12 @@
 import { tutors, tutories } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm/expressions";
 import { db as dbType } from "@/db/config";
+import { Tutor } from "@/types";
 
 export class TutorRepository {
   constructor(private readonly db: typeof dbType) {}
 
-  public async updateTutorProfile(userId: string, data: any) {
+  public async updateTutor(userId: string, data: Partial<Tutor>) {
     await this.db
       .update(tutors)
       .set({ ...data, updatedAt: new Date() })

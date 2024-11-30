@@ -184,7 +184,7 @@ export const createTutories: Controller<CreateTutorServiceSchema> = async (
   const tutorId = req.tutor.id;
 
   try {
-    const data = await tutoriesService.createTutorService(tutorId, req.body);
+    const data = await tutoriesService.createTutories(tutorId, req.body);
 
     res.status(201).json({
       status: "success",

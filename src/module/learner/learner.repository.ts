@@ -1,12 +1,16 @@
 import type { db as dbType } from "@/db/config";
 import { interests, learners, subjects } from "@/db/schema";
+import { Learner } from "@/types";
 import { eq } from "drizzle-orm/expressions";
 
 export class LearnerRepository {
   constructor(private readonly db: typeof dbType) {}
 
   // Update learner profile
-  public async updateLearnerProfile(userId: string, data: any) {
+  public async updateLearnerProfile(
+    userId: string,
+    data: Partial<Learner> & { interests?: string[] },
+  ) {
     if (data.interests) {
       await this.db.delete(interests).where(eq(interests.learnerId, userId));
       await this.db.insert(interests).values(

@@ -57,6 +57,13 @@
       "when": 1732580364629,
       "tag": "0007_strong_saracen",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1732953095747,
+      "tag": "0008_orange_lilith",
+      "breakpoints": true
     }
   ]
 }

@@ -93,12 +93,19 @@ export const tutors = pgTable("tutors", {
   phoneNumber: varchar("phone_number", { length: 20 }),
   city: varchar({ length: 255 }),
   district: varchar({ length: 255 }),
+  availability: jsonb("availability").$type<TutorAvailability>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at"),
 });
 
 export type TutorAvailability = {
-  [key: number]: string[]; // day index: array of time slots
+  0?: string[];
+  1?: string[];
+  2?: string[];
+  3?: string[];
+  4?: string[];
+  5?: string[];
+  6?: string[];
 };
 
 export const tutories = pgTable(
@@ -117,7 +124,6 @@ export const tutories = pgTable(
     teachingMethodology: text("teaching_methodology").notNull(),
     hourlyRate: integer("hourly_rate").notNull(),
     typeLesson: typeLessonEnum("type_lesson"),
-    availability: jsonb("availability").$type<TutorAvailability>(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at"),
   },

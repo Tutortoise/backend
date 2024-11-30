@@ -35,7 +35,7 @@ export class TutoriesService {
     this.reviewRepository = reviewRepository;
   }
 
-  // TODO: Implement realtime updates for tutor service availability
+  // TODO: Implement realtime updates for tutories availability
   // - Use Realtime Database to track tutor online status
   // - Show real-time booking availability
   // - Update tutor's current location for nearby search
@@ -73,9 +73,9 @@ export class TutoriesService {
 
   async getTutoriesDetail(tutoriesId: string) {
     try {
-      const service =
+      const tutoriesDetail =
         await this.tutoriesRepository.getTutoriesDetail(tutoriesId);
-      return service;
+      return tutoriesDetail;
     } catch (error) {
       logger.error(`Failed to get tutories detail: ${error}`);
     }
@@ -112,7 +112,7 @@ export class TutoriesService {
     }
   }
 
-  async createTutorService(
+  async createTutories(
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {

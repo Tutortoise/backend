@@ -12,11 +12,38 @@ const cityDistricts = {
   Samarinda: ["Samarinda Utara", "Samarinda Kota", "Samarinda Ilir"],
 };
 
+const generateRandomAvailability = () => {
+  const days = [0, 1, 2, 3, 4, 5, 6] as const;
+
+  const timeSlots = [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "12:00",
+    "12:30",
+    "13:00",
+  ];
+
+  const availability = {} as { [K in (typeof days)[number]]: string[] };
+
+  for (const day of days) {
+    if (faker.datatype.boolean()) {
+      availability[day] = faker.helpers.arrayElements(timeSlots).sort();
+    }
+  }
+
+  return availability;
+};
+
 export const seedTutors = async () => {
   const tutors: Tutor[] = [];
   for (let i = 0; i < 25; i++) {
     const city = faker.helpers.arrayElement(["Surabaya", "Samarinda"]);
     const district = faker.helpers.arrayElement(cityDistricts[city]);
+    const randomAvailability = generateRandomAvailability();
 
     const sexType = faker.person.sexType();
     tutors.push({
@@ -26,6 +53,7 @@ export const seedTutors = async () => {
       gender: sexType,
       city,
       district,
+      availability: randomAvailability,
     });
   }
 
@@ -38,9 +66,10 @@ export const seedTutors = async () => {
       role: "tutor",
     });
 
-    tutorRepository.updateTutorProfile(id, {
+    tutorRepository.updateTutor(id, {
       city: tutor.city,
       district: tutor.district,
+      availability: tutor.availability,
     });
   }
 };

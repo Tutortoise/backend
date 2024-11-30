@@ -2,7 +2,10 @@ import { container } from "@/container";
 import { z } from "zod";
 
 const authRepository = container.authRepository;
-const tutorRepository = container.tutorRepository;
+
+const zodTimesArray = z
+  .array(z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"))
+  .optional();
 
 export const tutorSchema = z.object({
   id: z.string().optional(),
@@ -31,6 +34,24 @@ export const tutorSchema = z.object({
       message:
         "Gender must be one of the following: male, female, or prefer not to say",
     })
+    .optional(),
+  availability: z
+    .object({
+      0: zodTimesArray,
+      1: zodTimesArray,
+      2: zodTimesArray,
+      3: zodTimesArray,
+      4: zodTimesArray,
+      5: zodTimesArray,
+      6: zodTimesArray,
+    })
+    .refine(
+      (availability) => {
+        // Check if at least one day has a time slot
+        return Object.values(availability).some((times) => times?.length);
+      },
+      { message: "At least one day must have a time slot" },
+    )
     .optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),

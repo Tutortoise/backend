@@ -1,15 +1,10 @@
 import { db as dbType } from "@/db/config";
-import {
-  orders,
-  subjects,
-  TutorAvailability,
-  tutories,
-  tutors,
-} from "@/db/schema";
+import { orders, subjects, tutories, tutors } from "@/db/schema";
 import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
+import { DayIndex } from "@/types";
 import { and, avg, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
 
@@ -28,178 +23,164 @@ export class TutoriesRepository {
   constructor(private readonly db: typeof dbType) {}
 
   async getTutories(filters: GetTutoriesFilters = {}) {
-    try {
-      const conditions = [];
+    const conditions = [];
 
-      if (filters.subjectId) {
-        conditions.push(eq(tutories.subjectId, filters.subjectId));
-      }
-
-      if (filters.tutorId) {
-        conditions.push(eq(tutories.tutorId, filters.tutorId));
-      }
-
-      if (
-        typeof filters.minHourlyRate !== "undefined" &&
-        filters.minHourlyRate !== null
-      ) {
-        conditions.push(gte(tutories.hourlyRate, filters.minHourlyRate));
-      }
-
-      if (
-        typeof filters.maxHourlyRate !== "undefined" &&
-        filters.maxHourlyRate !== null
-      ) {
-        conditions.push(lte(tutories.hourlyRate, filters.maxHourlyRate));
-      }
-
-      if (filters.typeLesson) {
-        conditions.push(eq(tutories.typeLesson, filters.typeLesson));
-      }
-
-      if (filters.city) {
-        conditions.push(like(tutors.city, `%${filters.city}%`));
-      }
-
-      if (filters.q) {
-        conditions.push(
-          or(
-            ilike(tutors.name, `%${filters.q}%`),
-            ilike(subjects.name, `%${filters.q}%`),
-          ),
-        );
-      }
-
-      return await this.db
-        .select({
-          id: tutories.id,
-          tutorId: tutors.id,
-          tutorName: tutors.name,
-          subjectName: subjects.name,
-          hourlyRate: tutories.hourlyRate,
-          typeLesson: tutories.typeLesson,
-          city: tutors.city,
-          district: tutors.district,
-        })
-        .from(tutories)
-        .where(and(...conditions))
-        .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-        .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
-        .execute();
-    } catch (error) {
-      throw new Error(`Failed to get tutories: ${error}`);
+    if (filters.subjectId) {
+      conditions.push(eq(tutories.subjectId, filters.subjectId));
     }
+
+    if (filters.tutorId) {
+      conditions.push(eq(tutories.tutorId, filters.tutorId));
+    }
+
+    if (
+      typeof filters.minHourlyRate !== "undefined" &&
+      filters.minHourlyRate !== null
+    ) {
+      conditions.push(gte(tutories.hourlyRate, filters.minHourlyRate));
+    }
+
+    if (
+      typeof filters.maxHourlyRate !== "undefined" &&
+      filters.maxHourlyRate !== null
+    ) {
+      conditions.push(lte(tutories.hourlyRate, filters.maxHourlyRate));
+    }
+
+    if (filters.typeLesson) {
+      conditions.push(eq(tutories.typeLesson, filters.typeLesson));
+    }
+
+    if (filters.city) {
+      conditions.push(like(tutors.city, `%${filters.city}%`));
+    }
+
+    if (filters.q) {
+      conditions.push(
+        or(
+          ilike(tutors.name, `%${filters.q}%`),
+          ilike(subjects.name, `%${filters.q}%`),
+        ),
+      );
+    }
+
+    return await this.db
+      .select({
+        id: tutories.id,
+        tutorId: tutors.id,
+        tutorName: tutors.name,
+        subjectName: subjects.name,
+        hourlyRate: tutories.hourlyRate,
+        typeLesson: tutories.typeLesson,
+        city: tutors.city,
+        district: tutors.district,
+      })
+      .from(tutories)
+      .where(and(...conditions))
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .execute();
   }
 
   async getTutoriesDetail(tutoriesId: string) {
-    try {
-      const [service] = await this.db
-        .select()
-        .from(tutories)
-        .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-        .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
-        .where(eq(tutories.id, tutoriesId))
-        .limit(1);
+    const [t] = await this.db
+      .select()
+      .from(tutories)
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .where(eq(tutories.id, tutoriesId))
+      .limit(1);
 
-      if (!service) {
-        return null;
-      }
+    if (!t) {
+      return null;
+    }
 
-      const alsoTeaches = await this.db
-        .select({
-          subjectName: subjects.name,
-          hourlyRate: tutories.hourlyRate,
-          typeLesson: tutories.typeLesson,
-        })
-        .from(tutories)
-        .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
-        .where(
-          and(
-            eq(tutories.tutorId, service.tutors.id),
-            not(eq(tutories.id, tutoriesId)),
+    const alsoTeaches = await this.db
+      .select({
+        subjectName: subjects.name,
+        hourlyRate: tutories.hourlyRate,
+        typeLesson: tutories.typeLesson,
+      })
+      .from(tutories)
+      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .where(
+        and(
+          eq(tutories.tutorId, t.tutors.id),
+          not(eq(tutories.id, tutoriesId)),
+        ),
+      );
+
+    return {
+      ...t,
+      alsoTeaches,
+    };
+  }
+
+  async getTutoriesAvailability(tutoriesId: string) {
+    const [t] = await this.db
+      .select({
+        availability: tutors.availability,
+        tutorId: tutories.tutorId,
+      })
+      .from(tutories)
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .where(eq(tutories.id, tutoriesId))
+      .limit(1);
+
+    if (!t) {
+      throw new Error("Tutories not found");
+    }
+
+    const today = new Date();
+    const next2WeeksAvailability: string[] = [];
+
+    const existingOrders = await this.getOrdersByTutor(t.tutorId);
+    const existingOrderTimes = existingOrders
+      .filter((order) => order.status === "scheduled")
+      .map((order) => ({
+        startTime: order.sessionTime,
+        endTime: new Date(order.sessionTime).setHours(
+          new Date(order.sessionTime).getHours() + order.totalHours,
+        ),
+      }));
+
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+
+      const dayIndex = date.getUTCDay() as DayIndex;
+      const times = t.availability?.[dayIndex] || [];
+
+      times.forEach((time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+
+        const datetime = new Date(
+          Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            hours,
+            minutes,
           ),
         );
 
-      return {
-        ...service,
-        alsoTeaches,
-      };
-    } catch (error) {
-      throw new Error(`Failed to get tutories detail: ${error}`);
-    }
-  }
+        // Skip past times
+        if (datetime < today) {
+          return;
+        }
 
-  async getTutoriesAvailability(serviceId: string) {
-    try {
-      const [service] = await this.db
-        .select({
-          availability: tutories.availability,
-          tutorId: tutories.tutorId,
-        })
-        .from(tutories)
-        .where(eq(tutories.id, serviceId))
-        .limit(1);
-
-      if (!service) {
-        throw new Error("Tutor service not found");
-      }
-
-      const today = new Date();
-      const next2WeeksAvailability: string[] = [];
-
-      const existingOrders = await this.getOrdersByTutor(service.tutorId);
-      const existingOrderTimes = existingOrders
-        .filter((order) => order.status === "scheduled")
-        .map((order) => ({
-          startTime: order.sessionTime,
-          endTime: new Date(order.sessionTime).setHours(
-            new Date(order.sessionTime).getHours() + order.totalHours,
-          ),
-        }));
-
-      for (let i = 0; i < 14; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-
-        const dayIndex = date.getUTCDay();
-        const times = service.availability?.[dayIndex] || [];
-
-        times.forEach((time: string) => {
-          const [hours, minutes] = time.split(":").map(Number);
-
-          const datetime = new Date(
-            Date.UTC(
-              date.getUTCFullYear(),
-              date.getUTCMonth(),
-              date.getUTCDate(),
-              hours,
-              minutes,
-            ),
-          );
-
-          // Skip past times
-          if (datetime < today) {
+        // Skip times that are already booked
+        for (const { startTime, endTime } of existingOrderTimes) {
+          if (datetime >= new Date(startTime) && datetime < new Date(endTime)) {
             return;
           }
+        }
 
-          // Skip times that are already booked
-          for (const { startTime, endTime } of existingOrderTimes) {
-            if (
-              datetime >= new Date(startTime) &&
-              datetime < new Date(endTime)
-            ) {
-              return;
-            }
-          }
-
-          next2WeeksAvailability.push(datetime.toISOString());
-        });
-      }
-
-      return next2WeeksAvailability;
-    } catch (error) {
-      throw new Error(`Failed to get tutor service availability: ${error}`);
+        next2WeeksAvailability.push(datetime.toISOString());
+      });
     }
+
+    return next2WeeksAvailability;
   }
 
   async getAverageHourlyRate({
@@ -233,77 +214,53 @@ export class TutoriesRepository {
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
-    const {
-      subjectId,
-      aboutYou,
-      teachingMethodology,
-      hourlyRate,
-      typeLesson,
-      availability,
-    } = data;
+    const { subjectId, aboutYou, teachingMethodology, hourlyRate, typeLesson } =
+      data;
 
-    try {
-      return await this.db
-        .insert(tutories)
-        .values({
-          tutorId,
-          subjectId,
-          aboutYou,
-          teachingMethodology,
-          hourlyRate,
-          typeLesson,
-          availability: availability as TutorAvailability,
-        })
-        .returning({ id: tutories.id });
-    } catch (error) {
-      throw new Error(`Failed to create tutor service: ${error}`);
-    }
+    return await this.db
+      .insert(tutories)
+      .values({
+        tutorId,
+        subjectId,
+        aboutYou,
+        teachingMethodology,
+        hourlyRate,
+        typeLesson,
+      })
+      .returning({ id: tutories.id });
   }
 
   async updateTutories(
-    serviceId: string,
+    tutoriesId: string,
     data: z.infer<typeof updateTutoriesSchema>["body"],
   ) {
-    try {
-      await this.db
-        .update(tutories)
-        .set({
-          ...data,
-          availability: data.availability as TutorAvailability,
-          updatedAt: new Date(),
-        })
-        .where(eq(tutories.id, serviceId));
-    } catch (error) {
-      throw new Error(`Failed to update tutories: ${error}`);
-    }
+    await this.db
+      .update(tutories)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(tutories.id, tutoriesId));
   }
 
-  async deleteTutories(serviceId: string) {
-    try {
-      await this.db.delete(tutories).where(eq(tutories.id, serviceId));
-    } catch (error) {
-      throw new Error(`Failed to delete tutories: ${error}`);
-    }
+  async deleteTutories(tutoriesId: string) {
+    await this.db.delete(tutories).where(eq(tutories.id, tutoriesId));
   }
 
-  async getOrders(serviceId: string) {
-    try {
-      return await this.db
-        .select({
-          id: orders.id,
-          tutoriesId: orders.tutoriesId,
-          sessionTime: orders.sessionTime,
-          totalHours: orders.totalHours,
-          notes: orders.notes,
-          learnerId: orders.learnerId,
-          status: orders.status,
-          createdAt: orders.createdAt,
-        })
-        .from(orders)
-        .where(eq(orders.tutoriesId, serviceId));
-    } catch (error) {
-      throw new Error(`Failed to get orders: ${error}`);
-    }
+  async getOrders(tutoriesId: string) {
+    return await this.db
+      .select({
+        id: orders.id,
+        tutoriesId: orders.tutoriesId,
+        sessionTime: orders.sessionTime,
+        totalHours: orders.totalHours,
+        notes: orders.notes,
+        learnerId: orders.learnerId,
+        status: orders.status,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
+      .where(eq(orders.tutoriesId, tutoriesId));
   }
 
   async getOrdersByTutor(tutorId: string) {
@@ -327,35 +284,35 @@ export class TutoriesRepository {
     }
   }
 
-  async validateTutoriesOwnership(tutorId: string, serviceId: string) {
+  async validateTutoriesOwnership(tutorId: string, tutoriesId: string) {
     try {
-      const [service] = await this.db
+      const [t] = await this.db
         .select({
           id: tutories.id,
         })
         .from(tutories)
-        .where(and(eq(tutories.id, serviceId), eq(tutories.tutorId, tutorId)))
+        .where(and(eq(tutories.id, tutoriesId), eq(tutories.tutorId, tutorId)))
         .limit(1);
 
-      return !!service;
+      return !!t;
     } catch (error) {
-      throw new Error(`Error validating tutor service ownership: ${error}`);
+      throw new Error(`Error validating tutories ownership: ${error}`);
     }
   }
 
-  async checkTutoriesExists(serviceId: string) {
+  async checkTutoriesExists(tutoriesId: string) {
     try {
-      const [service] = await this.db
+      const [t] = await this.db
         .select({
           id: tutories.id,
         })
         .from(tutories)
-        .where(eq(tutories.id, serviceId))
+        .where(eq(tutories.id, tutoriesId))
         .limit(1);
 
-      return !!service;
+      return !!t;
     } catch (error) {
-      throw new Error(`Error checking if tutor service exists: ${error}`);
+      throw new Error(`Error checking if tutories exists: ${error}`);
     }
   }
 }

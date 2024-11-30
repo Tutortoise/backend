@@ -60,6 +60,26 @@ async function registerAndLoginTutor() {
     .send({ email: newTutor.email, password: newTutor.password })
     .expect(200);
 
+  // generate availability
+  const dayIndex = faker.number.int({ min: 0, max: 6 });
+  const availability = {
+    [dayIndex]: faker.helpers.arrayElements([
+      "09:00",
+      "10:00",
+      "11:00",
+      "12:00",
+      "13:00",
+      "14:00",
+      "15:00",
+    ]),
+  };
+
+  await supertest(app)
+    .patch(`/api/v1/tutors/profile`)
+    .send({ availability })
+    .set("Authorization", `Bearer ${loginRes.body.data.token}`)
+    .expect(200);
+
   const token = loginRes.body.data.token;
   expect(token).toBeDefined();
 
@@ -218,22 +238,10 @@ describe("Create tutories", async () => {
   });
 
   test("Create tutories with token", async () => {
-    const dayIndex = faker.number.int({ min: 0, max: 6 });
     const newTutories: Omit<Tutories, "tutorId"> = {
       subjectId: randomSubject.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: {
-        [dayIndex]: faker.helpers.arrayElements([
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-        ]),
-      },
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: faker.lorem.paragraph(),
     };
@@ -275,21 +283,9 @@ describe("Update tutories", async () => {
   });
 
   test("Update tutories with token, but not your own", async () => {
-    const dayIndex = faker.number.int({ min: 0, max: 6 });
     const updatedTutories: Omit<Tutories, "tutorId" | "subjectId"> = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: {
-        [dayIndex]: faker.helpers.arrayElements([
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-        ]),
-      },
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: faker.lorem.paragraph(),
     };
@@ -311,22 +307,10 @@ describe("Update tutories", async () => {
     const subjects = await subjectRepository.getAllSubjects();
     const randomSubject = faker.helpers.arrayElement(subjects);
 
-    const dayIndex = faker.number.int({ min: 0, max: 6 });
     const newTutories: Omit<Tutories, "tutorId"> = {
       subjectId: randomSubject.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: {
-        [dayIndex]: faker.helpers.arrayElements([
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-        ]),
-      },
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: faker.lorem.paragraph(),
     };
@@ -343,17 +327,6 @@ describe("Update tutories", async () => {
     const updatedTutories: Omit<Tutories, "tutorId" | "subjectId"> = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: {
-        [dayIndex]: faker.helpers.arrayElements([
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-        ]),
-      },
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: faker.lorem.paragraph(),
     };
@@ -411,22 +384,10 @@ describe("Delete tutories", async () => {
     const subjects = await subjectRepository.getAllSubjects();
     const randomSubject = faker.helpers.arrayElement(subjects);
 
-    const dayIndex = faker.number.int({ min: 0, max: 6 });
     const newTutories: Omit<Tutories, "tutorId"> = {
       subjectId: randomSubject.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: {
-        [dayIndex]: faker.helpers.arrayElements([
-          "09:00",
-          "10:00",
-          "11:00",
-          "12:00",
-          "13:00",
-          "14:00",
-          "15:00",
-        ]),
-      },
       aboutYou: faker.lorem.paragraph(),
       teachingMethodology: faker.lorem.paragraph(),
     };

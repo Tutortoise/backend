@@ -44,7 +44,7 @@ export class TutorService {
     userId: string,
     data: z.infer<typeof updateProfileSchema>["body"],
   ) {
-    await this.tutorRepository.updateTutorProfile(userId, data);
+    await this.tutorRepository.updateTutor(userId, data);
   }
 
   async updateProfilePicture(
@@ -95,7 +95,7 @@ export class TutorService {
 
   async changePassword(userId: string, newPassword: string) {
     try {
-      await this.tutorRepository.updateTutorProfile(userId, {
+      await this.tutorRepository.updateTutor(userId, {
         password: await hash(newPassword, AuthRepository.SALT_ROUNDS),
       });
     } catch (error) {

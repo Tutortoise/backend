@@ -24,32 +24,6 @@ const generateTeachingMethodology = async (
   return chatCompletion.choices[0].message.content;
 };
 
-const generateRandomAvailability = () => {
-  const days = [0, 1, 2, 3, 4, 5, 6] as const;
-
-  const timeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-  ];
-
-  const availability = {} as { [K in (typeof days)[number]]: string[] };
-
-  for (const day of days) {
-    if (faker.datatype.boolean()) {
-      availability[day] = faker.helpers.arrayElements(timeSlots).sort();
-    }
-  }
-
-  return availability;
-};
-
 export const seedTutories = async ({ randomTeachingMethodology = false }) => {
   const tutories: Tutories[] = [];
 
@@ -65,7 +39,6 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
 
   for (const tutor of tutors) {
     const randomSubject = faker.helpers.arrayElement(subjects);
-    const randomAvailability = generateRandomAvailability();
 
     let subjectTeachingMethodology;
     if (randomTeachingMethodology) {
@@ -92,7 +65,6 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
       teachingMethodology: subjectTeachingMethodology,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000, 200000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
-      availability: randomAvailability,
     });
   }
 
@@ -104,7 +76,6 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
       teachingMethodology: t.teachingMethodology,
       hourlyRate: t.hourlyRate,
       typeLesson: t.typeLesson!,
-      availability: t.availability!,
     });
   }
 };
