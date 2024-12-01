@@ -42,18 +42,11 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
     typeLesson: typeLesson || null,
     minRating: minRating ? parseFloat(minRating as string) : null,
     city: city || null,
+    isDisabled: false,
   };
 
   try {
-    const tutories = await tutoriesService.getTutories({
-      q: filters.q,
-      subjectId: filters.subjectId,
-      minHourlyRate: filters.minHourlyRate,
-      maxHourlyRate: filters.maxHourlyRate,
-      typeLesson: filters.typeLesson,
-      minRating: filters.minRating,
-      city: filters.city,
-    });
+    const tutories = await tutoriesService.getTutories(filters);
 
     res.json({
       status: "success",

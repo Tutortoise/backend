@@ -8,23 +8,13 @@ import { TutoriesRepository } from "./tutories.repository";
 import { ReviewRepository } from "@/module/review/review.repository";
 import { ValidationError } from "../tutor/tutor.error";
 import { TutorRepository } from "../tutor/tutor.repository";
+import { GetTutoriesFilters } from "@/types";
 
 export interface TutorServiceServiceDependencies {
   tutoriesRepository: TutoriesRepository;
   tutorRepository: TutorRepository;
   reviewRepository: ReviewRepository;
 }
-
-type GetTutorServicesFilters = {
-  q?: string | null;
-  subjectId?: string | null;
-  minHourlyRate?: number | null;
-  maxHourlyRate?: number | null;
-  typeLesson?: "online" | "offline" | "both" | null;
-  city?: string | null;
-  tutorId?: string | null;
-  minRating?: number | null;
-};
 
 export class TutoriesService {
   private tutoriesRepository: TutoriesRepository;
@@ -50,7 +40,7 @@ export class TutoriesService {
   // - Notify learners when tutor services they're interested in change
   // - Send booking confirmation notifications
   // - Alert tutors of new booking requests
-  async getTutories(filters: GetTutorServicesFilters) {
+  async getTutories(filters: GetTutoriesFilters) {
     const tutories = await this.tutoriesRepository.getTutories(filters);
 
     // Get ratings for all tutories in parallel

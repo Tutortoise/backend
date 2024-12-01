@@ -27,6 +27,18 @@ export interface Subject {
   iconUrl: string;
 }
 
+export type GetTutoriesFilters = {
+  q?: string | null;
+  subjectId?: string | null;
+  minHourlyRate?: number | null;
+  maxHourlyRate?: number | null;
+  typeLesson?: "online" | "offline" | "both" | null;
+  tutorId?: string | null;
+  city?: string | null;
+  minRating?: number | null;
+  isDisabled?: boolean;
+};
+
 export interface UserPresence {
   isOnline: boolean;
   lastSeen: number;

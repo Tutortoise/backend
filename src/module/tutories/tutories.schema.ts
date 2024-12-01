@@ -52,6 +52,7 @@ export const tutoriesSchema = z.object({
   typeLesson: z.enum(["online", "offline", "both"], {
     message: "Teaching type must be either 'online', 'offline', or 'both'",
   }),
+  isDisabled: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),
 });

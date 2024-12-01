@@ -4,20 +4,9 @@ import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
-import { DayIndex } from "@/types";
+import { DayIndex, GetTutoriesFilters } from "@/types";
 import { and, avg, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
-
-type GetTutoriesFilters = {
-  q?: string | null;
-  subjectId?: string | null;
-  minHourlyRate?: number | null;
-  maxHourlyRate?: number | null;
-  typeLesson?: "online" | "offline" | "both" | null;
-  tutorId?: string | null;
-  city?: string | null;
-  minRating?: number | null;
-};
 
 export class TutoriesRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -62,6 +51,10 @@ export class TutoriesRepository {
           ilike(subjects.name, `%${filters.q}%`),
         ),
       );
+    }
+
+    if (typeof filters.isDisabled === "boolean") {
+      conditions.push(eq(tutories.isDisabled, filters.isDisabled));
     }
 
     return await this.db
