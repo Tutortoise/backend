@@ -118,6 +118,14 @@ export class TutoriesService {
     }
   }
 
+  async getLocations() {
+    try {
+      return await this.tutorRepository.getLocations();
+    } catch (error) {
+      logger.error(`Failed to get all tutories location: ${error}`);
+    }
+  }
+
   async createTutories(
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],

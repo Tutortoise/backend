@@ -28,6 +28,12 @@ tutoriesRouter.get(
 );
 
 tutoriesRouter.get(
+  "/locations",
+  // #swagger.tags = ['tutors/services']
+  tutoriesController.getLocations,
+);
+
+tutoriesRouter.get(
   "/:tutoriesId",
   // #swagger.tags = ['tutors/services']
   tutoriesController.getTutories,

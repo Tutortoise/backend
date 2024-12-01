@@ -1,7 +1,7 @@
-import { tutors, tutories } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm/expressions";
 import { db as dbType } from "@/db/config";
+import { tutories, tutors } from "@/db/schema";
 import { Tutor } from "@/types";
+import { eq, inArray, isNotNull } from "drizzle-orm/expressions";
 
 export class TutorRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -15,6 +15,24 @@ export class TutorRepository {
 
   public async getAllTutors() {
     return await this.db.select().from(tutors);
+  }
+
+  public async getLocations() {
+    const [cities, districts] = await Promise.all([
+      this.db
+        .selectDistinct({ city: tutors.city })
+        .from(tutors)
+        .where(isNotNull(tutors.city)),
+      this.db
+        .selectDistinct({ district: tutors.district })
+        .from(tutors)
+        .where(isNotNull(tutors.district)),
+    ]);
+
+    return {
+      cities: cities.map((c) => c.city),
+      districts: districts.map((d) => d.district),
+    };
   }
 
   public async hasTutors() {

@@ -156,6 +156,19 @@ export const getAverageRate: Controller<GetAverageRateSchema> = async (
   }
 };
 
+export const getLocations: Controller = async (_req, res) => {
+  try {
+    const locations = await tutoriesService.getLocations();
+    res.json({ status: "success", data: locations });
+  } catch (error) {
+    logger.error(`Failed to get all tutories location: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get all tutories location`,
+    });
+  }
+};
+
 export const getMyTutories: Controller = async (req, res) => {
   const tutorId = req.tutor.id;
 
