@@ -78,4 +78,28 @@ export class TutorRepository {
 
     return result[0];
   }
+
+  public async isProfileComplete(tutorId: string) {
+    const [tutor] = await this.db
+      .select({
+        id: tutors.id,
+        name: tutors.name,
+        email: tutors.email,
+        gender: tutors.gender,
+        city: tutors.city,
+        district: tutors.district,
+      })
+      .from(tutors)
+      .where(eq(tutors.id, tutorId))
+      .limit(1);
+
+    return (
+      tutor &&
+      tutor.name &&
+      tutor.email &&
+      tutor.gender &&
+      tutor.city &&
+      tutor.district
+    );
+  }
 }

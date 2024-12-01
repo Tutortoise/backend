@@ -5,6 +5,8 @@ import { container } from "@/container";
 import { generateUser } from "@tests/helpers/generate.helper";
 import { faker } from "@faker-js/faker";
 import { Tutories } from "@/types";
+import { z } from "zod";
+import { updateProfileSchema } from "@/module/tutor/tutor.schema";
 
 const subjectRepository = container.subjectRepository;
 const tutoriesRepository = container.tutoriesRepository;
@@ -84,6 +86,20 @@ async function registerAndLoginTutor() {
   expect(token).toBeDefined();
 
   return { tutor: newTutor, token };
+}
+
+async function updateTutorProfile(token: string) {
+  const data: z.infer<typeof updateProfileSchema>["body"] = {
+    gender: faker.helpers.arrayElement(["male", "female", "prefer not to say"]),
+    city: faker.location.city(),
+    district: faker.location.city(),
+  };
+
+  await supertest(app)
+    .patch(`/api/v1/tutors/profile`)
+    .set("Authorization", `Bearer ${token}`)
+    .send(data)
+    .expect(200);
 }
 
 describe("Get tutories", async () => {
@@ -229,6 +245,7 @@ describe("Get tutories", async () => {
 
 describe("Create tutories", async () => {
   const { token } = await registerAndLoginTutor();
+  updateTutorProfile(token);
 
   const subjects = await subjectRepository.getAllSubjects();
   const randomSubject = faker.helpers.arrayElement(subjects);
@@ -275,6 +292,7 @@ describe("Update tutories", async () => {
   const tutoriesId = tutories[0].id;
 
   const { token } = await registerAndLoginTutor();
+  updateTutorProfile(token);
 
   test("Update tutories without token", async () => {
     await supertest(app)
@@ -302,8 +320,6 @@ describe("Update tutories", async () => {
   });
 
   test("Update tutories with token", async () => {
-    // create new tutories
-    const { token } = await registerAndLoginTutor();
     const subjects = await subjectRepository.getAllSubjects();
     const randomSubject = faker.helpers.arrayElement(subjects);
 
@@ -360,6 +376,7 @@ describe("Delete tutories", async () => {
   const tutoriesId = tutories[0].id;
 
   const { token } = await registerAndLoginTutor();
+  updateTutorProfile(token);
 
   test("Delete tutories without token", async () => {
     await supertest(app)
@@ -380,7 +397,6 @@ describe("Delete tutories", async () => {
 
   test("Delete tutories with token", async () => {
     // create new tutories
-    const { token } = await registerAndLoginTutor();
     const subjects = await subjectRepository.getAllSubjects();
     const randomSubject = faker.helpers.arrayElement(subjects);
 

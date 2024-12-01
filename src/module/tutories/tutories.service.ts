@@ -6,9 +6,12 @@ import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 import { TutoriesRepository } from "./tutories.repository";
 import { ReviewRepository } from "@/module/review/review.repository";
+import { ValidationError } from "../tutor/tutor.error";
+import { TutorRepository } from "../tutor/tutor.repository";
 
 export interface TutorServiceServiceDependencies {
   tutoriesRepository: TutoriesRepository;
+  tutorRepository: TutorRepository;
   reviewRepository: ReviewRepository;
 }
 
@@ -25,13 +28,16 @@ type GetTutorServicesFilters = {
 
 export class TutoriesService {
   private tutoriesRepository: TutoriesRepository;
+  private tutorRepository: TutorRepository;
   private reviewRepository: ReviewRepository;
 
   constructor({
     tutoriesRepository,
+    tutorRepository,
     reviewRepository,
   }: TutorServiceServiceDependencies) {
     this.tutoriesRepository = tutoriesRepository;
+    this.tutorRepository = tutorRepository;
     this.reviewRepository = reviewRepository;
   }
 
@@ -117,12 +123,22 @@ export class TutoriesService {
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
     try {
+      const isTutorProfileComplete =
+        await this.tutorRepository.isProfileComplete(tutorId);
+
+      if (!isTutorProfileComplete) {
+        throw new ValidationError("Tutor profile is incomplete");
+      }
+
       const [{ id }] = await this.tutoriesRepository.createTutories(
         tutorId,
         data,
       );
       return { tutoriesId: id };
     } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
       logger.error(`Failed to create tutories: ${error}`);
     }
   }

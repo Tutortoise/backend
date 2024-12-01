@@ -11,9 +11,11 @@ import { TutoriesService } from "@/module/tutories/tutories.service";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
+import { ValidationError } from "../tutor/tutor.error";
 
 const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,
+  tutorRepository: container.tutorRepository,
   reviewRepository: container.reviewRepository,
 });
 
@@ -192,6 +194,14 @@ export const createTutories: Controller<CreateTutorServiceSchema> = async (
       data,
     });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      res.status(400).json({
+        status: "fail",
+        message: error.message,
+      });
+      return;
+    }
+
     logger.error(`Failed to create tutor service: ${error}`);
 
     res.status(500).json({
