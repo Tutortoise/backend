@@ -1,6 +1,6 @@
 import { db as dbType } from "@/db/config";
 import { chatRooms, chatMessages, learners, tutors } from "@/db/schema";
-import { eq, and, desc, lt, not } from "drizzle-orm";
+import { eq, and, desc, lt, not, asc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import type { MessageType, UserRole } from "@/db/schema";
 import { ChatRoomWithParticipants } from "./chat.types";
@@ -89,7 +89,7 @@ export class ChatRepository {
       .select()
       .from(chatMessages)
       .where(and(...conditions))
-      .orderBy(desc(chatMessages.sentAt))
+      .orderBy(asc(chatMessages.sentAt))
       .limit(limit);
   }
 
