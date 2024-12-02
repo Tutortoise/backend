@@ -77,7 +77,18 @@ export class TutoriesRepository {
 
   async getTutoriesDetail(tutoriesId: string) {
     const [t] = await this.db
-      .select()
+      .select({
+        id: tutories.id,
+        tutorId: tutors.id,
+        categoryName: categories.name,
+        tutorName: tutors.name,
+        aboutYou: tutories.aboutYou,
+        teachingMethodology: tutories.teachingMethodology,
+        hourlyRate: tutories.hourlyRate,
+        typeLesson: tutories.typeLesson,
+        city: tutors.city,
+        district: tutors.district,
+      })
       .from(tutories)
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
       .innerJoin(categories, eq(tutories.categoryId, categories.id))
@@ -98,10 +109,7 @@ export class TutoriesRepository {
       .from(tutories)
       .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .where(
-        and(
-          eq(tutories.tutorId, t.tutors.id),
-          not(eq(tutories.id, tutoriesId)),
-        ),
+        and(eq(tutories.tutorId, t.tutorId), not(eq(tutories.id, tutoriesId))),
       );
 
     return {
