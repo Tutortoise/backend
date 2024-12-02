@@ -24,6 +24,10 @@ export const tutoriesSchema = z.object({
       });
     }
   }),
+  name: z
+    .string()
+    .min(3, { message: "Tutories name must be at least 3 characters" })
+    .max(50, { message: "Tutoires name must be at most 50 characters" }),
   // About the tutor's experience
   aboutYou: z
     .string()
@@ -112,6 +116,7 @@ export const createTutoriesSchema = z.object({
     updatedAt: true,
   }),
 });
+export type CreateTutories = z.infer<typeof createTutoriesSchema>["body"];
 
 export const updateTutoriesSchema = z.object({
   body: tutoriesSchema
@@ -127,8 +132,9 @@ export const updateTutoriesSchema = z.object({
     tutoriesId: z.string(),
   }),
 });
+export type UpdateTutories = z.infer<typeof updateTutoriesSchema>["body"];
 
-export const deleteTutorServiceSchema = z.object({
+export const deleteTutoriesSchema = z.object({
   params: z.object({
     tutoriesId: z.string(),
   }),

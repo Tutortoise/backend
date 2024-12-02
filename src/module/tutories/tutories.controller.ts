@@ -1,7 +1,7 @@
 import { container } from "@/container";
 import {
   createTutoriesSchema,
-  deleteTutorServiceSchema,
+  deleteTutoriesSchema,
   getAverageRateSchema,
   getServiceSchema,
   getTutoriesSchema,
@@ -255,7 +255,7 @@ export const updateTutories: Controller<UpdateTutorServiceSchema> = async (
   }
 };
 
-type DeleteTutorServiceSchema = z.infer<typeof deleteTutorServiceSchema>;
+type DeleteTutorServiceSchema = z.infer<typeof deleteTutoriesSchema>;
 export const deleteTutories: Controller<DeleteTutorServiceSchema> = async (
   req,
   res,

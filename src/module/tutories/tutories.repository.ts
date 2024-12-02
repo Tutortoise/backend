@@ -60,6 +60,7 @@ export class TutoriesRepository {
     return await this.db
       .select({
         id: tutories.id,
+        name: tutories.name,
         tutorId: tutors.id,
         tutorName: tutors.name,
         categoryName: categories.name,
@@ -79,6 +80,7 @@ export class TutoriesRepository {
     const [t] = await this.db
       .select({
         id: tutories.id,
+        name: tutories.name,
         tutorId: tutors.id,
         categoryName: categories.name,
         tutorName: tutors.name,
@@ -221,24 +223,9 @@ export class TutoriesRepository {
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
-    const {
-      categoryId,
-      aboutYou,
-      teachingMethodology,
-      hourlyRate,
-      typeLesson,
-    } = data;
-
     return await this.db
       .insert(tutories)
-      .values({
-        tutorId,
-        categoryId,
-        aboutYou,
-        teachingMethodology,
-        hourlyRate,
-        typeLesson,
-      })
+      .values({ ...data, tutorId })
       .returning({ id: tutories.id });
   }
 

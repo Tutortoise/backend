@@ -58,6 +58,7 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
     }
 
     tutories.push({
+      name: faker.lorem.words(),
       tutorId: tutor.id,
       categoryId: randomCategory.id,
       createdAt: new Date(),
@@ -70,12 +71,6 @@ export const seedTutories = async ({ randomTeachingMethodology = false }) => {
 
   console.log(`Seeding tutories with ${tutories.length} data...`);
   for (const t of tutories) {
-    await tutoriesRepository.createTutories(t.tutorId, {
-      categoryId: t.categoryId,
-      aboutYou: t.aboutYou,
-      teachingMethodology: t.teachingMethodology,
-      hourlyRate: t.hourlyRate,
-      typeLesson: t.typeLesson!,
-    });
+    await tutoriesRepository.createTutories(t.tutorId, t);
   }
 };

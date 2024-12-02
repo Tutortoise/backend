@@ -120,10 +120,11 @@ export const tutories = pgTable(
     categoryId: uuid()
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
+    name: varchar({ length: 50 }).notNull(),
     aboutYou: text("about_you").notNull(),
     teachingMethodology: text("teaching_methodology").notNull(),
     hourlyRate: integer("hourly_rate").notNull(),
-    typeLesson: typeLessonEnum("type_lesson"),
+    typeLesson: typeLessonEnum("type_lesson").notNull(),
     isEnabled: boolean("is_enabled").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at"),

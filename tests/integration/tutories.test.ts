@@ -1,12 +1,15 @@
+import { container } from "@/container";
 import { app } from "@/main";
+import { updateProfileSchema } from "@/module/tutor/tutor.schema";
+import {
+  CreateTutories,
+  UpdateTutories,
+} from "@/module/tutories/tutories.schema";
+import { faker } from "@faker-js/faker";
+import { generateUser } from "@tests/helpers/generate.helper";
 import supertest from "supertest";
 import { describe, expect, test } from "vitest";
-import { container } from "@/container";
-import { generateUser } from "@tests/helpers/generate.helper";
-import { faker } from "@faker-js/faker";
-import { Tutories } from "@/types";
 import { z } from "zod";
-import { updateProfileSchema } from "@/module/tutor/tutor.schema";
 
 const categoryRepository = container.categoryRepository;
 const tutoriesRepository = container.tutoriesRepository;
@@ -255,7 +258,8 @@ describe("Create tutories", async () => {
   });
 
   test("Create tutories with token", async () => {
-    const newTutories: Omit<Tutories, "tutorId"> = {
+    const newTutories: CreateTutories = {
+      name: faker.lorem.words(),
       categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
@@ -301,7 +305,7 @@ describe("Update tutories", async () => {
   });
 
   test("Update tutories with token, but not your own", async () => {
-    const updatedTutories: Omit<Tutories, "tutorId" | "categoryId"> = {
+    const updatedTutories: UpdateTutories = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -322,8 +326,8 @@ describe("Update tutories", async () => {
   test("Update tutories with token", async () => {
     const categories = await categoryRepository.getAllCategories();
     const randomCategory = faker.helpers.arrayElement(categories);
-
-    const newTutories: Omit<Tutories, "tutorId"> = {
+    const newTutories: CreateTutories = {
+      name: faker.lorem.words(),
       categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
@@ -340,7 +344,7 @@ describe("Update tutories", async () => {
     const createdTutoriesId = createTutoriesRes.body.data.tutoriesId;
 
     // update the tutories
-    const updatedTutories: Omit<Tutories, "tutorId" | "categoryId"> = {
+    const updatedTutories: UpdateTutories = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -400,7 +404,8 @@ describe("Delete tutories", async () => {
     const categories = await categoryRepository.getAllCategories();
     const randomCategory = faker.helpers.arrayElement(categories);
 
-    const newTutories: Omit<Tutories, "tutorId"> = {
+    const newTutories: CreateTutories = {
+      name: faker.lorem.words(),
       categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
