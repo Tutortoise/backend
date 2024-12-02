@@ -76,4 +76,8 @@ export class LearnerRepository {
 
     return result[0];
   }
+
+  public async getLearners() {
+    return await this.db.select().from(learners);
+  }
 }

@@ -6,6 +6,7 @@ import {
   seedTutors,
 } from "@/module/tutor/tutor.seeder";
 import { seedTutories } from "@/module/tutories/tutories.seeder";
+import { seedOrders } from "./module/order/order.seeder";
 
 export const runSeeder = async () => {
   await seedCategories();
@@ -13,6 +14,7 @@ export const runSeeder = async () => {
   await seedTutors();
   await seedTutories({ generateWithGroq: true });
   await assignTutorProfilePictures();
+  await seedOrders();
 };
 
 runSeeder();
