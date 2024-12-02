@@ -69,12 +69,14 @@ export class TutoriesService {
 
   async getTutoriesDetail(tutoriesId: string) {
     try {
-      const [tutories, { avgRating, totalReviews }] = await Promise.all([
-        await this.tutoriesRepository.getTutoriesDetail(tutoriesId),
-        await this.reviewRepository.getAverageRating(tutoriesId),
-      ]);
+      const [tutories, reviews, { avgRating, totalReviews }] =
+        await Promise.all([
+          await this.tutoriesRepository.getTutoriesDetail(tutoriesId),
+          await this.reviewRepository.getTutoriesReviews(tutoriesId),
+          await this.reviewRepository.getAverageRating(tutoriesId),
+        ]);
 
-      return { ...tutories, avgRating, totalReviews };
+      return { ...tutories, reviews, avgRating, totalReviews };
     } catch (error) {
       logger.error(`Failed to get tutories detail: ${error}`);
     }
