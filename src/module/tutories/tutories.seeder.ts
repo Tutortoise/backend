@@ -20,9 +20,9 @@ async function retryOperation(operation: () => Promise<any>, retries = 10) {
 }
 
 const prompt = (category: string) => {
-  return `You are a tutor that is teaching category ${category}. The name is the title/headline on what specific topic you teach. The JSON schema should include
+  return `You are a tutor that is teaching category ${category}. The name is the title/headline on what specific topic you teach, keep it short and simple but descriptive. The JSON schema should include
 {
-  "name": "string (max 20 characters)",
+  "name": "string (max 30 characters)",
   "teachingMethodology": "string (must be detailed, min 10 characters, max 1000 characters)",
 }`;
 };
@@ -30,31 +30,31 @@ const generateNameAndTeachingMethod = async (categoryName: string) => {
   const groq = new Groq({
     apiKey: process.env["GROQ_KEY"],
   });
-  try {
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "user",
-          content: prompt(categoryName),
-        },
-      ],
-      response_format: { type: "json_object" },
-      model: "llama3-8b-8192",
-    });
+  const chatCompletion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: prompt(categoryName),
+      },
+    ],
+    response_format: { type: "json_object" },
+    model: "llama3-8b-8192",
+  });
 
-    const result = chatCompletion.choices[0].message.content;
-    const json = JSON.parse(result!);
-    if (!json || !json.name || !json.teachingMethodology)
-      throw new Error("Result is empty");
+  const result = chatCompletion.choices[0].message.content;
+  const json = JSON.parse(result!);
+  if (!json || !json.name || !json.teachingMethodology)
+    throw new Error("Result is empty");
 
-    return json;
-  } catch (error) {
-    console.error(`Failed to generate with Groq: ${error}`);
+  console.log(json.name);
+  if (json.name.length > 30) {
+    throw new Error("Name should be less than 30 characters");
   }
+
+  return json;
 };
 
 export const seedTutories = async ({ generateWithGroq = false }) => {
-  // Validate prerequisites
   const [categoryExists, tutorsExists] = await Promise.all([
     categoryRepository.hasCategories(),
     tutorRepository.hasTutors(),
@@ -81,11 +81,9 @@ export const seedTutories = async ({ generateWithGroq = false }) => {
           generateNameAndTeachingMethod(randomCategory.name),
         )
       : {
-          name: faker.lorem.words(),
+          name: faker.lorem.words({ min: 1, max: 2 }),
           teachingMethodology: faker.lorem.paragraph(),
         };
-
-    console.log(name, teachingMethodology);
 
     tutories.push({
       name,

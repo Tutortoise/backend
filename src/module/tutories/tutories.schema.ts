@@ -27,7 +27,7 @@ export const tutoriesSchema = z.object({
   name: z
     .string()
     .min(3, { message: "Tutories name must be at least 3 characters" })
-    .max(20, { message: "Tutoires name must be at most 20 characters" }),
+    .max(30, { message: "Tutoires name must be at most 30 characters" }),
   // About the tutor's experience
   aboutYou: z
     .string()
