@@ -9,10 +9,10 @@ import { seedTutories } from "@/module/tutories/tutories.seeder";
 
 export const runSeeder = async () => {
   await seedCategories();
-  // await seedLearners();
-  // await seedTutors();
-  // await seedServices({ randomTeachingMethodology: false });
-  // await assignTutorProfilePictures();
+  await seedLearners();
+  await seedTutors();
+  await seedTutories({ generateWithGroq: true });
+  await assignTutorProfilePictures();
 };
 
 runSeeder();
