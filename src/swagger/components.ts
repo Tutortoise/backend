@@ -2,6 +2,7 @@ export const components = {
   schemas: {
     // auth schemas
     RegisterSchema: {
+      $name: "David Gacoan",
       $email: "example@mail.com",
       $password: "password",
       $role: "learner/tutor",
