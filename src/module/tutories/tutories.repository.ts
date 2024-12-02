@@ -90,6 +90,7 @@ export class TutoriesRepository {
 
     const alsoTeaches = await this.db
       .select({
+        id: tutories.id,
         categoryName: categories.name,
         hourlyRate: tutories.hourlyRate,
         typeLesson: tutories.typeLesson,
