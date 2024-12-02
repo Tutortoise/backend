@@ -36,7 +36,7 @@ export const components = {
       city: "Samarinda",
       district: "Samarinda Utara",
       gender: "male/female",
-      interests: ["subjectId", "subjectId"],
+      interests: ["categoryId", "categoryId"],
       learningStyle: "visual/auditory/kinesthetic",
     },
     UpdateTutorProfileSchema: {
@@ -63,7 +63,7 @@ export const components = {
       review: "lorem ipsum dolor sit amet, consectetur adipiscing elit",
     },
     CreateTutoriesSchema: {
-      $subjectId: "subjectId",
+      $categoryId: "categoryId",
       $aboutYou: "lorem ipsum dolor sit amet, consectetur adipiscing elit",
       $techingMethodology:
         "lorem ipsum dolor sit amet, consectetur adipiscing elit",

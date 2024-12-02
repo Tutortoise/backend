@@ -2,7 +2,7 @@ import { container } from "@/container";
 import { z } from "zod";
 
 const authRepository = container.authRepository;
-const subjectRepository = container.subjectRepository;
+const categoryRepository = container.categoryRepository;
 
 export const learnerSchema = z.object({
   id: z.string().optional(),
@@ -35,7 +35,7 @@ export const learnerSchema = z.object({
   interests: z
     .array(z.string())
     .superRefine(async (interests, ctx) => {
-      const isValid = await subjectRepository.validateInterests(interests);
+      const isValid = await categoryRepository.validateInterests(interests);
 
       if (!isValid) {
         ctx.addIssue({

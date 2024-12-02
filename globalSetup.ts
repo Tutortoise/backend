@@ -1,10 +1,10 @@
 import { seedLearners } from "@/module/learner/learner.seeder";
-import { seedSubjects } from "@/module/subject/subject.seeder";
+import { seedCategories } from "@/module/category/category.seeder";
 import { seedTutories } from "@/module/tutories/tutories.seeder";
 import { seedTutors } from "@/module/tutor/tutor.seeder";
 
 export default async function setup() {
-  await seedSubjects();
+  await seedCategories();
   // await seedLearners();
   await seedTutors();
   await seedTutories({ randomTeachingMethodology: true });

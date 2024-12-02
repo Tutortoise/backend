@@ -22,14 +22,14 @@ export type Learner = typeof learners.$inferInsert;
 export type Tutor = typeof tutors.$inferInsert;
 export type Tutories = typeof tutories.$inferInsert;
 
-export interface Subject {
+export interface Category {
   name: string;
   iconUrl: string;
 }
 
 export type GetTutoriesFilters = {
   q?: string | null;
-  subjectId?: string | null;
+  categoryId?: string | null;
   minHourlyRate?: number | null;
   maxHourlyRate?: number | null;
   typeLesson?: "online" | "offline" | "both" | null;

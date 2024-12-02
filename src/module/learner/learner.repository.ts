@@ -1,5 +1,5 @@
 import type { db as dbType } from "@/db/config";
-import { interests, learners, subjects } from "@/db/schema";
+import { interests, learners, categories } from "@/db/schema";
 import { Learner } from "@/types";
 import { eq } from "drizzle-orm/expressions";
 
@@ -14,9 +14,9 @@ export class LearnerRepository {
     if (data.interests) {
       await this.db.delete(interests).where(eq(interests.learnerId, userId));
       await this.db.insert(interests).values(
-        data.interests.map((subjectId: string) => ({
+        data.interests.map((categoryId: string) => ({
           learnerId: userId,
-          subjectId: subjectId,
+          categoryId,
         })),
       );
     }
@@ -38,11 +38,13 @@ export class LearnerRepository {
     return result.length > 0;
   }
 
-  // Fetch valid subjects for validation
-  public async getValidSubjects() {
-    const results = await this.db.select({ id: subjects.id }).from(subjects);
+  // Fetch valid categories for validation
+  public async getValidCategories() {
+    const results = await this.db
+      .select({ id: categories.id })
+      .from(categories);
 
-    return results.map((subject) => subject.id);
+    return results.map((category) => category.id);
   }
 
   public async getPassword(learnerId: string) {

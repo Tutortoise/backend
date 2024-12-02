@@ -1,5 +1,5 @@
 import { db as dbType } from "@/db/config";
-import { orders, subjects, tutories, tutors } from "@/db/schema";
+import { orders, categories, tutories, tutors } from "@/db/schema";
 import {
   createTutoriesSchema,
   updateTutoriesSchema,
@@ -14,8 +14,8 @@ export class TutoriesRepository {
   async getTutories(filters: GetTutoriesFilters = {}) {
     const conditions = [];
 
-    if (filters.subjectId) {
-      conditions.push(eq(tutories.subjectId, filters.subjectId));
+    if (filters.categoryId) {
+      conditions.push(eq(tutories.categoryId, filters.categoryId));
     }
 
     if (filters.tutorId) {
@@ -48,7 +48,7 @@ export class TutoriesRepository {
       conditions.push(
         or(
           ilike(tutors.name, `%${filters.q}%`),
-          ilike(subjects.name, `%${filters.q}%`),
+          ilike(categories.name, `%${filters.q}%`),
         ),
       );
     }
@@ -62,7 +62,7 @@ export class TutoriesRepository {
         id: tutories.id,
         tutorId: tutors.id,
         tutorName: tutors.name,
-        subjectName: subjects.name,
+        categoryName: categories.name,
         hourlyRate: tutories.hourlyRate,
         typeLesson: tutories.typeLesson,
         city: tutors.city,
@@ -71,7 +71,7 @@ export class TutoriesRepository {
       .from(tutories)
       .where(and(...conditions))
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .execute();
   }
 
@@ -80,7 +80,7 @@ export class TutoriesRepository {
       .select()
       .from(tutories)
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .where(eq(tutories.id, tutoriesId))
       .limit(1);
 
@@ -90,12 +90,12 @@ export class TutoriesRepository {
 
     const alsoTeaches = await this.db
       .select({
-        subjectName: subjects.name,
+        categoryName: categories.name,
         hourlyRate: tutories.hourlyRate,
         typeLesson: tutories.typeLesson,
       })
       .from(tutories)
-      .innerJoin(subjects, eq(tutories.subjectId, subjects.id))
+      .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .where(
         and(
           eq(tutories.tutorId, t.tutors.id),
@@ -177,11 +177,11 @@ export class TutoriesRepository {
   }
 
   async getAverageHourlyRate({
-    subjectId,
+    categoryId,
     city,
     district,
   }: {
-    subjectId: string;
+    categoryId: string;
     city?: string;
     district?: string;
   }) {
@@ -198,7 +198,7 @@ export class TutoriesRepository {
       })
       .from(tutories)
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-      .where(and(eq(tutories.subjectId, subjectId), locationCondition));
+      .where(and(eq(tutories.categoryId, categoryId), locationCondition));
 
     return parseFloat(result.avgHourlyRate ?? "0");
   }
@@ -207,14 +207,19 @@ export class TutoriesRepository {
     tutorId: string,
     data: z.infer<typeof createTutoriesSchema>["body"],
   ) {
-    const { subjectId, aboutYou, teachingMethodology, hourlyRate, typeLesson } =
-      data;
+    const {
+      categoryId,
+      aboutYou,
+      teachingMethodology,
+      hourlyRate,
+      typeLesson,
+    } = data;
 
     return await this.db
       .insert(tutories)
       .values({
         tutorId,
-        subjectId,
+        categoryId,
         aboutYou,
         teachingMethodology,
         hourlyRate,

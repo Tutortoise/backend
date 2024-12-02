@@ -5,7 +5,7 @@ import { generateUser } from "@tests/helpers/generate.helper";
 import supertest from "supertest";
 import { describe, expect, test } from "vitest";
 
-const subjectRepository = container.subjectRepository;
+const categoryRepository = container.categoryRepository;
 
 async function registerAndLoginLearner() {
   const newLearner = generateUser("learner");
@@ -33,14 +33,14 @@ describe("Update learner profile", async () => {
   const { token } = await registerAndLoginLearner();
 
   test("should be able to update learner profile", async () => {
-    const subjects = await subjectRepository.getAllSubjects();
+    const categories = await categoryRepository.getAllCategories();
 
     const updatedProfile = {
       name: faker.person.fullName(),
       phoneNumber: "+62812121212",
       gender: "male",
       learningStyle: "visual",
-      interests: [subjects[0].id, subjects[1].id],
+      interests: [categories[0].id, categories[1].id],
     };
 
     await supertest(app)

@@ -1,6 +1,6 @@
 import { db } from "@/db/config";
 import { AuthRepository } from "@/module/auth/auth.repository";
-import { SubjectRepository } from "./module/subject/subject.repository";
+import { CategoryRepository } from "./module/category/category.repository";
 import { LearnerRepository } from "./module/learner/learner.repository";
 import { TutorRepository } from "./module/tutor/tutor.repository";
 import { ChatRepository } from "./module/chat/chat.repository";
@@ -13,7 +13,7 @@ import { createFaceValidationService } from "./module/face-validation/face-valid
 
 interface Container {
   authRepository: AuthRepository;
-  subjectRepository: SubjectRepository;
+  categoryRepository: CategoryRepository;
   learnerRepository: LearnerRepository;
   tutorRepository: TutorRepository;
   tutoriesRepository: TutoriesRepository;
@@ -30,7 +30,7 @@ export const setupContainer = (): Container => {
   if (!containerInstance) {
     containerInstance = {
       authRepository: new AuthRepository(db),
-      subjectRepository: new SubjectRepository(db),
+      categoryRepository: new CategoryRepository(db),
       learnerRepository: new LearnerRepository(db),
       tutorRepository: new TutorRepository(db),
       tutoriesRepository: new TutoriesRepository(db),

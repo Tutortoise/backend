@@ -8,7 +8,7 @@ import { Tutories } from "@/types";
 import { z } from "zod";
 import { updateProfileSchema } from "@/module/tutor/tutor.schema";
 
-const subjectRepository = container.subjectRepository;
+const categoryRepository = container.categoryRepository;
 const tutoriesRepository = container.tutoriesRepository;
 
 async function retryOperation(operation: () => Promise<void>, retries = 50) {
@@ -138,24 +138,24 @@ describe("Get tutories", async () => {
       for (const tutories of qParameterRes.body.data) {
         expect(
           tutories.tutorName.toLowerCase().includes(q) ||
-            tutories.subjectName.toLowerCase().includes(q),
+            tutories.categoryName.toLowerCase().includes(q),
         ).toBe(true);
       }
     }, 30000);
   });
 
-  test("Get all tutories with filter (subjectId)", async () => {
+  test("Get all tutories with filter (categoryId)", async () => {
     await retryOperation(async () => {
-      const subject = faker.helpers.arrayElement(
-        await subjectRepository.getAllSubjects(),
+      const category = faker.helpers.arrayElement(
+        await categoryRepository.getAllCategories(),
       );
-      const subjectIdParameterRes = await supertest(app)
+      const categoryIdParameterRes = await supertest(app)
         .get(`/api/v1/tutors/services`)
-        .query({ subjectId: subject.id })
+        .query({ categoryId: category.id })
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
-      for (const tutories of subjectIdParameterRes.body.data) {
-        expect(tutories.subjectName).toBe(subject.name);
+      for (const tutories of categoryIdParameterRes.body.data) {
+        expect(tutories.categoryName).toBe(category.name);
       }
     }, 30000);
   });
@@ -207,23 +207,23 @@ describe("Get tutories", async () => {
   test("Get all tutories with filter (multiple filters)", async () => {
     await retryOperation(async () => {
       const q = "z";
-      const subject = faker.helpers.arrayElement(
-        await subjectRepository.getAllSubjects(),
+      const category = faker.helpers.arrayElement(
+        await categoryRepository.getAllCategories(),
       );
       const hourlyRate = 100000;
 
       const multipleFiltersRes = await supertest(app)
         .get(`/api/v1/tutors/services`)
-        .query({ q, subjectId: subject.id, minHourlyRate: hourlyRate })
+        .query({ q, categoryId: category.id, minHourlyRate: hourlyRate })
         .set("Authorization", `Bearer ${token}`)
         .expect(200);
 
       for (const tutories of multipleFiltersRes.body.data) {
         expect(
           tutories.tutorName.toLowerCase().includes(q) ||
-            tutories.subjectName.toLowerCase().includes(q),
+            tutories.categoryName.toLowerCase().includes(q),
         ).toBe(true);
-        expect(tutories.subjectName).toBe(subject.name);
+        expect(tutories.categoryName).toBe(category.name);
         expect(tutories.hourlyRate).toBeGreaterThanOrEqual(hourlyRate);
       }
     }, 30000);
@@ -233,7 +233,7 @@ describe("Get tutories", async () => {
     await retryOperation(async () => {
       const invalidFilterRes = await supertest(app)
         .get(`/api/v1/tutors/services`)
-        .query({ typeLesson: "invalid", subjectId: "invalid" })
+        .query({ typeLesson: "invalid", categoryId: "invalid" })
         .set("Authorization", `Bearer ${token}`)
         .expect(400);
 
@@ -247,8 +247,8 @@ describe("Create tutories", async () => {
   const { token } = await registerAndLoginTutor();
   updateTutorProfile(token);
 
-  const subjects = await subjectRepository.getAllSubjects();
-  const randomSubject = faker.helpers.arrayElement(subjects);
+  const categories = await categoryRepository.getAllCategories();
+  const randomCategory = faker.helpers.arrayElement(categories);
 
   test("Create tutories without token", async () => {
     await supertest(app).post("/api/v1/tutors/services").expect(401);
@@ -256,7 +256,7 @@ describe("Create tutories", async () => {
 
   test("Create tutories with token", async () => {
     const newTutories: Omit<Tutories, "tutorId"> = {
-      subjectId: randomSubject.id,
+      categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -272,7 +272,7 @@ describe("Create tutories", async () => {
 
   test("Create tutories with invalid data", async () => {
     const invalidTutories = {
-      subjectId: "",
+      categoryId: "",
       hourlyRate: 0,
       typeLesson: "invalid",
     };
@@ -301,7 +301,7 @@ describe("Update tutories", async () => {
   });
 
   test("Update tutories with token, but not your own", async () => {
-    const updatedTutories: Omit<Tutories, "tutorId" | "subjectId"> = {
+    const updatedTutories: Omit<Tutories, "tutorId" | "categoryId"> = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -320,11 +320,11 @@ describe("Update tutories", async () => {
   });
 
   test("Update tutories with token", async () => {
-    const subjects = await subjectRepository.getAllSubjects();
-    const randomSubject = faker.helpers.arrayElement(subjects);
+    const categories = await categoryRepository.getAllCategories();
+    const randomCategory = faker.helpers.arrayElement(categories);
 
     const newTutories: Omit<Tutories, "tutorId"> = {
-      subjectId: randomSubject.id,
+      categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -340,7 +340,7 @@ describe("Update tutories", async () => {
     const createdTutoriesId = createTutoriesRes.body.data.tutoriesId;
 
     // update the tutories
-    const updatedTutories: Omit<Tutories, "tutorId" | "subjectId"> = {
+    const updatedTutories: Omit<Tutories, "tutorId" | "categoryId"> = {
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),
@@ -356,7 +356,7 @@ describe("Update tutories", async () => {
 
   test("Update tutories with invalid data", async () => {
     const invalidTutories = {
-      subjectId: "",
+      categoryId: "",
       hourlyRate: 0,
       typeLesson: "invalid",
     };
@@ -397,11 +397,11 @@ describe("Delete tutories", async () => {
 
   test("Delete tutories with token", async () => {
     // create new tutories
-    const subjects = await subjectRepository.getAllSubjects();
-    const randomSubject = faker.helpers.arrayElement(subjects);
+    const categories = await categoryRepository.getAllCategories();
+    const randomCategory = faker.helpers.arrayElement(categories);
 
     const newTutories: Omit<Tutories, "tutorId"> = {
-      subjectId: randomSubject.id,
+      categoryId: randomCategory.id,
       hourlyRate: faker.helpers.arrayElement([50000, 100000, 150000]),
       typeLesson: faker.helpers.arrayElement(["online", "offline", "both"]),
       aboutYou: faker.lorem.paragraph(),

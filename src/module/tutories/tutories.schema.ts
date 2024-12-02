@@ -1,7 +1,7 @@
 import { container } from "@/container";
 import { z } from "zod";
 
-const subjectRepository = container.subjectRepository;
+const categoryRepository = container.categoryRepository;
 const tutorRepository = container.tutorRepository;
 
 export const tutoriesSchema = z.object({
@@ -15,25 +15,23 @@ export const tutoriesSchema = z.object({
       });
     }
   }),
-  subjectId: z.string().superRefine(async (subjectId, ctx) => {
-    const exists = await subjectRepository.checkSubjectExists(subjectId);
+  categoryId: z.string().superRefine(async (categoryId, ctx) => {
+    const exists = await categoryRepository.checkCategoryExists(categoryId);
     if (!exists) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Subject does not exist",
+        message: "Category does not exist",
       });
     }
   }),
-  // About the tutor's experience with the subject
+  // About the tutor's experience
   aboutYou: z
     .string()
     .min(10, {
-      message:
-        "You must at least write your experience with the subject in 10 characters",
+      message: "You must at least write your experience in 10 characters",
     })
     .max(1500, {
-      message:
-        "You must at most write your experience with the subject in 1500 characters",
+      message: "You must at most write your experience in 1500 characters",
     }),
   // Tutor's teaching methodology
   teachingMethodology: z
@@ -60,14 +58,14 @@ export const tutoriesSchema = z.object({
 export const getTutoriesSchema = z.object({
   query: z.object({
     q: z.string().optional(), // search query
-    subjectId: z
+    categoryId: z
       .string()
-      .superRefine(async (subjectId, ctx) => {
-        const exists = await subjectRepository.checkSubjectExists(subjectId);
+      .superRefine(async (categoryId, ctx) => {
+        const exists = await categoryRepository.checkCategoryExists(categoryId);
         if (!exists) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Subject does not exist",
+            message: "Category does not exist",
           });
         }
       })
@@ -92,12 +90,12 @@ export const getServiceSchema = z.object({
 
 export const getAverageRateSchema = z.object({
   query: z.object({
-    subjectId: z.string().superRefine(async (subjectId, ctx) => {
-      const exists = await subjectRepository.checkSubjectExists(subjectId);
+    categoryId: z.string().superRefine(async (categoryId, ctx) => {
+      const exists = await categoryRepository.checkCategoryExists(categoryId);
       if (!exists) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Subject does not exist",
+          message: "Category does not exist",
         });
       }
     }),
@@ -120,7 +118,7 @@ export const updateTutoriesSchema = z.object({
     .omit({
       id: true,
       tutorId: true,
-      subjectId: true,
+      categoryId: true,
       createdAt: true,
       updatedAt: true,
     })

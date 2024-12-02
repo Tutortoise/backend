@@ -8,8 +8,8 @@ export const tags = [
     description: "Chat related endpoints",
   },
   {
-    name: "subjects",
-    description: "Subject related endpoints",
+    name: "categories",
+    description: "Category related endpoints",
   },
   {
     name: "learners",

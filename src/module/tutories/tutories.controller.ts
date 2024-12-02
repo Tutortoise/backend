@@ -26,7 +26,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
 ) => {
   const {
     q,
-    subjectId,
+    categoryId,
     minHourlyRate,
     maxHourlyRate,
     typeLesson,
@@ -36,7 +36,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
 
   const filters = {
     q: q || null,
-    subjectId: subjectId || null,
+    categoryId: categoryId || null,
     minHourlyRate: minHourlyRate ? parseInt(minHourlyRate as string) : null,
     maxHourlyRate: maxHourlyRate ? parseInt(maxHourlyRate as string) : null,
     typeLesson: typeLesson || null,
@@ -130,7 +130,7 @@ export const getAverageRate: Controller<GetAverageRateSchema> = async (
 ) => {
   try {
     const averageRate = await tutoriesService.getAverageRate({
-      subjectId: req.query.subjectId,
+      categoryId: req.query.categoryId,
       city: req.query.city,
       district: req.query.district,
     });

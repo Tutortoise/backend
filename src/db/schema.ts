@@ -48,7 +48,7 @@ export type UserRole = (typeof USER_ROLES)[number];
 export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 // Tables
-export const subjects = pgTable("subjects", {
+export const categories = pgTable("categories", {
   id: uuid()
     .primaryKey()
     .$default(() => uuidv4()),
@@ -61,9 +61,9 @@ export const interests = pgTable("interests", {
   learnerId: uuid()
     .notNull()
     .references(() => learners.id, { onDelete: "cascade" }),
-  subjectId: uuid()
+  categoryId: uuid()
     .notNull()
-    .references(() => subjects.id, { onDelete: "cascade" }),
+    .references(() => categories.id, { onDelete: "cascade" }),
 });
 
 export const learners = pgTable("learners", {
@@ -117,9 +117,9 @@ export const tutories = pgTable(
     tutorId: uuid()
       .notNull()
       .references(() => tutors.id, { onDelete: "cascade" }),
-    subjectId: uuid()
+    categoryId: uuid()
       .notNull()
-      .references(() => subjects.id, { onDelete: "cascade" }),
+      .references(() => categories.id, { onDelete: "cascade" }),
     aboutYou: text("about_you").notNull(),
     teachingMethodology: text("teaching_methodology").notNull(),
     hourlyRate: integer("hourly_rate").notNull(),
@@ -132,7 +132,7 @@ export const tutories = pgTable(
     hourlyRateIdx: index().on(table.hourlyRate),
     typeLessonIdx: index().on(table.typeLesson),
     createdAtIdx: index().on(table.createdAt),
-    tutorIdSubjectIdx: index().on(table.tutorId, table.subjectId),
+    tutorIdCategoryIdx: index().on(table.tutorId, table.categoryId),
   }),
 );
 
@@ -248,9 +248,9 @@ export const interestRelations = relations(interests, ({ one }) => ({
     fields: [interests.learnerId],
     references: [learners.id],
   }),
-  subject: one(subjects, {
-    fields: [interests.subjectId],
-    references: [subjects.id],
+  category: one(categories, {
+    fields: [interests.categoryId],
+    references: [categories.id],
   }),
 }));
 
@@ -268,9 +268,9 @@ export const tutoriesRelations = relations(tutories, ({ one, many }) => ({
     fields: [tutories.tutorId],
     references: [tutors.id],
   }),
-  subject: one(subjects, {
-    fields: [tutories.subjectId],
-    references: [subjects.id],
+  category: one(categories, {
+    fields: [tutories.categoryId],
+    references: [categories.id],
   }),
   orders: many(orders),
 }));

@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { seedLearners } from "@/module/learner/learner.seeder";
-import { seedSubjects } from "@/module/subject/subject.seeder";
+import { seedCategories } from "@/module/category/category.seeder";
 import {
   assignTutorProfilePictures,
   seedTutors,
@@ -8,7 +8,7 @@ import {
 import { seedTutories } from "@/module/tutories/tutories.seeder";
 
 export const runSeeder = async () => {
-  await seedSubjects();
+  await seedCategories();
   // await seedLearners();
   // await seedTutors();
   // await seedServices({ randomTeachingMethodology: false });

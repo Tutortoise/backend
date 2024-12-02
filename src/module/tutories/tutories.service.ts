@@ -89,17 +89,17 @@ export class TutoriesService {
   }
 
   async getAverageRate({
-    subjectId,
+    categoryId,
     city,
     district,
   }: {
-    subjectId: string;
+    categoryId: string;
     city?: string;
     district?: string;
   }) {
     try {
       return await this.tutoriesRepository.getAverageHourlyRate({
-        subjectId,
+        categoryId,
         city,
         district,
       });
