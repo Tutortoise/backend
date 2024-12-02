@@ -110,7 +110,11 @@ export class TutoriesRepository {
       .from(tutories)
       .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .where(
-        and(eq(tutories.tutorId, t.tutorId), not(eq(tutories.id, tutoriesId))),
+        and(
+          eq(tutories.tutorId, t.tutorId),
+          not(eq(tutories.id, tutoriesId)),
+          eq(tutories.isEnabled, true),
+        ),
       );
 
     return {
