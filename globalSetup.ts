@@ -7,5 +7,5 @@ export default async function setup() {
   await seedCategories();
   // await seedLearners();
   await seedTutors();
-  await seedTutories({ randomTeachingMethodology: true });
+  await seedTutories({ generateWithGroq: false });
 }
