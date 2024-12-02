@@ -124,7 +124,7 @@ export const tutories = pgTable(
     teachingMethodology: text("teaching_methodology").notNull(),
     hourlyRate: integer("hourly_rate").notNull(),
     typeLesson: typeLessonEnum("type_lesson"),
-    isDisabled: boolean("is_disabled").notNull().default(false),
+    isEnabled: boolean("is_enabled").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at"),
   },

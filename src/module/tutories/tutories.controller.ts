@@ -42,7 +42,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
     typeLesson: typeLesson || null,
     minRating: minRating ? parseFloat(minRating as string) : null,
     city: city || null,
-    isDisabled: false,
+    isEnabled: true,
   };
 
   try {

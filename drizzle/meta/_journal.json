@@ -78,6 +78,13 @@
       "when": 1733104129121,
       "tag": "0010_useful_spirit",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1733115285784,
+      "tag": "0011_happy_swarm",
+      "breakpoints": true
     }
   ]
 }

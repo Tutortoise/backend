@@ -36,7 +36,7 @@ export type GetTutoriesFilters = {
   tutorId?: string | null;
   city?: string | null;
   minRating?: number | null;
-  isDisabled?: boolean;
+  isEnabled?: boolean;
 };
 
 export interface UserPresence {

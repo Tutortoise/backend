@@ -53,8 +53,8 @@ export class TutoriesRepository {
       );
     }
 
-    if (typeof filters.isDisabled === "boolean") {
-      conditions.push(eq(tutories.isDisabled, filters.isDisabled));
+    if (typeof filters.isEnabled === "boolean") {
+      conditions.push(eq(tutories.isEnabled, filters.isEnabled));
     }
 
     return await this.db
@@ -88,6 +88,7 @@ export class TutoriesRepository {
         typeLesson: tutories.typeLesson,
         city: tutors.city,
         district: tutors.district,
+        isEnabled: tutories.isEnabled,
       })
       .from(tutories)
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
