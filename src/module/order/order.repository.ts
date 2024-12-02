@@ -106,7 +106,7 @@ export class OrderRepository {
   async updateStatusToCompleted() {
     await this.db
       .update(orders)
-      .set({ status: "scheduled" })
+      .set({ status: "completed" })
       .where(lte(orders.estimatedEndTime, new Date()));
   }
 }
