@@ -1,21 +1,11 @@
 import { db as dbType } from "@/db/config";
-import { orders, categories, tutories, tutors } from "@/db/schema";
+import { categories, orders, tutories, tutors } from "@/db/schema";
 import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { DayIndex, GetTutoriesFilters } from "@/types";
-import {
-  and,
-  avg,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  lte,
-  not,
-  or,
-} from "drizzle-orm";
+import { and, avg, eq, gte, ilike, inArray, lte, not, or } from "drizzle-orm";
 import { z } from "zod";
 
 export class TutoriesRepository {
@@ -65,6 +55,7 @@ export class TutoriesRepository {
     if (filters.q) {
       conditions.push(
         or(
+          ilike(tutories.name, `%${filters.q}%`),
           ilike(tutors.name, `%${filters.q}%`),
           ilike(categories.name, `%${filters.q}%`),
         ),
