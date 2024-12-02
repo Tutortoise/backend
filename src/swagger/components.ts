@@ -47,6 +47,11 @@ export const components = {
       city: "Samarinda",
       district: "Samarinda Utara",
       gender: "male/female",
+      $availability: {
+        1: ["07:00", "08:00"],
+        3: ["08:00", "09:00"],
+        6: ["10:00", "13:00"],
+      },
     },
     ChangePasswordSchema: {
       $currentPassword: "oldpassword",
@@ -61,7 +66,7 @@ export const components = {
     },
     CreateReviewSchema: {
       $rating: 5,
-      review: "lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      message: "lorem ipsum dolor sit amet, consectetur adipiscing elit",
     },
     CreateTutoriesSchema: {
       $categoryId: "categoryId",
@@ -70,11 +75,6 @@ export const components = {
         "lorem ipsum dolor sit amet, consectetur adipiscing elit",
       $hourlyRate: 50000,
       typeLesson: "online/offline/both",
-      $availability: {
-        1: ["07:00", "08:00"],
-        3: ["08:00", "09:00"],
-        6: ["10:00", "13:00"],
-      },
     },
     UpdateTutoriesSchema: {
       $aboutYou: "lorem ipsum dolor sit amet, consectetur adipiscing elit",
@@ -82,11 +82,6 @@ export const components = {
         "lorem ipsum dolor sit amet, consectetur adipiscing elit",
       $hourlyRate: 70000,
       typeLesson: "online/offline/both",
-      $availability: {
-        2: ["07:00", "08:00"],
-        5: ["08:00", "09:00"],
-        7: ["10:00", "13:00"],
-      },
     },
   },
 };
