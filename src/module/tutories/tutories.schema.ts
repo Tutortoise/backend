@@ -64,8 +64,17 @@ export const getTutoriesSchema = z.object({
     q: z.string().optional(), // search query
     categoryId: z
       .string()
+      .or(z.array(z.string()))
       .superRefine(async (categoryId, ctx) => {
-        const exists = await categoryRepository.checkCategoryExists(categoryId);
+        let exists: boolean;
+        if (Array.isArray(categoryId)) {
+          exists = await Promise.all(
+            categoryId.map((id) => categoryRepository.checkCategoryExists(id)),
+          ).then((results) => results.every((result) => result));
+        } else {
+          exists = await categoryRepository.checkCategoryExists(categoryId);
+        }
+
         if (!exists) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -82,7 +91,7 @@ export const getTutoriesSchema = z.object({
         message: "Teaching type must be either 'online', 'offline', or 'both'",
       })
       .optional(),
-    city: z.string().optional(),
+    city: z.string().or(z.array(z.string())).optional(),
   }),
 });
 

@@ -5,7 +5,17 @@ import {
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { DayIndex, GetTutoriesFilters } from "@/types";
-import { and, avg, eq, gte, ilike, like, lte, not, or } from "drizzle-orm";
+import {
+  and,
+  avg,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  not,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 
 export class TutoriesRepository {
@@ -15,7 +25,11 @@ export class TutoriesRepository {
     const conditions = [];
 
     if (filters.categoryId) {
-      conditions.push(eq(tutories.categoryId, filters.categoryId));
+      if (Array.isArray(filters.categoryId)) {
+        conditions.push(inArray(tutories.categoryId, filters.categoryId));
+      } else {
+        conditions.push(eq(tutories.categoryId, filters.categoryId));
+      }
     }
 
     if (filters.tutorId) {
@@ -41,7 +55,11 @@ export class TutoriesRepository {
     }
 
     if (filters.city) {
-      conditions.push(like(tutors.city, `%${filters.city}%`));
+      if (Array.isArray(filters.city)) {
+        conditions.push(inArray(tutors.city, filters.city));
+      } else {
+        conditions.push(eq(tutors.city, filters.city));
+      }
     }
 
     if (filters.q) {

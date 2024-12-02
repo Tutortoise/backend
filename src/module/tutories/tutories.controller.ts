@@ -8,7 +8,7 @@ import {
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { TutoriesService } from "@/module/tutories/tutories.service";
-import { Controller } from "@/types";
+import { Controller, GetTutoriesFilters } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
 import { ValidationError } from "../tutor/tutor.error";
@@ -34,7 +34,7 @@ export const getAllTutories: Controller<GetTutoriesSchema> = async (
     minRating,
   } = req.query;
 
-  const filters = {
+  const filters: GetTutoriesFilters = {
     q: q || null,
     categoryId: categoryId || null,
     minHourlyRate: minHourlyRate ? parseInt(minHourlyRate as string) : null,

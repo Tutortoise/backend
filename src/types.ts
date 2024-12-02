@@ -29,12 +29,12 @@ export interface Category {
 
 export type GetTutoriesFilters = {
   q?: string | null;
-  categoryId?: string | null;
+  categoryId?: string | string[] | null;
   minHourlyRate?: number | null;
   maxHourlyRate?: number | null;
   typeLesson?: "online" | "offline" | "both" | null;
   tutorId?: string | null;
-  city?: string | null;
+  city?: string | string[] | null;
   minRating?: number | null;
   isEnabled?: boolean;
 };
