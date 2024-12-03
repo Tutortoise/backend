@@ -18,6 +18,7 @@ const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,
   tutorRepository: container.tutorRepository,
   reviewRepository: container.reviewRepository,
+  abusiveDetection: container.abusiveDetectionService,
 });
 
 type GetMyOrdersSchema = z.infer<typeof getMyOrdersSchema>;

@@ -9,26 +9,44 @@ import { ReviewRepository } from "@/module/review/review.repository";
 import { ValidationError } from "../tutor/tutor.error";
 import { TutorRepository } from "../tutor/tutor.repository";
 import { GetTutoriesFilters } from "@/types";
+import { AbusiveDetectionService } from "@/module/abusive-detection/abusive-detection.interface";
 
 export interface TutorServiceServiceDependencies {
   tutoriesRepository: TutoriesRepository;
   tutorRepository: TutorRepository;
   reviewRepository: ReviewRepository;
+  abusiveDetection: AbusiveDetectionService;
 }
 
 export class TutoriesService {
   private tutoriesRepository: TutoriesRepository;
   private tutorRepository: TutorRepository;
   private reviewRepository: ReviewRepository;
+  private abusiveDetection: AbusiveDetectionService;
 
   constructor({
     tutoriesRepository,
     tutorRepository,
     reviewRepository,
+    abusiveDetection,
   }: TutorServiceServiceDependencies) {
     this.tutoriesRepository = tutoriesRepository;
     this.tutorRepository = tutorRepository;
     this.reviewRepository = reviewRepository;
+    this.abusiveDetection = abusiveDetection;
+  }
+
+  private async validateContent(content: string, fieldName: string) {
+    const result = await this.abusiveDetection.validateText(content);
+    if (result.is_abusive) {
+      throw new ValidationError(
+        `${fieldName} contains inappropriate content${
+          result.matched_words.length > 0
+            ? `: ${result.matched_words.join(", ")}`
+            : ""
+        }`,
+      );
+    }
   }
 
   // TODO: Implement realtime updates for tutories availability
@@ -133,6 +151,11 @@ export class TutoriesService {
         throw new ValidationError("Tutor profile is incomplete");
       }
 
+      await Promise.all([
+        this.validateContent(data.aboutYou, "About you"),
+        this.validateContent(data.teachingMethodology, "Teaching methodology"),
+      ]);
+
       const [{ id }] = await this.tutoriesRepository.createTutories(
         tutorId,
         data,
@@ -143,6 +166,7 @@ export class TutoriesService {
         throw error;
       }
       logger.error(`Failed to create tutories: ${error}`);
+      throw error;
     }
   }
 
@@ -151,9 +175,25 @@ export class TutoriesService {
     data: z.infer<typeof updateTutoriesSchema>["body"],
   ) {
     try {
+      const validations = [];
+      if (data.aboutYou)
+        validations.push(this.validateContent(data.aboutYou, "About you"));
+      if (data.teachingMethodology)
+        validations.push(
+          this.validateContent(
+            data.teachingMethodology,
+            "Teaching methodology",
+          ),
+        );
+
+      await Promise.all(validations);
       await this.tutoriesRepository.updateTutories(tutoriesId, data);
     } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
       logger.error(`Failed to update tutories: ${error}`);
+      throw error;
     }
   }
 

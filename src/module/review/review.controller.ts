@@ -8,6 +8,7 @@ import { createReviewSchema, getReviewsSchema } from "./review.schema";
 const reviewService = new ReviewService({
   reviewRepository: container.reviewRepository,
   orderRepository: container.orderRepository,
+  abusiveDetection: container.abusiveDetectionService,
 });
 
 type CreateReviewSchema = z.infer<typeof createReviewSchema>;
