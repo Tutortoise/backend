@@ -58,7 +58,7 @@ export class LearnerRepository {
   }
 
   public async getLearnerById(learnerId: string) {
-    const result = await this.db
+    const [learner] = await this.db
       .select({
         id: learners.id,
         name: learners.name,
@@ -74,7 +74,19 @@ export class LearnerRepository {
       .where(eq(learners.id, learnerId))
       .limit(1);
 
-    return result[0];
+    if (!learner) return null;
+
+    const userInterests = await this.db
+      .select({
+        categoryId: interests.categoryId,
+      })
+      .from(interests)
+      .where(eq(interests.learnerId, learnerId));
+
+    return {
+      ...learner,
+      interests: userInterests.map((i) => i.categoryId),
+    };
   }
 
   public async getLearners() {
