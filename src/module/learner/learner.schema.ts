@@ -64,3 +64,26 @@ export const updateProfileSchema = z.object({
     lastSeen: true,
   }),
 });
+
+export const updateLearningStyleSchema = z.object({
+  body: z.object({
+    learningStyle: z.enum(["visual", "auditory", "kinesthetic"], {
+      message:
+        "Learning style must be one of 'visual', 'auditory', or 'kinesthetic'",
+    }),
+  }),
+});
+
+export const updateInterestsSchema = z.object({
+  body: z.object({
+    interests: z.array(z.string()).superRefine(async (interests, ctx) => {
+      const isValid = await categoryRepository.validateInterests(interests);
+      if (!isValid) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid interests",
+        });
+      }
+    }),
+  }),
+});

@@ -4,7 +4,11 @@ import {
 } from "@/module/auth/auth.middleware";
 import { changePasswordSchema } from "@/module/auth/auth.schema";
 import * as learnerController from "@/module/learner/learner.controller";
-import { updateProfileSchema } from "@/module/learner/learner.schema";
+import {
+  updateInterestsSchema,
+  updateLearningStyleSchema,
+  updateProfileSchema,
+} from "@/module/learner/learner.schema";
 import {
   validateProfilePictureUpload,
   validator,
@@ -24,7 +28,7 @@ learnerRouter.get(
 
 learnerRouter.patch(
   "/profile",
-  /* #swagger.tags = ['learners'] 
+  /* #swagger.tags = ['learners']
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/UpdateLearnerProfileSchema" }
   } */
@@ -32,9 +36,29 @@ learnerRouter.patch(
   learnerController.updateProfile,
 );
 
+learnerRouter.patch(
+  "/profile/learning-style",
+  /* #swagger.tags = ['learners']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/UpdateLearningStyleSchema" }
+  } */
+  validator(updateLearningStyleSchema),
+  learnerController.updateLearningStyle,
+);
+
+learnerRouter.patch(
+  "/profile/interests",
+  /* #swagger.tags = ['learners']
+  #swagger.requestBody = {
+    schema: { $ref: "#/components/schemas/UpdateInterestsSchema" }
+  } */
+  validator(updateInterestsSchema),
+  learnerController.updateInterests,
+);
+
 learnerRouter.put(
   "/profile/picture",
-  /* #swagger.tags = ['learners'] 
+  /* #swagger.tags = ['learners']
     #swagger.requestBody = {
       required: true,
       content: {
@@ -49,7 +73,7 @@ learnerRouter.put(
 
 learnerRouter.put(
   "/password",
-  /* #swagger.tags = ['learners'] 
+  /* #swagger.tags = ['learners']
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/ChangePasswordSchema" }
   } */

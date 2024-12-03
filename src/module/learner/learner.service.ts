@@ -4,6 +4,7 @@ import { z } from "zod";
 import { LearnerRepository } from "./learner.repository";
 import { hash } from "bcryptjs";
 import { AuthRepository } from "../auth/auth.repository";
+import { LearningStyle } from "./learner.types";
 
 export interface LearnerServiceDependencies {
   learnerRepository: LearnerRepository;
@@ -56,6 +57,24 @@ export class LearnerService {
       return bucketFile.publicUrl();
     } catch (error) {
       throw new Error(`Failed to update profile picture: ${error}`);
+    }
+  }
+
+  async updateLearningStyle(userId: string, learningStyle: LearningStyle) {
+    try {
+      await this.learnerRepository.updateLearnerProfile(userId, {
+        learningStyle,
+      });
+    } catch (error) {
+      throw new Error(`Failed to update learning style: ${error}`);
+    }
+  }
+
+  async updateInterests(userId: string, interests: string[]) {
+    try {
+      await this.learnerRepository.updateLearnerProfile(userId, { interests });
+    } catch (error) {
+      throw new Error(`Failed to update interests: ${error}`);
     }
   }
 

@@ -3,7 +3,11 @@ import { downscaleImage } from "@/helpers/image.helper";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@/module/auth/auth.schema";
-import { updateProfileSchema } from "@/module/learner/learner.schema";
+import {
+  updateInterestsSchema,
+  updateLearningStyleSchema,
+  updateProfileSchema,
+} from "@/module/learner/learner.schema";
 import { LearnerService } from "@/module/learner/learner.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
@@ -51,6 +55,49 @@ export const updateProfile: Controller<UpdateProfileSchema> = async (
     res.status(500).json({
       status: "error",
       message: "Failed to update learner profile",
+    });
+  }
+};
+
+type UpdateLearningStyleSchema = z.infer<typeof updateLearningStyleSchema>;
+export const updateLearningStyle: Controller<
+  UpdateLearningStyleSchema
+> = async (req, res) => {
+  try {
+    const { learningStyle } = req.body;
+    await learnerService.updateLearningStyle(req.learner.id, learningStyle);
+
+    res.json({
+      status: "success",
+      message: "Learning style updated successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to update learning style: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to update learning style",
+    });
+  }
+};
+
+type UpdateInterestsSchema = z.infer<typeof updateInterestsSchema>;
+export const updateInterests: Controller<UpdateInterestsSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    const { interests } = req.body;
+    await learnerService.updateInterests(req.learner.id, interests);
+
+    res.json({
+      status: "success",
+      message: "Interests updated successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to update interests: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to update interests",
     });
   }
 };
