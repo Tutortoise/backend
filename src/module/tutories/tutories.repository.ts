@@ -5,7 +5,18 @@ import {
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { DayIndex, GetTutoriesFilters } from "@/types";
-import { and, avg, eq, gte, ilike, inArray, lte, not, or } from "drizzle-orm";
+import {
+  and,
+  avg,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  lte,
+  not,
+  or,
+} from "drizzle-orm";
 import { z } from "zod";
 
 export class TutoriesRepository {
@@ -79,7 +90,7 @@ export class TutoriesRepository {
         district: tutors.district,
       })
       .from(tutories)
-      .where(and(...conditions))
+      .where(and(...conditions, isNotNull(tutors.availability)))
       .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
       .innerJoin(categories, eq(tutories.categoryId, categories.id))
       .execute();
