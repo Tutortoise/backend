@@ -29,6 +29,7 @@ export class ReviewRepository {
         rating: reviews.rating,
         message: reviews.message,
         createdAt: reviews.createdAt,
+        learnerId: learners.id,
         learnerName: learners.name,
       })
       .from(reviews)
