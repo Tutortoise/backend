@@ -88,6 +88,7 @@ export class TutorRepository {
         phoneNumber: tutors.phoneNumber,
         city: tutors.city,
         district: tutors.district,
+        availability: tutors.availability,
         createdAt: tutors.createdAt,
       })
       .from(tutors)
