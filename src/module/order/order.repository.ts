@@ -1,5 +1,10 @@
 import { db as dbType } from "@/db/config";
-import { orders, tutories as tutoriesTable, tutors } from "@/db/schema";
+import {
+  learners,
+  orders,
+  tutories as tutoriesTable,
+  tutors,
+} from "@/db/schema";
 import { and, eq, inArray, lte } from "drizzle-orm";
 
 export class OrderRepository {
@@ -70,10 +75,14 @@ export class OrderRepository {
         sessionTime: orders.sessionTime,
         tutorId: tutoriesTable.tutorId,
         tutorName: tutors.name,
+        learnerId: orders.learnerId,
+        learnerName: learners.name,
+        typeLesson: tutoriesTable.typeLesson,
       })
       .from(orders)
       .innerJoin(tutoriesTable, eq(orders.tutoriesId, tutoriesTable.id))
       .innerJoin(tutors, eq(tutoriesTable.tutorId, tutors.id))
+      .innerJoin(learners, eq(orders.learnerId, learners.id))
       .where(and(...conditions));
 
     return query;
