@@ -155,6 +155,7 @@ export const orders = pgTable(
     notes: text("notes"),
     typeLesson: typeLessonEnum("type_lesson").notNull(),
     status: orderStatusEnum("status"),
+    price: integer("price").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({

@@ -13,6 +13,7 @@ import { z } from "zod";
 
 const orderService = new OrderService({
   orderRepository: container.orderRepository,
+  tutoriesRepository: container.tutoriesRepository,
 });
 const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,

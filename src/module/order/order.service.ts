@@ -1,16 +1,23 @@
 import { createOrderSchema } from "@/module/order/order.schema";
 import { z } from "zod";
 import { OrderRepository } from "./order.repository";
+import { TutoriesRepository } from "../tutories/tutories.repository";
 
 export interface OrderServiceDependencies {
   orderRepository: OrderRepository;
+  tutoriesRepository: TutoriesRepository;
 }
 
 export class OrderService {
   private orderRepository: OrderRepository;
+  private tutoriesRepository: TutoriesRepository;
 
-  constructor({ orderRepository }: OrderServiceDependencies) {
+  constructor({
+    orderRepository,
+    tutoriesRepository,
+  }: OrderServiceDependencies) {
     this.orderRepository = orderRepository;
+    this.tutoriesRepository = tutoriesRepository;
   }
 
   async getOrderById(orderId: string) {
@@ -41,11 +48,18 @@ export class OrderService {
       const estimatedEndTime = new Date(data.sessionTime);
       estimatedEndTime.setHours(estimatedEndTime.getHours() + data.totalHours);
 
+      const tutories = await this.tutoriesRepository.getTutoriesDetail(
+        data.tutoriesId,
+      );
+
+      const price = data.totalHours * tutories!.hourlyRate;
+
       const order = await this.orderRepository.createOrder({
         ...data,
         learnerId,
         sessionTime: new Date(data.sessionTime),
         estimatedEndTime,
+        price,
         status: "pending",
       });
 

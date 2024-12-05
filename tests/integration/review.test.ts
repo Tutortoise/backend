@@ -5,13 +5,12 @@ import { generateJWT } from "@/helpers/jwt.helper";
 import supertest from "supertest";
 import { describe, expect, test, beforeAll } from "vitest";
 import { db } from "@/db/config";
-import { reviews, orders } from "@/db/schema";
+import { reviews } from "@/db/schema";
 import type { UserRole } from "@/db/schema";
 import { faker } from "@faker-js/faker";
 
 const orderRepository = container.orderRepository;
 const tutoriesRepository = container.tutoriesRepository;
-const reviewRepository = container.reviewRepository;
 const authRepository = container.authRepository;
 
 interface TestUser {
@@ -42,6 +41,7 @@ async function createOrder(learnerId: string, tutoriesId: string) {
     totalHours: 1,
     status: "completed",
     typeLesson: "online",
+    price: 0,
   });
   return order;
 }

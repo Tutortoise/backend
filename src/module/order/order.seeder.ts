@@ -35,6 +35,7 @@ export const seedOrders = async () => {
       typeLesson:
         tutories[i].typeLesson === "both" ? "online" : tutories[i].typeLesson,
       status: "completed",
+      price: tutories[i].hourlyRate * totalHours,
     });
   }
 };
