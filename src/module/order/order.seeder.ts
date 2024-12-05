@@ -26,16 +26,20 @@ export const seedOrders = async () => {
     const estimatedEndTime = new Date(sessionTime);
     estimatedEndTime.setHours(estimatedEndTime.getHours() + totalHours);
 
+    const randomTutories = faker.helpers.arrayElement(tutories);
+
     await orderRepository.createOrder({
       learnerId: learners[i].id,
-      tutoriesId: tutories[i].id,
+      tutoriesId: randomTutories.id,
       sessionTime,
       totalHours,
       estimatedEndTime,
       typeLesson:
-        tutories[i].typeLesson === "both" ? "online" : tutories[i].typeLesson,
+        randomTutories.typeLesson === "both"
+          ? "online"
+          : randomTutories.typeLesson,
       status: "completed",
-      price: tutories[i].hourlyRate * totalHours,
+      price: randomTutories.hourlyRate * totalHours,
     });
   }
 };
