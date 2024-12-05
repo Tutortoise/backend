@@ -32,6 +32,8 @@ export const seedOrders = async () => {
       sessionTime,
       totalHours,
       estimatedEndTime,
+      typeLesson:
+        tutories[i].typeLesson === "both" ? "online" : tutories[i].typeLesson,
       status: "completed",
     });
   }

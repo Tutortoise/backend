@@ -153,6 +153,7 @@ export const orders = pgTable(
     estimatedEndTime: timestamp("estimated_end_time"),
     totalHours: integer("total_hours").notNull(),
     notes: text("notes"),
+    typeLesson: typeLessonEnum("type_lesson").notNull(),
     status: orderStatusEnum("status"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

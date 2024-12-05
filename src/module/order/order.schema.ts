@@ -41,6 +41,7 @@ export const orderSchema = z.object({
     .string()
     .max(1000, { message: "Note must be at most 1000 characters" })
     .optional(),
+  typeLesson: z.enum(["online", "offline"]),
   status: z.enum(["pending", "declined", "scheduled", "completed"]),
   createdAt: z.string(),
   updatedAt: z.string().optional(),

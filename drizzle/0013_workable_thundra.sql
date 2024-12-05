@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "type_lesson" "type_lesson" NOT NULL;

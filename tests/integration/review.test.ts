@@ -41,6 +41,7 @@ async function createOrder(learnerId: string, tutoriesId: string) {
     sessionTime: new Date(availability[0]),
     totalHours: 1,
     status: "completed",
+    typeLesson: "online",
   });
   return order;
 }

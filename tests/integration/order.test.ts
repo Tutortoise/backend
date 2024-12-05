@@ -1,5 +1,6 @@
 import { container } from "@/container";
 import { app } from "@/main";
+import { Tutories } from "@/types";
 import { faker } from "@faker-js/faker";
 import { generateUser } from "@tests/helpers/generate.helper";
 import jwt from "jsonwebtoken";
@@ -35,12 +36,12 @@ function cleanupOrders(createdOrders: string[]): unknown {
 
 async function createOrder({
   learnerToken,
-  tutoriesId,
+  tutories,
   sessionTime,
   totalHours,
 }: {
   learnerToken: string;
-  tutoriesId: string;
+  tutories: Partial<Tutories>;
   sessionTime: string;
   totalHours?: number;
 }) {
@@ -48,7 +49,9 @@ async function createOrder({
     .post("/api/v1/orders")
     .set("Authorization", `Bearer ${learnerToken}`)
     .send({
-      tutoriesId,
+      tutoriesId: tutories.id,
+      typeLesson:
+        tutories.typeLesson === "both" ? "online" : tutories.typeLesson,
       sessionTime,
       totalHours: totalHours || 1,
       notes: "I want to learn more",
@@ -106,7 +109,7 @@ describe("Order a tutories", async () => {
   test("Learner can order a tutories", async () => {
     const { orderId } = await createOrder({
       learnerToken: token,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
 
@@ -120,6 +123,7 @@ describe("Order a tutories", async () => {
       .set("Authorization", `Bearer ${token}`)
       .send({
         tutoriesId: randomTutories.id,
+        typeLesson: "online",
         sessionTime: new Date().toISOString(),
         totalHours: 1,
         notes: "I want to learn more",
@@ -149,7 +153,7 @@ describe("Accept an order", async () => {
 
     const { orderId } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
 
@@ -170,7 +174,7 @@ describe("Accept an order", async () => {
 
     const { orderId } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
     expect(orderId).toBeDefined();
@@ -197,7 +201,7 @@ describe("Decline an order", async () => {
 
     const { orderId } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
     expect(orderId).toBeDefined();
@@ -221,7 +225,7 @@ describe("Decline an order", async () => {
     // Create an order
     const { orderId } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
     expect(orderId).toBeDefined();
@@ -247,7 +251,7 @@ describe("Handle availability edge cases", async () => {
     const { token: learnerToken } = await registerAndLoginUser("learner");
     const { orderId: orderId1 } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
     expect(orderId1).toBeDefined();
@@ -257,7 +261,7 @@ describe("Handle availability edge cases", async () => {
     const { token: learnerToken2 } = await registerAndLoginUser("learner");
     const { orderId: orderId2 } = await createOrder({
       learnerToken: learnerToken2,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
       totalHours: 5,
     });
@@ -278,6 +282,7 @@ describe("Handle availability edge cases", async () => {
       .set("Authorization", `Bearer ${learnerToken3}`)
       .send({
         tutoriesId: randomTutories.id,
+        typeLesson: "online",
         sessionTime: availability[0],
         totalHours: 1,
         notes: "I want to learn more",
@@ -304,7 +309,7 @@ describe("Handle availability edge cases", async () => {
     // Create first order
     const { orderId } = await createOrder({
       learnerToken,
-      tutoriesId: randomTutories.id,
+      tutories: randomTutories,
       sessionTime: availability[0],
     });
     expect(orderId).toBeDefined();
@@ -329,6 +334,7 @@ describe("Handle availability edge cases", async () => {
       .set("Authorization", `Bearer ${learnerToken}`)
       .send({
         tutoriesId: randomTutories.id,
+        typeLesson: "online",
         sessionTime: availability[0],
         totalHours: 1,
         notes: "This should fail",
