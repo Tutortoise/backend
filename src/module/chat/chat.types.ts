@@ -15,6 +15,7 @@ export interface ChatRoomWithParticipants extends ChatRoom {
     content: string;
     type: MessageType;
   };
+  unreadCount: number;
 }
 
 export interface ChatMessage {

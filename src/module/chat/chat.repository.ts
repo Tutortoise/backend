@@ -67,6 +67,7 @@ export class ChatRepository {
         senderRole,
         content,
         type,
+        isRead: false,
       })
       .returning();
 
@@ -101,6 +102,20 @@ export class ChatRepository {
         room: chatRooms,
         learnerName: learners.name,
         tutorName: tutors.name,
+        lastMessage: sql<{ content: string; type: MessageType }>`
+        (SELECT json_build_object(
+          'content', content,
+          'type', type
+        )
+        FROM ${chatMessages}
+        WHERE ${chatMessages.roomId} = ${chatRooms.id}
+        ORDER BY ${chatMessages.sentAt} DESC
+        LIMIT 1)`,
+        unreadCount: sql<number>`
+        (SELECT COUNT(*)
+         FROM ${chatMessages}
+         WHERE ${chatMessages.roomId} = ${chatRooms.id}
+         AND ${chatMessages.isRead} = false)`,
       })
       .from(chatRooms)
       .leftJoin(learners, eq(chatRooms.learnerId, learners.id))
@@ -113,6 +128,8 @@ export class ChatRepository {
       ...result.room,
       learnerName: result.learnerName,
       tutorName: result.tutorName,
+      lastMessage: result.lastMessage || undefined,
+      unreadCount: Number(result.unreadCount) || 0,
     };
   }
 
@@ -136,6 +153,12 @@ export class ChatRepository {
             WHERE ${chatMessages.roomId} = ${chatRooms.id}
             ORDER BY ${chatMessages.sentAt} DESC
             LIMIT 1)`,
+          unreadCount: sql<number>`
+            (SELECT COUNT(*)
+             FROM ${chatMessages}
+             WHERE ${chatMessages.roomId} = ${chatRooms.id}
+             AND ${chatMessages.senderId} != ${userId}
+             AND ${chatMessages.isRead} = false)`,
         })
         .from(chatRooms)
         .innerJoin(learners, eq(chatRooms.learnerId, learners.id))
