@@ -1,5 +1,6 @@
 import { db as dbType } from "@/db/config";
 import {
+  categories,
   learners,
   orders,
   tutories as tutoriesTable,
@@ -73,16 +74,20 @@ export class OrderRepository {
         id: orders.id,
         status: orders.status,
         sessionTime: orders.sessionTime,
+        estimatedEndTime: orders.estimatedEndTime,
+        categoryName: categories.name,
         tutorId: tutoriesTable.tutorId,
         tutorName: tutors.name,
         learnerId: orders.learnerId,
         learnerName: learners.name,
         typeLesson: tutoriesTable.typeLesson,
+        price: orders.price,
       })
       .from(orders)
       .innerJoin(tutoriesTable, eq(orders.tutoriesId, tutoriesTable.id))
       .innerJoin(tutors, eq(tutoriesTable.tutorId, tutors.id))
       .innerJoin(learners, eq(orders.learnerId, learners.id))
+      .innerJoin(categories, eq(tutoriesTable.categoryId, categories.id))
       .where(and(...conditions));
 
     return query;
