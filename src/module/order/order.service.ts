@@ -88,6 +88,7 @@ export class OrderService {
       for (const pendingOrder of pendingOrders) {
         await this.orderRepository.updateOrder(pendingOrder.id, {
           status: "declined",
+          updatedAt: new Date(),
         });
       }
     } catch (error) {
@@ -97,7 +98,10 @@ export class OrderService {
 
   async declineOrder(orderId: string) {
     try {
-      return this.orderRepository.updateOrder(orderId, { status: "declined" });
+      return this.orderRepository.updateOrder(orderId, {
+        status: "declined",
+        updatedAt: new Date(),
+      });
     } catch (error) {
       throw new Error(`Failed to decline order: ${error}`);
     }

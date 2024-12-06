@@ -157,6 +157,7 @@ export const orders = pgTable(
     status: orderStatusEnum("status"),
     price: integer("price").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at"),
   },
   (table) => ({
     learnerIdIdx: index().on(table.learnerId),

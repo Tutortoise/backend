@@ -6,7 +6,7 @@ import {
   tutories as tutoriesTable,
   tutors,
 } from "@/db/schema";
-import { and, eq, inArray, lte } from "drizzle-orm";
+import { and, eq, desc, inArray, lte } from "drizzle-orm";
 
 export class OrderRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -89,6 +89,7 @@ export class OrderRepository {
       .innerJoin(tutors, eq(tutoriesTable.tutorId, tutors.id))
       .innerJoin(learners, eq(orders.learnerId, learners.id))
       .innerJoin(categories, eq(tutoriesTable.categoryId, categories.id))
+      .orderBy(desc(orders.updatedAt), desc(orders.createdAt))
       .where(and(...conditions));
 
     return query;
