@@ -13,8 +13,6 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { v4 as uuidv4 } from "uuid";
-
 // Enums
 export const genderEnum = pgEnum("gender", [
   "male",
@@ -49,9 +47,7 @@ export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 // Tables
 export const categories = pgTable("categories", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
+  id: uuid().primaryKey().defaultRandom(),
   name: varchar({ length: 255 }).notNull(),
   iconUrl: varchar("icon_url", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -67,9 +63,7 @@ export const interests = pgTable("interests", {
 });
 
 export const learners = pgTable("learners", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
+  id: uuid().primaryKey().defaultRandom(),
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
@@ -83,9 +77,7 @@ export const learners = pgTable("learners", {
 });
 
 export const tutors = pgTable("tutors", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
+  id: uuid().primaryKey().defaultRandom(),
   name: varchar({ length: 255 }).notNull(),
   email: varchar({ length: 255 }).notNull().unique(),
   password: varchar({ length: 255 }).notNull(),
@@ -111,9 +103,7 @@ export type TutorAvailability = {
 export const tutories = pgTable(
   "tutories",
   {
-    id: uuid()
-      .primaryKey()
-      .$default(() => uuidv4()),
+    id: uuid().primaryKey().defaultRandom(),
     tutorId: uuid()
       .notNull()
       .references(() => tutors.id, { onDelete: "cascade" }),
@@ -140,9 +130,7 @@ export const tutories = pgTable(
 export const orders = pgTable(
   "orders",
   {
-    id: uuid()
-      .primaryKey()
-      .$default(() => uuidv4()),
+    id: uuid().primaryKey().defaultRandom(),
     learnerId: uuid()
       .notNull()
       .references(() => learners.id, { onDelete: "cascade" }),
@@ -170,9 +158,7 @@ export const orders = pgTable(
 );
 
 export const chatRooms = pgTable("chat_rooms", {
-  id: uuid()
-    .primaryKey()
-    .$default(() => uuidv4()),
+  id: uuid().primaryKey().defaultRandom(),
   learnerId: uuid()
     .notNull()
     .references(() => learners.id),
@@ -186,9 +172,7 @@ export const chatRooms = pgTable("chat_rooms", {
 export const chatMessages = pgTable(
   "chat_messages",
   {
-    id: uuid()
-      .primaryKey()
-      .$default(() => uuidv4()),
+    id: uuid().primaryKey().defaultRandom(),
     roomId: uuid()
       .notNull()
       .references(() => chatRooms.id),
@@ -213,9 +197,7 @@ export const chatMessages = pgTable(
 export const fcmTokens = pgTable(
   "fcm_tokens",
   {
-    id: uuid()
-      .primaryKey()
-      .$default(() => uuidv4()),
+    id: uuid().primaryKey().defaultRandom(),
     userId: uuid().notNull(),
     token: varchar({ length: 255 }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -230,9 +212,7 @@ export const fcmTokens = pgTable(
 export const reviews = pgTable(
   "reviews",
   {
-    id: uuid()
-      .primaryKey()
-      .$default(() => uuidv4()),
+    id: uuid().primaryKey().defaultRandom(),
     orderId: uuid()
       .notNull()
       .unique()
