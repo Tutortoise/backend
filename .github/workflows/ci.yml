@@ -29,7 +29,7 @@ jobs:
     - name: Run Tests
       run: |
         bun db:migrate
-        bun test
+        bun run test
       env:
         FIREBASE_DATABASE_EMULATOR_HOST: 127.0.0.1:9000
         FIREBASE_STORAGE_EMULATOR_HOST: 127.0.0.1:9199
