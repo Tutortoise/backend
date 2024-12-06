@@ -82,6 +82,7 @@ export class OrderRepository {
         learnerName: learners.name,
         typeLesson: tutoriesTable.typeLesson,
         price: orders.price,
+        notes: orders.notes,
       })
       .from(orders)
       .innerJoin(tutoriesTable, eq(orders.tutoriesId, tutoriesTable.id))
