@@ -65,15 +65,15 @@ export const seedTutories = async ({ generateWithGroq = false }) => {
   }
 
   // Fetch required data
-  const [categories, tutors] = await Promise.all([
-    categoryRepository.getAllCategories(),
-    tutorRepository.getAllTutors(),
-  ]);
+  const tutors = await tutorRepository.getAllTutors();
 
   const tutories: Tutories[] = [];
 
   // Iterate over tutors to generate tutories
   for (const tutor of tutors) {
+    const categories = await categoryRepository.getAvailableCategories(
+      tutor.id,
+    );
     const randomCategory = faker.helpers.arrayElement(categories);
 
     const { name, teachingMethodology } = generateWithGroq
