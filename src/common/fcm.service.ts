@@ -1,4 +1,4 @@
-import { messaging } from "firebase-admin";
+import { messaging } from "@/config";
 import { FCMRepository } from "./fcm.repository";
 import type { MessageType } from "@/db/schema";
 
@@ -51,8 +51,7 @@ export class FCMService {
       tokens,
     };
 
-    const response =
-      await messaging().sendEachForMulticast(notificationMessage);
+    const response = await messaging.sendEachForMulticast(notificationMessage);
 
     if (response.failureCount > 0) {
       const invalidTokens = response.responses

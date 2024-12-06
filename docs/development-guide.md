@@ -4,12 +4,11 @@ This guide covers how to set up and run the project in your local development en
 
 ## Prerequisites
 
-- Node.js (v22 or later)
+- Bun (v1.1.38)
 - PostgreSQL (v16)
 - Docker (optional, for running PostgreSQL in container)
 - Firebase CLI
 - Google Cloud SDK (for storage emulator)
-- pnpm (v9 or later)
 
 ## Environment Setup
 
@@ -17,7 +16,7 @@ This guide covers how to set up and run the project in your local development en
 2. Install dependencies:
 
    ```bash
-   pnpm install
+   bun install
    ```
 
 3. Copy the example environment file:
@@ -64,12 +63,12 @@ This guide covers how to set up and run the project in your local development en
 2. Run database migrations:
 
    ```bash
-   pnpm run db:migrate
+   bun db:migrate
    ```
 
 3. (Optional) Seed the database:
    ```bash
-   pnpm run db:seed
+   bun db:seed
    ```
 
 ### Using Local PostgreSQL
@@ -89,7 +88,7 @@ This guide covers how to set up and run the project in your local development en
 
 3. Run database migrations:
    ```bash
-   pnpm run db:migrate
+   bun db:migrate
    ```
 
 ## Firebase Emulators
@@ -97,7 +96,7 @@ This guide covers how to set up and run the project in your local development en
 1. Install Firebase CLI if you haven't:
 
    ```bash
-   pnpm install -g firebase-tools
+   npm install -g firebase-tools
    ```
 
 2. Log in to Firebase:
@@ -120,7 +119,7 @@ This will start:
 ## Starting the Development Server
 
 ```bash
-pnpm run dev
+bun dev
 ```
 
 The server will be available at `http://localhost:8080`
