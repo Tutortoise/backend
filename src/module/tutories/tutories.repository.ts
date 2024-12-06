@@ -103,6 +103,7 @@ export class TutoriesRepository {
         name: tutories.name,
         tutorId: tutors.id,
         categoryName: categories.name,
+        categoryId: tutories.categoryId,
         tutorName: tutors.name,
         aboutYou: tutories.aboutYou,
         teachingMethodology: tutories.teachingMethodology,
