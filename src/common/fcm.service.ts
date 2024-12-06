@@ -20,6 +20,7 @@ export class FCMService {
   async sendChatNotification(
     recipientId: string,
     senderName: string,
+    senderId: string,
     message: { content: string; type: MessageType },
     roomId: string,
   ): Promise<void> {
@@ -35,12 +36,16 @@ export class FCMService {
 
     const notificationMessage = {
       notification: {
-        title: `New message from ${senderName}`,
+        title: `New message from ${senderName || "Unknown User"}`,
         body: truncatedPreview,
       },
       data: {
         type: "chat_message",
         roomId,
+        senderName: senderName || "Unknown User",
+        senderId: senderId || "",
+        content: truncatedPreview,
+        title: `New message from ${senderName || "Unknown User"}`,
         click_action: "FLUTTER_NOTIFICATION_CLICK",
       },
       tokens,

@@ -101,7 +101,9 @@ export class ChatRepository {
       .select({
         room: chatRooms,
         learnerName: learners.name,
+        learnerId: learners.id,
         tutorName: tutors.name,
+        tutorId: tutors.id,
         lastMessage: sql<{ content: string; type: MessageType }>`
         (SELECT json_build_object(
           'content', content,

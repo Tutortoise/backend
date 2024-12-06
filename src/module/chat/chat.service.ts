@@ -118,6 +118,7 @@ export class ChatService {
       this.deps.fcmService.sendChatNotification(
         recipientId,
         senderName,
+        senderId,
         message,
         roomId,
       );
