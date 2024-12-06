@@ -80,7 +80,7 @@ export class OrderRepository {
         tutorName: tutors.name,
         learnerId: orders.learnerId,
         learnerName: learners.name,
-        typeLesson: tutoriesTable.typeLesson,
+        typeLesson: orders.typeLesson,
         price: orders.price,
         notes: orders.notes,
       })
