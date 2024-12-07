@@ -8,6 +8,8 @@ import { DayIndex, GetTutoriesFilters } from "@/types";
 import {
   and,
   avg,
+  count,
+  countDistinct,
   eq,
   gte,
   ilike,
@@ -97,52 +99,64 @@ export class TutoriesRepository {
   }
 
   async getTutoriesDetail(tutoriesId: string) {
-    const [t] = await this.db
-      .select({
-        id: tutories.id,
-        name: tutories.name,
-        tutorId: tutors.id,
-        categoryName: categories.name,
-        categoryId: tutories.categoryId,
-        tutorName: tutors.name,
-        aboutYou: tutories.aboutYou,
-        teachingMethodology: tutories.teachingMethodology,
-        hourlyRate: tutories.hourlyRate,
-        typeLesson: tutories.typeLesson,
-        city: tutors.city,
-        district: tutors.district,
-        isEnabled: tutories.isEnabled,
-      })
-      .from(tutories)
-      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-      .innerJoin(categories, eq(tutories.categoryId, categories.id))
-      .where(eq(tutories.id, tutoriesId))
-      .limit(1);
+    const [t, orderStats, alsoTeaches] = await Promise.all([
+      // Get tutories detail
+      this.db
+        .select({
+          id: tutories.id,
+          name: tutories.name,
+          tutorId: tutors.id,
+          categoryName: categories.name,
+          categoryId: tutories.categoryId,
+          tutorName: tutors.name,
+          aboutYou: tutories.aboutYou,
+          teachingMethodology: tutories.teachingMethodology,
+          hourlyRate: tutories.hourlyRate,
+          typeLesson: tutories.typeLesson,
+          city: tutors.city,
+          district: tutors.district,
+          isEnabled: tutories.isEnabled,
+        })
+        .from(tutories)
+        .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+        .innerJoin(categories, eq(tutories.categoryId, categories.id))
+        .where(eq(tutories.id, tutoriesId))
+        .limit(1),
 
-    if (!t) {
-      return null;
-    }
+      // Get total orders and learners (unique)
+      this.db
+        .select({
+          totalOrders: count(orders.id),
+          totalLearners: countDistinct(orders.learnerId),
+        })
+        .from(orders)
+        .where(eq(orders.tutoriesId, tutoriesId))
+        .limit(1),
 
-    const alsoTeaches = await this.db
-      .select({
-        id: tutories.id,
-        categoryName: categories.name,
-        hourlyRate: tutories.hourlyRate,
-        typeLesson: tutories.typeLesson,
-      })
-      .from(tutories)
-      .innerJoin(categories, eq(tutories.categoryId, categories.id))
-      .where(
-        and(
-          eq(tutories.tutorId, t.tutorId),
-          not(eq(tutories.id, tutoriesId)),
-          eq(tutories.isEnabled, true),
+      // Get also teaches
+      this.db
+        .select({
+          id: tutories.id,
+          categoryName: categories.name,
+          hourlyRate: tutories.hourlyRate,
+          typeLesson: tutories.typeLesson,
+        })
+        .from(tutories)
+        .innerJoin(categories, eq(tutories.categoryId, categories.id))
+        .where(
+          and(
+            eq(tutories.tutorId, tutoriesId),
+            not(eq(tutories.id, tutoriesId)),
+            eq(tutories.isEnabled, true),
+          ),
         ),
-      );
+    ]);
 
     return {
-      ...t,
+      ...t[0],
       alsoTeaches,
+      totalOrders: orderStats[0].totalOrders,
+      totalLearners: orderStats[0].totalLearners,
     };
   }
 
