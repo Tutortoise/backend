@@ -130,7 +130,12 @@ export class TutoriesRepository {
           totalLearners: countDistinct(orders.learnerId),
         })
         .from(orders)
-        .where(eq(orders.tutoriesId, tutoriesId))
+        .where(
+          and(
+            eq(orders.tutoriesId, tutoriesId),
+            eq(orders.status, "completed"),
+          ),
+        )
         .limit(1),
 
       // Get also teaches
