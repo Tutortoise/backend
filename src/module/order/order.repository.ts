@@ -6,7 +6,7 @@ import {
   tutories as tutoriesTable,
   tutors,
 } from "@/db/schema";
-import { and, eq, desc, inArray, lte, isNotNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lte } from "drizzle-orm";
 
 export class OrderRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -59,7 +59,7 @@ export class OrderRepository {
     }
 
     if (typeof unreviewed === "boolean" && unreviewed) {
-      conditions.push(isNotNull(orders.reviewDismissedAt));
+      conditions.push(isNull(orders.reviewDismissedAt));
     }
 
     if (tutorId) {
