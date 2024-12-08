@@ -10,6 +10,12 @@ export const createReviewSchema = z.object({
   }),
 });
 
+export const dismissReviewSchema = z.object({
+  params: z.object({
+    orderId: z.string().uuid(),
+  }),
+});
+
 export const getReviewsSchema = z.object({
   params: z.object({
     tutoriesId: z.string().uuid(),

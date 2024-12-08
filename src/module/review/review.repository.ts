@@ -1,5 +1,5 @@
 import { db as dbType } from "@/db/config";
-import { reviews, orders, learners, tutories } from "@/db/schema";
+import { reviews, orders, learners } from "@/db/schema";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 
 export class ReviewRepository {
@@ -77,5 +77,12 @@ export class ReviewRepository {
       .groupBy(orders.tutoriesId);
 
     return results;
+  }
+
+  async dismissReviewPrompt(orderId: string) {
+    return this.db
+      .update(orders)
+      .set({ reviewDismissedAt: new Date() })
+      .where(eq(orders.id, orderId));
   }
 }

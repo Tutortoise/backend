@@ -56,6 +56,10 @@ export class ReviewService {
     return orders.some((order) => order.status === "completed");
   }
 
+  async dismissReviewPrompt(orderId: string) {
+    return this.deps.reviewRepository.dismissReviewPrompt(orderId);
+  }
+
   async hasReview(orderId: string) {
     return this.deps.reviewRepository.hasReview(orderId);
   }

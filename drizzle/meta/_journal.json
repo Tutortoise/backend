@@ -127,6 +127,13 @@
       "when": 1733644648448,
       "tag": "0017_flowery_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1733656234950,
+      "tag": "0018_short_ikaris",
+      "breakpoints": true
     }
   ]
 }

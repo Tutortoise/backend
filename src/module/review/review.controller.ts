@@ -3,7 +3,11 @@ import { Controller } from "@/types";
 import { z } from "zod";
 import { logger } from "@middleware/logging.middleware";
 import { ReviewService } from "./review.service";
-import { createReviewSchema, getReviewsSchema } from "./review.schema";
+import {
+  createReviewSchema,
+  dismissReviewSchema,
+  getReviewsSchema,
+} from "./review.schema";
 
 const reviewService = new ReviewService({
   reviewRepository: container.reviewRepository,
@@ -100,6 +104,44 @@ export const getTutoriesReviews: Controller<GetReviewsSchema> = async (
     res.status(500).json({
       status: "error",
       message: "Failed to get reviews",
+    });
+  }
+};
+
+type DismissReviewSchema = z.infer<typeof dismissReviewSchema>;
+export const dismissReviewPrompt: Controller<DismissReviewSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    const learnerId = req.learner.id;
+    const { orderId } = req.params;
+
+    // Validate that the learner owns this order
+    const isValidOrder = await reviewService.validateOrderOwnership(
+      orderId,
+      learnerId,
+    );
+    if (!isValidOrder) {
+      res.status(403).json({
+        status: "fail",
+        message:
+          "You can only dismiss review prompt for orders that you've made",
+      });
+      return;
+    }
+
+    await reviewService.dismissReviewPrompt(orderId);
+
+    res.json({
+      status: "success",
+      message: "Review prompt dismissed successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to dismiss review: ${error}`);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to dismiss review",
     });
   }
 };

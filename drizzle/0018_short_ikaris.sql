@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ADD COLUMN "review_dismissed_at" timestamp;

@@ -5,7 +5,11 @@ import {
 import { validator } from "@middleware/validation.middleware";
 import { Router } from "express";
 import * as reviewController from "./review.controller";
-import { createReviewSchema, getReviewsSchema } from "./review.schema";
+import {
+  createReviewSchema,
+  dismissReviewSchema,
+  getReviewsSchema,
+} from "./review.schema";
 
 const reviewRouter = Router();
 
@@ -29,6 +33,13 @@ reviewRouter.post(
   } */
   validator(createReviewSchema),
   reviewController.createReview,
+);
+
+reviewRouter.post(
+  "/orders/:orderId/disimss",
+  // #swagger.tags = ['reviews']
+  validator(dismissReviewSchema),
+  reviewController.dismissReviewPrompt,
 );
 
 export default reviewRouter;
