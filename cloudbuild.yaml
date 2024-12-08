@@ -1,0 +1,50 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    env:
+      - DOCKER_BUILDKIT=1
+    args:
+      - build
+      - '--no-cache'
+      - '-t'
+      - asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend:$COMMIT_SHA
+      - .
+      - '-f'
+      - Dockerfile
+    id: Build
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - tag
+      - asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend:$COMMIT_SHA
+      - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend:latest'
+    id: Tag
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend
+      - '--all-tags'
+    id: Push
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    args:
+      - run
+      - services
+      - update
+      - tutortoise-backend
+      - '--platform=managed'
+      - '--image=asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend:latest'
+      - '--labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID'
+      - '--region=asia-southeast2'
+      - '--quiet'
+    id: Deploy
+    entrypoint: gcloud
+timeout: 600s
+images:
+  - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/tutortoise/backend:$COMMIT_SHA'
+options:
+  substitutionOption: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _TRIGGER_ID: f529fdff-9444-48ed-b06b-5ecc13d39cb5
+tags:
+  - gcp-cloud-build-deploy-cloud-run
+  - gcp-cloud-build-deploy-cloud-run-managed
+  - tutortoise-backend
