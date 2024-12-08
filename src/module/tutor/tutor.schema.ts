@@ -66,3 +66,9 @@ export const updateProfileSchema = z.object({
     lastSeen: true,
   }),
 });
+
+export const getAvailabilitySchema = z.object({
+  params: z.object({
+    tutorId: z.string(),
+  }),
+});

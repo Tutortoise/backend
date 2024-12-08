@@ -74,6 +74,14 @@ export class TutorService {
     }
   }
 
+  async getAvailability(tutorId: string) {
+    try {
+      return await this.tutorRepository.getAvailability(tutorId);
+    } catch (error) {
+      throw new Error(`Failed to get tutor availability: ${error}`);
+    }
+  }
+
   async getPassword(userId: string) {
     return await this.tutorRepository.getPassword(userId);
   }

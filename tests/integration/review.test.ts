@@ -11,6 +11,7 @@ import { faker } from "@faker-js/faker";
 
 const orderRepository = container.orderRepository;
 const tutoriesRepository = container.tutoriesRepository;
+const tutorRepository = container.tutorRepository;
 const authRepository = container.authRepository;
 
 interface TestUser {
@@ -32,8 +33,8 @@ async function createTestUser(role: UserRole): Promise<TestUser> {
 }
 
 async function createOrder(learnerId: string, tutoriesId: string) {
-  const availability =
-    await tutoriesRepository.getTutoriesAvailability(tutoriesId);
+  const { tutorId } = await tutoriesRepository.getTutoriesById(tutoriesId);
+  const availability = await tutorRepository.getAvailability(tutorId);
 
   const sessionTime = new Date(availability[0]);
   const estimatedEndTime = sessionTime;

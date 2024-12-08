@@ -3,6 +3,7 @@ import { z, ZodIssueCode } from "zod";
 
 const learnerRepository = container.learnerRepository;
 const tutoriesRepository = container.tutoriesRepository;
+const tutorRepository = container.tutorRepository;
 const orderRepository = container.orderRepository;
 
 export const orderSchema = z.object({
@@ -64,8 +65,11 @@ export const createOrderSchema = z
     }),
   })
   .superRefine(async (data, ctx) => {
-    const availabilityList = await tutoriesRepository.getTutoriesAvailability(
+    const tutories = await tutoriesRepository.getTutoriesById(
       data.body.tutoriesId,
+    );
+    const availabilityList = await tutorRepository.getAvailability(
+      tutories.tutorId,
     );
 
     const sessionDate = new Date(data.body.sessionTime);

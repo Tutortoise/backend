@@ -1,6 +1,6 @@
 import { db as dbType } from "@/db/config";
-import { tutories, tutors } from "@/db/schema";
-import { Tutor } from "@/types";
+import { orders, tutories, tutors } from "@/db/schema";
+import { DayIndex, Tutor } from "@/types";
 import { eq, inArray, isNotNull } from "drizzle-orm/expressions";
 
 export class TutorRepository {
@@ -33,6 +33,84 @@ export class TutorRepository {
       cities: cities.map((c) => c.city),
       districts: districts.map((d) => d.district),
     };
+  }
+
+  async getOrdersByTutor(tutorId: string) {
+    return await this.db
+      .select({
+        id: orders.id,
+        tutoriesId: orders.tutoriesId,
+        sessionTime: orders.sessionTime,
+        totalHours: orders.totalHours,
+        notes: orders.notes,
+        learnerId: orders.learnerId,
+        status: orders.status,
+        createdAt: orders.createdAt,
+      })
+      .from(orders)
+      .innerJoin(tutories, eq(orders.tutoriesId, tutories.id))
+      .where(eq(tutories.tutorId, tutorId));
+  }
+
+  async getAvailability(tutorId: string) {
+    const [tutor] = await this.db
+      .select({
+        availability: tutors.availability,
+      })
+      .from(tutors)
+      .where(eq(tutors.id, tutorId))
+      .limit(1);
+
+    const today = new Date();
+    const next2WeeksAvailability: string[] = [];
+
+    const existingOrders = await this.getOrdersByTutor(tutorId);
+    const existingOrderTimes = existingOrders
+      .filter((order) => order.status === "scheduled")
+      .map((order) => ({
+        startTime: order.sessionTime,
+        endTime: new Date(order.sessionTime).setHours(
+          new Date(order.sessionTime).getHours() + order.totalHours,
+        ),
+      }));
+
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+
+      const dayIndex = date.getUTCDay() as DayIndex;
+      const times = tutor.availability?.[dayIndex] || [];
+
+      times.forEach((time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+
+        const datetime = new Date(
+          Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth(),
+            date.getUTCDate(),
+            hours,
+            minutes,
+          ),
+        );
+
+        // Skip past times
+        if (datetime < today) {
+          return;
+        }
+
+        // Skip times that are already booked
+        for (const { startTime, endTime } of existingOrderTimes) {
+          if (datetime >= new Date(startTime) && datetime < new Date(endTime)) {
+            return;
+          }
+        }
+
+        next2WeeksAvailability.push(datetime.toISOString());
+      });
+    }
+
+    return next2WeeksAvailability;
   }
 
   public async hasTutors() {

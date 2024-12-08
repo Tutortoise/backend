@@ -4,7 +4,7 @@ import {
   createTutoriesSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
-import { DayIndex, GetTutoriesFilters } from "@/types";
+import { GetTutoriesFilters } from "@/types";
 import {
   and,
   avg,
@@ -98,6 +98,28 @@ export class TutoriesRepository {
       .execute();
   }
 
+  async getTutoriesById(tutoriesId: string) {
+    const [t] = await this.db
+      .select({
+        id: tutories.id,
+        name: tutories.name,
+        tutorId: tutors.id,
+        tutorName: tutors.name,
+        categoryName: categories.name,
+        hourlyRate: tutories.hourlyRate,
+        typeLesson: tutories.typeLesson,
+        city: tutors.city,
+        district: tutors.district,
+      })
+      .from(tutories)
+      .where(eq(tutories.id, tutoriesId))
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .innerJoin(categories, eq(tutories.categoryId, categories.id))
+      .limit(1);
+
+    return t;
+  }
+
   async getTutoriesDetail(tutoriesId: string) {
     const [t, orderStats, alsoTeaches] = await Promise.all([
       // Get tutories detail
@@ -163,73 +185,6 @@ export class TutoriesRepository {
       totalOrders: orderStats[0].totalOrders,
       totalLearners: orderStats[0].totalLearners,
     };
-  }
-
-  async getTutoriesAvailability(tutoriesId: string) {
-    const [t] = await this.db
-      .select({
-        availability: tutors.availability,
-        tutorId: tutories.tutorId,
-      })
-      .from(tutories)
-      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
-      .where(eq(tutories.id, tutoriesId))
-      .limit(1);
-
-    if (!t) {
-      throw new Error("Tutories not found");
-    }
-
-    const today = new Date();
-    const next2WeeksAvailability: string[] = [];
-
-    const existingOrders = await this.getOrdersByTutor(t.tutorId);
-    const existingOrderTimes = existingOrders
-      .filter((order) => order.status === "scheduled")
-      .map((order) => ({
-        startTime: order.sessionTime,
-        endTime: new Date(order.sessionTime).setHours(
-          new Date(order.sessionTime).getHours() + order.totalHours,
-        ),
-      }));
-
-    for (let i = 0; i < 14; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-
-      const dayIndex = date.getUTCDay() as DayIndex;
-      const times = t.availability?.[dayIndex] || [];
-
-      times.forEach((time: string) => {
-        const [hours, minutes] = time.split(":").map(Number);
-
-        const datetime = new Date(
-          Date.UTC(
-            date.getUTCFullYear(),
-            date.getUTCMonth(),
-            date.getUTCDate(),
-            hours,
-            minutes,
-          ),
-        );
-
-        // Skip past times
-        if (datetime < today) {
-          return;
-        }
-
-        // Skip times that are already booked
-        for (const { startTime, endTime } of existingOrderTimes) {
-          if (datetime >= new Date(startTime) && datetime < new Date(endTime)) {
-            return;
-          }
-        }
-
-        next2WeeksAvailability.push(datetime.toISOString());
-      });
-    }
-
-    return next2WeeksAvailability;
   }
 
   async getAverageHourlyRate({
@@ -300,27 +255,6 @@ export class TutoriesRepository {
       })
       .from(orders)
       .where(eq(orders.tutoriesId, tutoriesId));
-  }
-
-  async getOrdersByTutor(tutorId: string) {
-    try {
-      return await this.db
-        .select({
-          id: orders.id,
-          tutoriesId: orders.tutoriesId,
-          sessionTime: orders.sessionTime,
-          totalHours: orders.totalHours,
-          notes: orders.notes,
-          learnerId: orders.learnerId,
-          status: orders.status,
-          createdAt: orders.createdAt,
-        })
-        .from(orders)
-        .innerJoin(tutories, eq(orders.tutoriesId, tutories.id))
-        .where(eq(tutories.tutorId, tutorId));
-    } catch (error) {
-      throw new Error(`Failed to get orders by tutor: ${error}`);
-    }
   }
 
   async validateTutoriesOwnership(tutorId: string, tutoriesId: string) {

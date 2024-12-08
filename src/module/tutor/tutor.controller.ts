@@ -3,7 +3,10 @@ import { downscaleImage } from "@/helpers/image.helper";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { changePasswordSchema } from "@/module/auth/auth.schema";
-import { updateProfileSchema } from "@/module/tutor/tutor.schema";
+import {
+  getAvailabilitySchema,
+  updateProfileSchema,
+} from "@/module/tutor/tutor.schema";
 import { TutorService } from "@/module/tutor/tutor.service";
 import { RequestHandler } from "express";
 import { z } from "zod";
@@ -125,6 +128,30 @@ export const changePassword: Controller<ChangePasswordSchema> = async (
     res.status(500).json({
       status: "error",
       message: "Failed to change password",
+    });
+  }
+};
+
+type GetAvailabilitySchema = z.infer<typeof getAvailabilitySchema>;
+export const getAvailability: Controller<GetAvailabilitySchema> = async (
+  req,
+  res,
+) => {
+  const tutorId = req.params.tutorId;
+
+  try {
+    const availability = await tutorService.getAvailability(tutorId);
+
+    res.json({
+      status: "success",
+      data: availability,
+    });
+  } catch (error) {
+    logger.error(`Failed to get tutor service availability: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get tutor service availability`,
     });
   }
 };

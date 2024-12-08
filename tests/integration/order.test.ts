@@ -17,8 +17,8 @@ async function getRandomTutories() {
   let availability;
   do {
     randomTutories = faker.helpers.arrayElement(tutories);
-    availability = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
+    availability = await tutorRepository.getAvailability(
+      randomTutories.tutorId,
     );
 
     if (availability.length === 0) {
@@ -322,8 +322,8 @@ describe("Handle availability edge cases", async () => {
       .expect(200);
 
     // Get availability after accepting the order
-    const availabilityAfter = await tutoriesRepository.getTutoriesAvailability(
-      randomTutories.id,
+    const availabilityAfter = await tutorRepository.getAvailability(
+      randomTutories.tutorId,
     );
 
     expect(availabilityAfter).not.toContain(availability[0]);

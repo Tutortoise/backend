@@ -98,17 +98,6 @@ export class TutoriesService {
     }
   }
 
-  async getTutoriesAvailability(tutoriesId: string) {
-    try {
-      const availability =
-        await this.tutoriesRepository.getTutoriesAvailability(tutoriesId);
-
-      return availability;
-    } catch (error) {
-      logger.error(`Failed to get tutories availability: ${error}`);
-    }
-  }
-
   async getAverageRate({
     categoryId,
     city,

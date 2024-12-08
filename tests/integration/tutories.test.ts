@@ -431,19 +431,19 @@ describe("Delete tutories", async () => {
 
 describe("Get tutories availability", async () => {
   const tutories = await tutoriesRepository.getTutories();
-  const tutoriesId = tutories[0].id;
+  const tutorId = tutories[0].tutorId;
 
   const { token } = await registerAndLoginLearner();
 
   test("Get tutories availability without token", async () => {
     await supertest(app)
-      .get(`/api/v1/tutors/services/${tutoriesId}/availability`)
+      .get(`/api/v1/tutors/${tutorId}/availability`)
       .expect(401);
   });
 
   test("Get tutories availability with token", async () => {
     const res = await supertest(app)
-      .get(`/api/v1/tutors/services/${tutoriesId}/availability`)
+      .get(`/api/v1/tutors/${tutorId}/availability`)
       .set("Authorization", `Bearer ${token}`)
       .expect(200);
 

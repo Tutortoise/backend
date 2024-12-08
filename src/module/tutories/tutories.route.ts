@@ -38,11 +38,6 @@ tutoriesRouter.get(
   // #swagger.tags = ['tutors/services']
   tutoriesController.getTutories,
 );
-tutoriesRouter.get(
-  "/:tutoriesId/availability",
-  // #swagger.tags = ['tutors/services']
-  tutoriesController.getTutoriesAvailability,
-);
 
 tutoriesRouter.use(verifyTutor);
 

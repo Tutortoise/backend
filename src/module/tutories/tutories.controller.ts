@@ -100,30 +100,6 @@ export const getTutories: Controller<GetServiceSchema> = async (
   }
 };
 
-export const getTutoriesAvailability: Controller<GetServiceSchema> = async (
-  req,
-  res,
-) => {
-  const tutoriesId = req.params.tutoriesId;
-
-  try {
-    const availability =
-      await tutoriesService.getTutoriesAvailability(tutoriesId);
-
-    res.json({
-      status: "success",
-      data: availability,
-    });
-  } catch (error) {
-    logger.error(`Failed to get tutor service availability: ${error}`);
-
-    res.status(500).json({
-      status: "error",
-      message: `Failed to get tutor service availability`,
-    });
-  }
-};
-
 type GetAverageRateSchema = z.infer<typeof getAverageRateSchema>;
 export const getAverageRate: Controller<GetAverageRateSchema> = async (
   req,
