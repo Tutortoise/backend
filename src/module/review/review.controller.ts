@@ -8,6 +8,7 @@ import {
   dismissReviewSchema,
   getReviewsSchema,
 } from "./review.schema";
+import { ValidationError } from "../tutor/tutor.error";
 
 const reviewService = new ReviewService({
   reviewRepository: container.reviewRepository,
@@ -78,6 +79,13 @@ export const createReview: Controller<CreateReviewSchema> = async (
       data: review,
     });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      res.status(400).json({
+        status: "fail",
+        message: error.message,
+      });
+    }
+
     logger.error(`Failed to create review: ${error}`);
     res.status(500).json({
       status: "error",
