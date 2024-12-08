@@ -55,7 +55,7 @@ orderRouter.post(
   // #swagger.tags = ['orders']
   verifyTutor,
   validator(changeOrderStatusSchema),
-  orderController.declineOrder,
+  orderController.cancelOrder,
 );
 
 orderRouter.get(
