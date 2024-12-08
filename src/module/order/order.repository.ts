@@ -3,6 +3,7 @@ import {
   categories,
   learners,
   orders,
+  reviews,
   tutories as tutoriesTable,
   tutors,
 } from "@/db/schema";
@@ -59,7 +60,9 @@ export class OrderRepository {
     }
 
     if (typeof unreviewed === "boolean" && unreviewed) {
-      conditions.push(isNull(orders.reviewDismissedAt));
+      conditions.push(
+        and(isNull(orders.reviewDismissedAt), isNull(reviews.id)),
+      );
     }
 
     if (tutorId) {
@@ -95,6 +98,7 @@ export class OrderRepository {
       .innerJoin(tutors, eq(tutoriesTable.tutorId, tutors.id))
       .innerJoin(learners, eq(orders.learnerId, learners.id))
       .innerJoin(categories, eq(tutoriesTable.categoryId, categories.id))
+      .leftJoin(reviews, eq(orders.id, reviews.orderId))
       .orderBy(desc(orders.updatedAt), desc(orders.createdAt))
       .where(and(...conditions));
 
