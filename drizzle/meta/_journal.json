@@ -134,6 +134,13 @@
       "when": 1733656234950,
       "tag": "0018_short_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1733678498964,
+      "tag": "0019_nappy_lockjaw",
+      "breakpoints": true
     }
   ]
 }

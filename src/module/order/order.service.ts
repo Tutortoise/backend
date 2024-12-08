@@ -117,6 +117,17 @@ export class OrderService {
     }
   }
 
+  async cancelOrder(orderId: string) {
+    try {
+      return this.orderRepository.updateOrder(orderId, {
+        status: "canceled",
+        updatedAt: new Date(),
+      });
+    } catch (error) {
+      throw new Error(`Failed to cancel order: ${error}`);
+    }
+  }
+
   async getUnreviewedOrders(learnerId: string) {
     try {
       return this.orderRepository.getOrders({

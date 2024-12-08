@@ -32,6 +32,7 @@ export const typeLessonEnum = pgEnum("type_lesson", [
 export const orderStatusEnum = pgEnum("status", [
   "pending",
   "declined",
+  "canceled",
   "scheduled",
   "completed",
 ]);

@@ -5,9 +5,8 @@ import {
 } from "@/module/auth/auth.middleware";
 import * as orderController from "@/module/order/order.controller";
 import {
-  acceptOrderSchema,
+  changeOrderStatusSchema,
   createOrderSchema,
-  declineOrderSchema,
   getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { validator } from "@middleware/validation.middleware";
@@ -39,7 +38,7 @@ orderRouter.post(
   "/:orderId/accept",
   // #swagger.tags = ['orders']
   verifyTutor,
-  validator(acceptOrderSchema),
+  validator(changeOrderStatusSchema),
   orderController.acceptOrder,
 );
 
@@ -47,7 +46,15 @@ orderRouter.post(
   "/:orderId/decline",
   // #swagger.tags = ['orders']
   verifyTutor,
-  validator(declineOrderSchema),
+  validator(changeOrderStatusSchema),
+  orderController.declineOrder,
+);
+
+orderRouter.post(
+  "/:orderId/cancel",
+  // #swagger.tags = ['orders']
+  verifyTutor,
+  validator(changeOrderStatusSchema),
   orderController.declineOrder,
 );
 

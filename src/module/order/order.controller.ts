@@ -1,8 +1,7 @@
 import { container } from "@/container";
 import {
-  acceptOrderSchema,
+  changeOrderStatusSchema,
   createOrderSchema,
-  declineOrderSchema,
   getMyOrdersSchema,
 } from "@/module/order/order.schema";
 import { OrderService } from "@/module/order/order.service";
@@ -56,8 +55,11 @@ export const createOrder: Controller<CreateOrderSchema> = async (req, res) => {
   }
 };
 
-type AcceptOrderSchema = z.infer<typeof acceptOrderSchema>;
-export const acceptOrder: Controller<AcceptOrderSchema> = async (req, res) => {
+type ChangeOrderStatusSchema = z.infer<typeof changeOrderStatusSchema>;
+export const acceptOrder: Controller<ChangeOrderStatusSchema> = async (
+  req,
+  res,
+) => {
   try {
     // Check if the tutor owns the tutories
     const orderId = req.params.orderId;
@@ -87,8 +89,7 @@ export const acceptOrder: Controller<AcceptOrderSchema> = async (req, res) => {
   }
 };
 
-type DeclineOrderSchema = z.infer<typeof declineOrderSchema>;
-export const declineOrder: Controller<DeclineOrderSchema> = async (
+export const declineOrder: Controller<ChangeOrderStatusSchema> = async (
   req,
   res,
 ) => {
@@ -118,6 +119,39 @@ export const declineOrder: Controller<DeclineOrderSchema> = async (
     res
       .status(500)
       .json({ status: "error", message: "Failed to decline order" });
+  }
+};
+
+export const cancelOrder: Controller<ChangeOrderStatusSchema> = async (
+  req,
+  res,
+) => {
+  try {
+    // Check if the tutor owns the tutories
+    const orderId = req.params.orderId;
+    const order = await orderService.getOrderById(orderId);
+    const isOwner = await tutoriesService.validateTutoriesOwnership({
+      tutorId: req.tutor.id,
+      tutoriesId: order[0].tutories.id,
+    });
+
+    if (!isOwner) {
+      res.status(403).json({
+        status: "error",
+        message: "You are not authorized to cancel this order",
+      });
+      return;
+    }
+
+    await orderService.cancelOrder(req.params.orderId);
+
+    res.json({ status: "success", message: "Order has been cancelled" });
+  } catch (error) {
+    logger.error(`Failed to cancel order: ${error}`);
+
+    res
+      .status(500)
+      .json({ status: "error", message: "Failed to cancel order" });
   }
 };
 
