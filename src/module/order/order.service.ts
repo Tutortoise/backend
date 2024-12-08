@@ -116,4 +116,16 @@ export class OrderService {
       throw new Error(`Failed to decline order: ${error}`);
     }
   }
+
+  async getUnreviewedOrders(learnerId: string) {
+    try {
+      return this.orderRepository.getOrders({
+        learnerId,
+        status: "completed",
+        unreviewed: true,
+      });
+    } catch (error) {
+      throw new Error(`Failed to get unreviewed orders: ${error}`);
+    }
+  }
 }

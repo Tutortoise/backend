@@ -120,3 +120,17 @@ export const declineOrder: Controller<DeclineOrderSchema> = async (
       .json({ status: "error", message: "Failed to decline order" });
   }
 };
+
+export const getUnreviewedOrders: Controller = async (req, res) => {
+  try {
+    const orders = await orderService.getUnreviewedOrders(req.learner.id);
+
+    res.json({ status: "success", data: orders });
+  } catch (error) {
+    logger.error(`Failed to get unreviewed orders: ${error}`);
+
+    res
+      .status(500)
+      .json({ status: "error", message: "Failed to get unreviewed orders" });
+  }
+};

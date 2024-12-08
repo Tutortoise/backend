@@ -51,4 +51,11 @@ orderRouter.post(
   orderController.declineOrder,
 );
 
+orderRouter.get(
+  "/unreviewed",
+  // #swagger.tags = ['orders']
+  verifyLearner,
+  orderController.getUnreviewedOrders,
+);
+
 export default orderRouter;

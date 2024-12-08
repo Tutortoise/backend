@@ -6,7 +6,7 @@ import {
   tutories as tutoriesTable,
   tutors,
 } from "@/db/schema";
-import { and, eq, desc, inArray, lte } from "drizzle-orm";
+import { and, eq, desc, inArray, lte, isNotNull } from "drizzle-orm";
 
 export class OrderRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -29,12 +29,14 @@ export class OrderRepository {
     tutoriesId,
     orderId,
     status,
+    unreviewed,
   }: {
     learnerId?: string;
     tutorId?: string;
     tutoriesId?: string;
     orderId?: string;
     status?: "pending" | "scheduled" | "completed";
+    unreviewed?: boolean;
   }) {
     await this.updateStatusToCompleted();
 
@@ -54,6 +56,10 @@ export class OrderRepository {
 
     if (orderId) {
       conditions.push(eq(orders.id, orderId));
+    }
+
+    if (typeof unreviewed === "boolean" && unreviewed) {
+      conditions.push(isNotNull(orders.reviewDismissedAt));
     }
 
     if (tutorId) {
