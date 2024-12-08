@@ -1,0 +1,1 @@
+ALTER TABLE "orders" ALTER COLUMN "estimated_end_time" SET NOT NULL;

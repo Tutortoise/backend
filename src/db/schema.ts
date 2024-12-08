@@ -138,7 +138,7 @@ export const orders = pgTable(
       .notNull()
       .references(() => tutories.id, { onDelete: "cascade" }),
     sessionTime: timestamp("session_time").notNull(),
-    estimatedEndTime: timestamp("estimated_end_time"),
+    estimatedEndTime: timestamp("estimated_end_time").notNull(),
     totalHours: integer("total_hours").notNull(),
     notes: text("notes"),
     typeLesson: typeLessonEnum("type_lesson").notNull(),

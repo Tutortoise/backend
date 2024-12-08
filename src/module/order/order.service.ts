@@ -77,20 +77,30 @@ export class OrderService {
       await this.orderRepository.updateOrder(orderId, { status: "scheduled" });
 
       const order = await this.orderRepository.getOrderById(orderId);
+      const acceptedOrderTime = new Date(order[0].orders.sessionTime);
+      const estimatedEndTime = new Date(order[0].orders.estimatedEndTime);
 
-      // To prevent double booking, decline all other pending orders
+      // To prevent double booking, decline all other pending orders that overlap with the accepted order
       const tutoriesId = order[0].tutories.id;
       const pendingOrders = await this.orderRepository.getOrders({
         tutoriesId,
         status: "pending",
       });
-
-      for (const pendingOrder of pendingOrders) {
-        await this.orderRepository.updateOrder(pendingOrder.id, {
+      const overlappingOrders = pendingOrders.filter((pendingOrder) => {
+        const pendingOrderTime = new Date(pendingOrder.sessionTime);
+        return (
+          pendingOrderTime >= acceptedOrderTime &&
+          pendingOrderTime <= estimatedEndTime
+        );
+      });
+      const updatePromises = overlappingOrders.map((order) =>
+        this.orderRepository.updateOrder(order.id, {
           status: "declined",
           updatedAt: new Date(),
-        });
-      }
+        }),
+      );
+
+      await Promise.all(updatePromises);
     } catch (error) {
       throw new Error(`Failed to accept order: ${error}`);
     }

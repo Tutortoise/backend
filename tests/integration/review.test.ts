@@ -34,10 +34,15 @@ async function createTestUser(role: UserRole): Promise<TestUser> {
 async function createOrder(learnerId: string, tutoriesId: string) {
   const availability =
     await tutoriesRepository.getTutoriesAvailability(tutoriesId);
+
+  const sessionTime = new Date(availability[0]);
+  const estimatedEndTime = sessionTime;
+  estimatedEndTime.setHours(estimatedEndTime.getHours() + 1);
   const [order] = await orderRepository.createOrder({
     learnerId,
     tutoriesId,
-    sessionTime: new Date(availability[0]),
+    sessionTime,
+    estimatedEndTime,
     totalHours: 1,
     status: "completed",
     typeLesson: "online",
