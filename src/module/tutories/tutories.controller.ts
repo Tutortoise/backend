@@ -247,6 +247,14 @@ export const updateTutories: Controller<UpdateTutorServiceSchema> = async (
       message: "Tutor service updated successfully",
     });
   } catch (error) {
+    if (error instanceof ValidationError) {
+      res.status(400).json({
+        status: "fail",
+        message: error.message,
+      });
+      return;
+    }
+
     logger.error(`Failed to update tutor service: ${error}`);
 
     res.status(500).json({
