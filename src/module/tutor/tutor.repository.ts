@@ -62,7 +62,7 @@ export class TutorRepository {
       .limit(1);
 
     const today = new Date();
-    const next2WeeksAvailability: string[] = [];
+    const next2WeeksAvailability: Date[] = [];
 
     const existingOrders = await this.getOrdersByTutor(tutorId);
     const existingOrderTimes = existingOrders
@@ -106,11 +106,13 @@ export class TutorRepository {
           }
         }
 
-        next2WeeksAvailability.push(datetime.toISOString());
+        next2WeeksAvailability.push(datetime);
       });
     }
 
-    return next2WeeksAvailability;
+    return next2WeeksAvailability
+      .sort((a, b) => a.getTime() - b.getTime())
+      .map((d) => d.toISOString());
   }
 
   public async hasTutors() {
