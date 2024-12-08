@@ -90,7 +90,7 @@ export class OrderService {
         const pendingOrderTime = new Date(pendingOrder.sessionTime);
         return (
           pendingOrderTime >= acceptedOrderTime &&
-          pendingOrderTime <= estimatedEndTime
+          pendingOrderTime < estimatedEndTime
         );
       });
       const updatePromises = overlappingOrders.map((order) =>
