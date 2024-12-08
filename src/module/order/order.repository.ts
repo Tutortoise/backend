@@ -48,7 +48,9 @@ export class OrderRepository {
     } else if (status === "scheduled") {
       conditions.push(eq(orders.status, "scheduled"));
     } else if (status === "completed") {
-      conditions.push(inArray(orders.status, ["completed", "declined"]));
+      conditions.push(
+        inArray(orders.status, ["completed", "declined", "canceled"]),
+      );
     }
 
     if (learnerId) {
