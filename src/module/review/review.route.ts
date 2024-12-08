@@ -36,7 +36,7 @@ reviewRouter.post(
 );
 
 reviewRouter.post(
-  "/orders/:orderId/disimss",
+  "/orders/:orderId/dismiss",
   // #swagger.tags = ['reviews']
   validator(dismissReviewSchema),
   reviewController.dismissReviewPrompt,
