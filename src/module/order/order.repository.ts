@@ -98,6 +98,7 @@ export class OrderRepository {
         typeLesson: orders.typeLesson,
         price: orders.price,
         notes: orders.notes,
+        totalHours: orders.totalHours,
         createdAt: orders.createdAt,
         updatedAt: orders.updatedAt,
       })
