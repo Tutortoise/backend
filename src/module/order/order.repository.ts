@@ -98,6 +98,8 @@ export class OrderRepository {
         typeLesson: orders.typeLesson,
         price: orders.price,
         notes: orders.notes,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
       })
       .from(orders)
       .innerJoin(tutoriesTable, eq(orders.tutoriesId, tutoriesTable.id))
