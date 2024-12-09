@@ -1,6 +1,6 @@
 import { db as dbType } from "@/db/config";
-import { reviews, orders, learners } from "@/db/schema";
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { learners, orders, reviews } from "@/db/schema";
+import { and, desc, eq, inArray, not, sql } from "drizzle-orm";
 
 export class ReviewRepository {
   constructor(private readonly db: typeof dbType) {}
@@ -35,7 +35,9 @@ export class ReviewRepository {
       .from(reviews)
       .innerJoin(orders, eq(reviews.orderId, orders.id))
       .innerJoin(learners, eq(orders.learnerId, learners.id))
-      .where(eq(orders.tutoriesId, tutoriesId))
+      .where(
+        and(eq(orders.tutoriesId, tutoriesId), not(eq(reviews.message, ""))),
+      )
       .orderBy(desc(reviews.createdAt));
   }
 
