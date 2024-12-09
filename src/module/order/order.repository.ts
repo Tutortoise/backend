@@ -39,7 +39,10 @@ export class OrderRepository {
     status?: "pending" | "scheduled" | "completed";
     unreviewed?: boolean;
   }) {
-    await this.updateStatusToCompleted();
+    await Promise.all([
+      this.updateStatusToCompleted(),
+      this.declineExpiredOrders(),
+    ]);
 
     const conditions = [];
 
@@ -138,10 +141,21 @@ export class OrderRepository {
     return result.length > 0;
   }
 
+  // Automatically update the status of the order to completed if the estimated end time has passed
   async updateStatusToCompleted() {
     await this.db
       .update(orders)
       .set({ status: "completed" })
       .where(lte(orders.estimatedEndTime, new Date()));
+  }
+
+  // If the tutor does not accept the order later than scheduled time, the order will be declined
+  async declineExpiredOrders() {
+    await this.db
+      .update(orders)
+      .set({ status: "declined" })
+      .where(
+        and(eq(orders.status, "pending"), lte(orders.sessionTime, new Date())),
+      );
   }
 }
