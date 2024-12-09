@@ -55,10 +55,10 @@ export const categories = pgTable("categories", {
 });
 
 export const interests = pgTable("interests", {
-  learnerId: uuid()
+  learnerId: uuid("learner_id")
     .notNull()
     .references(() => learners.id, { onDelete: "cascade" }),
-  categoryId: uuid()
+  categoryId: uuid("category_id")
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
 });
@@ -105,10 +105,10 @@ export const tutories = pgTable(
   "tutories",
   {
     id: uuid().primaryKey().defaultRandom(),
-    tutorId: uuid()
+    tutorId: uuid("tutor_id")
       .notNull()
       .references(() => tutors.id, { onDelete: "cascade" }),
-    categoryId: uuid()
+    categoryId: uuid("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
     name: varchar({ length: 50 }).notNull(),
@@ -132,10 +132,10 @@ export const orders = pgTable(
   "orders",
   {
     id: uuid().primaryKey().defaultRandom(),
-    learnerId: uuid()
+    learnerId: uuid("learner_id")
       .notNull()
       .references(() => learners.id, { onDelete: "cascade" }),
-    tutoriesId: uuid()
+    tutoriesId: uuid("tutories_id")
       .notNull()
       .references(() => tutories.id, { onDelete: "cascade" }),
     sessionTime: timestamp("session_time").notNull(),
@@ -161,10 +161,10 @@ export const orders = pgTable(
 
 export const chatRooms = pgTable("chat_rooms", {
   id: uuid().primaryKey().defaultRandom(),
-  learnerId: uuid()
+  learnerId: uuid("learner_id")
     .notNull()
     .references(() => learners.id),
-  tutorId: uuid()
+  tutorId: uuid("tutor_id")
     .notNull()
     .references(() => tutors.id),
   lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
@@ -175,10 +175,10 @@ export const chatMessages = pgTable(
   "chat_messages",
   {
     id: uuid().primaryKey().defaultRandom(),
-    roomId: uuid()
+    roomId: uuid("room_id")
       .notNull()
       .references(() => chatRooms.id),
-    senderId: uuid().notNull(),
+    senderId: uuid("sender_id").notNull(),
     senderRole: userRoleEnum("sender_role").notNull(),
     content: text("content").notNull(),
     type: messageTypeEnum("type").notNull(),
@@ -200,7 +200,7 @@ export const fcmTokens = pgTable(
   "fcm_tokens",
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid().notNull(),
+    userId: uuid("user_id").notNull(),
     token: varchar({ length: 255 }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at"),
@@ -215,7 +215,7 @@ export const reviews = pgTable(
   "reviews",
   {
     id: uuid().primaryKey().defaultRandom(),
-    orderId: uuid()
+    orderId: uuid("order_id")
       .notNull()
       .unique()
       .references(() => orders.id, { onDelete: "cascade" }),
