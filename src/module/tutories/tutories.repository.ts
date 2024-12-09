@@ -121,7 +121,15 @@ export class TutoriesRepository {
   }
 
   async getTutoriesDetail(tutoriesId: string) {
-    const [t, orderStats, alsoTeaches] = await Promise.all([
+    const { tutorId } = await this.db
+      .select({ tutorId: tutories.tutorId })
+      .from(tutories)
+      .where(eq(tutories.id, tutoriesId))
+      .limit(1)
+      .then(([result]) => result);
+
+    // Execute the rest of the queries in parallel
+    const [[t], [orderStats], alsoTeaches] = await Promise.all([
       // Get tutories detail
       this.db
         .select({
@@ -172,7 +180,7 @@ export class TutoriesRepository {
         .innerJoin(categories, eq(tutories.categoryId, categories.id))
         .where(
           and(
-            eq(tutories.tutorId, tutoriesId),
+            eq(tutories.tutorId, tutorId),
             not(eq(tutories.id, tutoriesId)),
             eq(tutories.isEnabled, true),
           ),
@@ -180,10 +188,10 @@ export class TutoriesRepository {
     ]);
 
     return {
-      ...t[0],
+      ...t,
       alsoTeaches,
-      totalOrders: orderStats[0].totalOrders,
-      totalLearners: orderStats[0].totalLearners,
+      totalOrders: orderStats.totalOrders,
+      totalLearners: orderStats.totalLearners,
     };
   }
 
