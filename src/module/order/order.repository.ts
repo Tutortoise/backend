@@ -63,7 +63,11 @@ export class OrderRepository {
 
     if (typeof unreviewed === "boolean" && unreviewed) {
       conditions.push(
-        and(isNull(orders.reviewDismissedAt), isNull(reviews.id)),
+        and(
+          eq(orders.status, "completed"),
+          isNull(orders.reviewDismissedAt),
+          isNull(reviews.id),
+        ),
       );
     }
 
