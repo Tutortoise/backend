@@ -1,4 +1,4 @@
-import { RECOMMENDATION_ENABLED, RECOMMENDATION_URL } from "@/config";
+import { SYSTEM_RECOMMENDER_ENABLED, SYSTEM_RECOMMENDER_URL } from "@/config";
 import {
   RemoteRecommendationService,
   InterestRecommendationService,
@@ -12,7 +12,7 @@ export const createRecommendationService = (
   learnerRepository: LearnerRepository,
   tutoriesRepository: TutoriesRepository,
 ) => {
-  if (process.env.NODE_ENV === "test" || !RECOMMENDATION_ENABLED) {
+  if (process.env.NODE_ENV === "test" || !SYSTEM_RECOMMENDER_ENABLED) {
     logger.info(
       "Recommendation service is disabled, using simple interest-matching service",
     );
@@ -22,11 +22,11 @@ export const createRecommendationService = (
     );
   }
 
-  const service = new RemoteRecommendationService(RECOMMENDATION_URL!);
+  const service = new RemoteRecommendationService(SYSTEM_RECOMMENDER_URL!);
 
   try {
     axios
-      .get(`${RECOMMENDATION_URL}/health`, {
+      .get(`${SYSTEM_RECOMMENDER_URL}/health`, {
         timeout: 5000,
       })
       .catch(() => {
