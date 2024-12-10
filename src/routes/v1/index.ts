@@ -19,6 +19,6 @@ v1Router.use("/tutors", tutorRouter);
 v1Router.use("/orders", orderRouter);
 v1Router.use("/chat", chatRouter);
 v1Router.use("/reviews", reviewRouter);
-v1Router.get("/notification", notificationRouter);
+v1Router.use("/notification", notificationRouter);
 
 export default v1Router;

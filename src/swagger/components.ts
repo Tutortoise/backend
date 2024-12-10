@@ -83,5 +83,16 @@ export const components = {
       $hourlyRate: 70000,
       typeLesson: "online/offline/both",
     },
+    GetNotificationsSchema: {
+      query: {
+        limit: "20",
+        before: "2024-01-01T00:00:00Z",
+      },
+    },
+    MarkNotificationReadSchema: {
+      params: {
+        notificationId: "uuid",
+      },
+    },
   },
 };

@@ -31,4 +31,8 @@ export const tags = [
     name: "reviews",
     description: "Review related endpoints",
   },
+  {
+    name: "notifications",
+    description: "Notification related endpoints",
+  },
 ];
