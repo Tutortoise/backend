@@ -1,9 +1,12 @@
-import { jwtAuthMiddleware, verifyTutor } from "@/module/auth/auth.middleware";
+import {
+  jwtAuthMiddleware,
+  verifyLearner,
+  verifyTutor,
+} from "@/module/auth/auth.middleware";
 import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
   createTutoriesSchema,
   getAverageRateSchema,
-  getRecommendationsSchema,
   getTutoriesSchema,
   trackInteractionSchema,
   updateTutoriesSchema,
@@ -36,14 +39,15 @@ tutoriesRouter.get(
 );
 
 tutoriesRouter.get(
-  "/recommendations/:learnerId",
+  "/recommendations",
   // #swagger.tags = ['tutors/services']
-  validator(getRecommendationsSchema),
+  verifyLearner,
   tutoriesController.getRecommendations,
 );
 
 tutoriesRouter.get(
-  "/interaction/:learnerId/:tutoriesId",
+  "/interaction/:tutoriesId",
+  verifyLearner,
   validator(trackInteractionSchema),
   tutoriesController.trackInteraction,
 );

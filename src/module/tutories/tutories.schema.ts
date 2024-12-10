@@ -151,39 +151,8 @@ export const deleteTutoriesSchema = z.object({
   }),
 });
 
-export const getRecommendationsSchema = z.object({
-  params: z.object({
-    learnerId: z.string().superRefine(async (learnerId, ctx) => {
-      try {
-        const exists =
-          await container.learnerRepository.checkLearnerExists(learnerId);
-        if (!exists) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Learner does not exist",
-          });
-        }
-      } catch (error) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Failed to check if learner exists ",
-        });
-      }
-    }),
-  }),
-});
-
 export const trackInteractionSchema = z.object({
   params: z.object({
-    learnerId: z.string().superRefine(async (learnerId, ctx) => {
-      const exists = await learnerRepository.checkLearnerExists(learnerId);
-      if (!exists) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Learner does not exist",
-        });
-      }
-    }),
     tutoriesId: z.string().superRefine(async (tutoriesId, ctx) => {
       const exists = await tutoriesRepository.checkTutoriesExists(tutoriesId);
       if (!exists) {

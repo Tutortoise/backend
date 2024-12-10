@@ -3,7 +3,6 @@ import {
   createTutoriesSchema,
   deleteTutoriesSchema,
   getAverageRateSchema,
-  getRecommendationsSchema,
   getServiceSchema,
   getTutoriesSchema,
   trackInteractionSchema,
@@ -280,12 +279,8 @@ export const deleteTutories: Controller<DeleteTutorServiceSchema> = async (
   }
 };
 
-type GetRecommendationsSchema = z.infer<typeof getRecommendationsSchema>;
-export const getRecommendations: Controller<GetRecommendationsSchema> = async (
-  req,
-  res,
-) => {
-  const learnerId = req.params.learnerId;
+export const getRecommendations: Controller = async (req, res) => {
+  const learnerId = req.learner.id;
 
   try {
     const recommendations = await tutoriesService.getRecommendations(learnerId);
@@ -309,7 +304,7 @@ export const trackInteraction: Controller<TrackInteractionSchema> = async (
   req,
   res,
 ) => {
-  const learnerId = req.params.learnerId;
+  const learnerId = req.learner.id;
   const tutoriesId = req.params.tutoriesId;
 
   try {
