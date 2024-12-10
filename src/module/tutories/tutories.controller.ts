@@ -3,8 +3,10 @@ import {
   createTutoriesSchema,
   deleteTutoriesSchema,
   getAverageRateSchema,
+  getRecommendationsSchema,
   getServiceSchema,
   getTutoriesSchema,
+  trackInteractionSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { TutoriesService } from "@/module/tutories/tutories.service";
@@ -18,6 +20,7 @@ const tutoriesService = new TutoriesService({
   tutorRepository: container.tutorRepository,
   reviewRepository: container.reviewRepository,
   abusiveDetection: container.abusiveDetectionService,
+  recommender: container.recommendationService,
 });
 
 type GetTutoriesSchema = z.infer<typeof getTutoriesSchema>;
@@ -273,6 +276,55 @@ export const deleteTutories: Controller<DeleteTutorServiceSchema> = async (
     res.status(500).json({
       status: "error",
       message: `Failed to delete tutor service: ${error}`,
+    });
+  }
+};
+
+type GetRecommendationsSchema = z.infer<typeof getRecommendationsSchema>;
+export const getRecommendations: Controller<GetRecommendationsSchema> = async (
+  req,
+  res,
+) => {
+  const learnerId = req.params.learnerId;
+
+  try {
+    const recommendations = await tutoriesService.getRecommendations(learnerId);
+
+    res.json({
+      status: "success",
+      data: recommendations,
+    });
+  } catch (error) {
+    logger.error(`Failed to get recommendations: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to get recommendations`,
+    });
+  }
+};
+
+type TrackInteractionSchema = z.infer<typeof trackInteractionSchema>;
+export const trackInteraction: Controller<TrackInteractionSchema> = async (
+  req,
+  res,
+) => {
+  const learnerId = req.params.learnerId;
+  const tutoriesId = req.params.tutoriesId;
+
+  try {
+    await tutoriesService.trackInteraction(learnerId, tutoriesId);
+
+    res.json({
+      status: "success",
+      message: "Interaction tracked successfully",
+    });
+  } catch (error) {
+    logger.error(`Failed to track interaction: ${error}`);
+
+    res.status(500).json({
+      status: "error",
+      message: `Failed to track interaction`,
     });
   }
 };

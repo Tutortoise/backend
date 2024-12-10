@@ -12,6 +12,8 @@ import { FaceValidationService } from "./module/face-validation/face-validation.
 import { createFaceValidationService } from "./module/face-validation/face-validation.factory";
 import { AbusiveDetectionService } from "./module/abusive-detection/abusive-detection.interface";
 import { createAbusiveDetectionService } from "@/module/abusive-detection/abusive-detection.factory";
+import { createRecommendationService } from "./module/recommendation/recommendation.factory";
+import { RecommendationService } from "./module/recommendation/recommendation.interface";
 
 interface Container {
   authRepository: AuthRepository;
@@ -25,24 +27,39 @@ interface Container {
   reviewRepository: ReviewRepository;
   faceValidationService: FaceValidationService;
   abusiveDetectionService: AbusiveDetectionService;
+  recommendationService: RecommendationService;
 }
 
 let containerInstance: Container | null = null;
 
 export const setupContainer = (): Container => {
   if (!containerInstance) {
+    const authRepository = new AuthRepository(db);
+    const categoryRepository = new CategoryRepository(db);
+    const learnerRepository = new LearnerRepository(db);
+    const tutorRepository = new TutorRepository(db);
+    const tutoriesRepository = new TutoriesRepository(db);
+    const orderRepository = new OrderRepository(db);
+    const chatRepository = new ChatRepository(db);
+    const fcmRepository = new FCMRepository(db);
+    const reviewRepository = new ReviewRepository(db);
+
     containerInstance = {
-      authRepository: new AuthRepository(db),
-      categoryRepository: new CategoryRepository(db),
-      learnerRepository: new LearnerRepository(db),
-      tutorRepository: new TutorRepository(db),
-      tutoriesRepository: new TutoriesRepository(db),
-      orderRepository: new OrderRepository(db),
-      chatRepository: new ChatRepository(db),
-      fcmRepository: new FCMRepository(db),
-      reviewRepository: new ReviewRepository(db),
+      authRepository,
+      categoryRepository,
+      learnerRepository,
+      tutorRepository,
+      tutoriesRepository,
+      orderRepository,
+      chatRepository,
+      fcmRepository,
+      reviewRepository,
       faceValidationService: createFaceValidationService(),
       abusiveDetectionService: createAbusiveDetectionService(),
+      recommendationService: createRecommendationService(
+        learnerRepository,
+        tutoriesRepository,
+      ),
     };
   }
 

@@ -1,5 +1,12 @@
 import { db as dbType } from "@/db/config";
-import { categories, orders, tutories, tutors } from "@/db/schema";
+import {
+  categories,
+  interests,
+  learners,
+  orders,
+  tutories,
+  tutors,
+} from "@/db/schema";
 import {
   createTutoriesSchema,
   updateTutoriesSchema,
@@ -18,6 +25,7 @@ import {
   lte,
   not,
   or,
+  sql,
 } from "drizzle-orm";
 import { z } from "zod";
 
@@ -295,5 +303,47 @@ export class TutoriesRepository {
     } catch (error) {
       throw new Error(`Error checking if tutories exists: ${error}`);
     }
+  }
+
+  async getTutoriesByLearnerInterests(learnerId: string) {
+    return await this.db
+      .select({
+        tutor_id: tutors.id,
+        tutories_id: tutories.id,
+        name: tutors.name,
+        email: tutors.email,
+        city: tutors.city,
+        district: tutors.district,
+        category: categories.name,
+        tutory_name: tutories.name,
+        about: tutories.aboutYou,
+        methodology: tutories.teachingMethodology,
+        hourly_rate: tutories.hourlyRate,
+        type_lesson: tutories.typeLesson,
+        location_match: sql<boolean>`${learners.city} = ${tutors.city}`.as(
+          "location_match",
+        ),
+        availability: tutors.availability,
+        completed_orders: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${orders} 
+          WHERE ${orders.tutoriesId} = ${tutories.id} 
+          AND ${orders.status} = 'completed'
+        )`.as("completed_orders"),
+        total_orders: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${orders} 
+          WHERE ${orders.tutoriesId} = ${tutories.id}
+        )`.as("total_orders"),
+      })
+      .from(tutories)
+      .innerJoin(tutors, eq(tutories.tutorId, tutors.id))
+      .innerJoin(categories, eq(tutories.categoryId, categories.id))
+      .innerJoin(interests, eq(interests.categoryId, tutories.categoryId))
+      .innerJoin(learners, eq(interests.learnerId, learners.id))
+      .where(
+        and(eq(interests.learnerId, learnerId), eq(tutories.isEnabled, true)),
+      )
+      .limit(5);
   }
 }
