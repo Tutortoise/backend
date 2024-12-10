@@ -22,18 +22,21 @@ export interface Recommendation {
 }
 
 export interface RecommendationServiceResponse {
-  learner: {
-    id: string;
-    name: string;
-    email: string;
-    learning_style: LearningStyle | null;
-    city: string | null;
-    district: string | null;
-    interests: string[];
+  status: string;
+  data: {
+    learner: {
+      id: string;
+      name: string;
+      email: string;
+      learning_style: LearningStyle | null;
+      city: string | null;
+      district: string | null;
+      interests: string[];
+    };
+    recommendations: Recommendation[];
+    total_found: number;
+    requested: number;
   };
-  recommendations: Recommendation[];
-  total_found: number;
-  requested: number;
 }
 
 export interface RecommendationService {

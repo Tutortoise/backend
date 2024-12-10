@@ -84,18 +84,21 @@ export class InterestRecommendationService implements RecommendationService {
       await this.tutoriesRepository.getTutoriesByLearnerInterests(learnerId);
 
     const result: RecommendationServiceResponse = {
-      learner: {
-        id: learner.id,
-        name: learner.name,
-        email: learner.email,
-        learning_style: learner.learningStyle,
-        city: learner.city,
-        district: learner.district,
-        interests: learner.interests,
+      status: "success",
+      data: {
+        learner: {
+          id: learner.id,
+          name: learner.name,
+          email: learner.email,
+          learning_style: learner.learningStyle,
+          city: learner.city,
+          district: learner.district,
+          interests: learner.interests,
+        },
+        recommendations,
+        total_found: 0,
+        requested: 0,
       },
-      recommendations,
-      total_found: 0,
-      requested: 0,
     };
 
     return result;

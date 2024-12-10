@@ -287,7 +287,7 @@ export const getRecommendations: Controller = async (req, res) => {
 
     res.json({
       status: "success",
-      data: recommendations,
+      data: recommendations?.data,
     });
   } catch (error) {
     logger.error(`Failed to get recommendations: ${error}`);
