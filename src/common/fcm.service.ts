@@ -17,41 +17,38 @@ export class FCMService {
     await this.deps.fcmRepository.removeToken(userId, token);
   }
 
-  async sendChatNotification(
-    recipientId: string,
-    senderName: string,
-    senderId: string,
-    message: { content: string; type: MessageType },
-    roomId: string,
+  async getUserTokens(userId: string): Promise<string[]> {
+    return await this.deps.fcmRepository.getUserTokens(userId);
+  }
+
+  private async removeInvalidTokens(userId: string, invalidTokens: string[]) {
+    await this.deps.fcmRepository.removeInvalidTokens(userId, invalidTokens);
+  }
+
+  async sendNotification(
+    userId: string,
+    notification: {
+      title: string;
+      body: string;
+      data?: Record<string, any>;
+    },
   ): Promise<void> {
-    const tokens = await this.deps.fcmRepository.getUserTokens(recipientId);
+    const tokens = await this.getUserTokens(userId);
     if (!tokens.length) return;
 
-    const messagePreview =
-      message.type === "image" ? "📷 Image" : message.content;
-    const truncatedPreview =
-      messagePreview.length > 50
-        ? `${messagePreview.substring(0, 47)}...`
-        : messagePreview;
-
-    const notificationMessage = {
+    const message = {
       notification: {
-        title: `New message from ${senderName || "Unknown User"}`,
-        body: truncatedPreview,
+        title: notification.title,
+        body: notification.body,
       },
       data: {
-        type: "chat_message",
-        roomId,
-        senderName: senderName || "Unknown User",
-        senderId: senderId || "",
-        content: truncatedPreview,
-        title: `New message from ${senderName || "Unknown User"}`,
+        ...notification.data,
         click_action: "FLUTTER_NOTIFICATION_CLICK",
       },
       tokens,
     };
 
-    const response = await messaging.sendEachForMulticast(notificationMessage);
+    const response = await messaging.sendEachForMulticast(message);
 
     if (response.failureCount > 0) {
       const invalidTokens = response.responses
@@ -59,12 +56,35 @@ export class FCMService {
         .filter((token): token is string => token !== null);
 
       if (invalidTokens.length > 0) {
-        return await this.removeInvalidTokens(recipientId, invalidTokens);
+        await this.removeInvalidTokens(userId, invalidTokens);
       }
     }
   }
 
-  private async removeInvalidTokens(userId: string, invalidTokens: string[]) {
-    await this.deps.fcmRepository.removeInvalidTokens(userId, invalidTokens);
+  async sendChatNotification(
+    recipientId: string,
+    senderName: string,
+    senderId: string,
+    message: { content: string; type: MessageType },
+    roomId: string,
+  ): Promise<void> {
+    const messagePreview =
+      message.type === "image" ? "📷 Image" : message.content;
+    const truncatedPreview =
+      messagePreview.length > 50
+        ? `${messagePreview.substring(0, 47)}...`
+        : messagePreview;
+
+    await this.sendNotification(recipientId, {
+      title: `New message from ${senderName || "Unknown User"}`,
+      body: truncatedPreview,
+      data: {
+        type: "chat_message",
+        roomId,
+        senderName: senderName || "Unknown User",
+        senderId: senderId || "",
+        content: truncatedPreview,
+      },
+    });
   }
 }

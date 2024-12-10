@@ -46,6 +46,21 @@ export const messageTypeEnum = pgEnum("message_type", MESSAGE_TYPES);
 export type UserRole = (typeof USER_ROLES)[number];
 export type MessageType = (typeof MESSAGE_TYPES)[number];
 
+export const NOTIFICATION_TYPES = [
+  "order_accepted",
+  "order_declined",
+  "order_canceled",
+  "new_order",
+  "chat_message",
+] as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export const notificationTypeEnum = pgEnum(
+  "notification_type",
+  NOTIFICATION_TYPES,
+);
+
 // Tables
 export const categories = pgTable("categories", {
   id: uuid().primaryKey().defaultRandom(),
@@ -194,6 +209,24 @@ export const chatMessages = pgTable(
       senderIdIdx: index("chat_messages_sender_idx").on(table.senderId),
     };
   },
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    type: notificationTypeEnum("type").notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    message: varchar("message", { length: 255 }).notNull(),
+    data: jsonb("data").$type<Record<string, any>>(),
+    isRead: boolean("is_read").default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdIdx: index("notifications_user_id_idx").on(table.userId),
+    createdAtIdx: index("notifications_created_at_idx").on(table.createdAt),
+  }),
 );
 
 export const fcmTokens = pgTable(

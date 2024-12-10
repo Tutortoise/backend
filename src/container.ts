@@ -14,6 +14,7 @@ import { AbusiveDetectionService } from "./module/abusive-detection/abusive-dete
 import { createAbusiveDetectionService } from "@/module/abusive-detection/abusive-detection.factory";
 import { createRecommendationService } from "./module/recommendation/recommendation.factory";
 import { RecommendationService } from "./module/recommendation/recommendation.interface";
+import { NotificationRepository } from "./module/notification/notification.repository";
 
 interface Container {
   authRepository: AuthRepository;
@@ -25,6 +26,7 @@ interface Container {
   chatRepository: ChatRepository;
   fcmRepository: FCMRepository;
   reviewRepository: ReviewRepository;
+  notificationRepository: NotificationRepository;
   faceValidationService: FaceValidationService;
   abusiveDetectionService: AbusiveDetectionService;
   recommendationService: RecommendationService;
@@ -43,6 +45,7 @@ export const setupContainer = (): Container => {
     const chatRepository = new ChatRepository(db);
     const fcmRepository = new FCMRepository(db);
     const reviewRepository = new ReviewRepository(db);
+    const notificationRepository = new NotificationRepository(db);
 
     containerInstance = {
       authRepository,
@@ -54,6 +57,7 @@ export const setupContainer = (): Container => {
       chatRepository,
       fcmRepository,
       reviewRepository,
+      notificationRepository,
       faceValidationService: createFaceValidationService(),
       abusiveDetectionService: createAbusiveDetectionService(),
       recommendationService: createRecommendationService(

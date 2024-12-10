@@ -1,3 +1,4 @@
+import { FCMService } from "@/common/fcm.service";
 import { container } from "@/container";
 import {
   changeOrderStatusSchema,
@@ -9,16 +10,22 @@ import { TutoriesService } from "@/module/tutories/tutories.service";
 import { Controller } from "@/types";
 import { logger } from "@middleware/logging.middleware";
 import { z } from "zod";
+import { NotificationService } from "../notification/notification.service";
 
 const orderService = new OrderService({
   orderRepository: container.orderRepository,
   tutoriesRepository: container.tutoriesRepository,
+  notificationService: new NotificationService({
+    notificationRepository: container.notificationRepository,
+    fcmService: new FCMService({ fcmRepository: container.fcmRepository }),
+  }),
 });
 const tutoriesService = new TutoriesService({
   tutoriesRepository: container.tutoriesRepository,
   tutorRepository: container.tutorRepository,
   reviewRepository: container.reviewRepository,
   abusiveDetection: container.abusiveDetectionService,
+  recommender: container.recommendationService,
 });
 
 type GetMyOrdersSchema = z.infer<typeof getMyOrdersSchema>;

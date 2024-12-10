@@ -2,22 +2,27 @@ import { createOrderSchema } from "@/module/order/order.schema";
 import { z } from "zod";
 import { OrderRepository } from "./order.repository";
 import { TutoriesRepository } from "../tutories/tutories.repository";
+import { NotificationService } from "../notification/notification.service";
 
 export interface OrderServiceDependencies {
   orderRepository: OrderRepository;
   tutoriesRepository: TutoriesRepository;
+  notificationService: NotificationService;
 }
 
 export class OrderService {
   private orderRepository: OrderRepository;
   private tutoriesRepository: TutoriesRepository;
+  private notificationService: NotificationService;
 
   constructor({
     orderRepository,
     tutoriesRepository,
+    notificationService,
   }: OrderServiceDependencies) {
     this.orderRepository = orderRepository;
     this.tutoriesRepository = tutoriesRepository;
+    this.notificationService = notificationService;
   }
 
   async getOrderById(orderId: string) {
@@ -63,6 +68,17 @@ export class OrderService {
         status: "pending",
       });
 
+      await this.notificationService.createNotification({
+        userId: tutories.tutorId,
+        type: "new_order",
+        title: "New Order",
+        message: `You have a new order request for ${tutories.name}`,
+        data: {
+          orderId: order[0].id,
+          tutoriesId: data.tutoriesId,
+        },
+      });
+
       return {
         orderId: order[0].id,
       };
@@ -101,6 +117,17 @@ export class OrderService {
       );
 
       await Promise.all(updatePromises);
+
+      await this.notificationService.createNotification({
+        userId: order[0].orders.learnerId,
+        type: "order_accepted",
+        title: "Order Accepted",
+        message: `Your order for ${order[0].tutories.name} has been accepted`,
+        data: {
+          orderId,
+          tutoriesId: order[0].tutories.id,
+        },
+      });
     } catch (error) {
       throw new Error(`Failed to accept order: ${error}`);
     }
@@ -108,9 +135,22 @@ export class OrderService {
 
   async declineOrder(orderId: string) {
     try {
-      return this.orderRepository.updateOrder(orderId, {
+      await this.orderRepository.updateOrder(orderId, {
         status: "declined",
         updatedAt: new Date(),
+      });
+
+      const order = await this.orderRepository.getOrderById(orderId);
+
+      await this.notificationService.createNotification({
+        userId: order[0].orders.learnerId,
+        type: "order_declined",
+        title: "Order Declined",
+        message: `Your order for ${order[0].tutories.name} has been declined`,
+        data: {
+          orderId,
+          tutoriesId: order[0].tutories.id,
+        },
       });
     } catch (error) {
       throw new Error(`Failed to decline order: ${error}`);
