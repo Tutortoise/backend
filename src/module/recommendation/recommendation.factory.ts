@@ -37,7 +37,7 @@ export const createRecommendationService = (
     return service;
   } catch (error) {
     logger.warn(
-      `Recommendation service is unavailable: ${error}, falling back to NoOp service`,
+      `Recommendation service is unavailable: ${error}, falling back to simple interest-matching service`,
     );
     return new InterestRecommendationService(
       learnerRepository,
