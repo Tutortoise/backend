@@ -10,12 +10,14 @@ import { ValidationError } from "../tutor/tutor.error";
 import { TutorRepository } from "../tutor/tutor.repository";
 import { GetTutoriesFilters } from "@/types";
 import { AbusiveDetectionService } from "@/module/abusive-detection/abusive-detection.interface";
+import { RecommendationService } from "../recommendation/recommendation.interface";
 
 export interface TutorServiceServiceDependencies {
   tutoriesRepository: TutoriesRepository;
   tutorRepository: TutorRepository;
   reviewRepository: ReviewRepository;
   abusiveDetection: AbusiveDetectionService;
+  recommender: RecommendationService;
 }
 
 export class TutoriesService {
@@ -23,17 +25,20 @@ export class TutoriesService {
   private tutorRepository: TutorRepository;
   private reviewRepository: ReviewRepository;
   private abusiveDetection: AbusiveDetectionService;
+  private recommender: RecommendationService;
 
   constructor({
     tutoriesRepository,
     tutorRepository,
     reviewRepository,
     abusiveDetection,
+    recommender,
   }: TutorServiceServiceDependencies) {
     this.tutoriesRepository = tutoriesRepository;
     this.tutorRepository = tutorRepository;
     this.reviewRepository = reviewRepository;
     this.abusiveDetection = abusiveDetection;
+    this.recommender = recommender;
   }
 
   private async validateContent(content: string, fieldName: string) {
@@ -123,6 +128,22 @@ export class TutoriesService {
       return await this.tutorRepository.getLocations();
     } catch (error) {
       logger.error(`Failed to get all tutories location: ${error}`);
+    }
+  }
+
+  async getRecommendations(learnerId: string) {
+    try {
+      return await this.recommender.getRecommendations(learnerId);
+    } catch (error) {
+      logger.error(`Failed to get recommendations: ${error}`);
+    }
+  }
+
+  async trackInteraction(learnerId: string, tutoriesId: string) {
+    try {
+      await this.recommender.trackInteraction(learnerId, tutoriesId);
+    } catch (error) {
+      logger.error(`Failed to track interaction: ${error}`);
     }
   }
 

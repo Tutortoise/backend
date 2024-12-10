@@ -3,6 +3,8 @@ import { z } from "zod";
 
 const categoryRepository = container.categoryRepository;
 const tutorRepository = container.tutorRepository;
+const learnerRepository = container.learnerRepository;
+const tutoriesRepository = container.tutoriesRepository;
 
 export const tutoriesSchema = z.object({
   id: z.string().optional(),
@@ -146,5 +148,50 @@ export type UpdateTutories = z.infer<typeof updateTutoriesSchema>["body"];
 export const deleteTutoriesSchema = z.object({
   params: z.object({
     tutoriesId: z.string(),
+  }),
+});
+
+export const getRecommendationsSchema = z.object({
+  params: z.object({
+    learnerId: z.string().superRefine(async (learnerId, ctx) => {
+      try {
+        const exists =
+          await container.learnerRepository.checkLearnerExists(learnerId);
+        if (!exists) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Learner does not exist",
+          });
+        }
+      } catch (error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Failed to check if learner exists ",
+        });
+      }
+    }),
+  }),
+});
+
+export const trackInteractionSchema = z.object({
+  params: z.object({
+    learnerId: z.string().superRefine(async (learnerId, ctx) => {
+      const exists = await learnerRepository.checkLearnerExists(learnerId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Learner does not exist",
+        });
+      }
+    }),
+    tutoriesId: z.string().superRefine(async (tutoriesId, ctx) => {
+      const exists = await tutoriesRepository.checkTutoriesExists(tutoriesId);
+      if (!exists) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Tutories does not exist",
+        });
+      }
+    }),
   }),
 });

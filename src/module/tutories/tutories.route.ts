@@ -3,7 +3,9 @@ import * as tutoriesController from "@/module/tutories/tutories.controller";
 import {
   createTutoriesSchema,
   getAverageRateSchema,
+  getRecommendationsSchema,
   getTutoriesSchema,
+  trackInteractionSchema,
   updateTutoriesSchema,
 } from "@/module/tutories/tutories.schema";
 import { validator } from "@middleware/validation.middleware";
@@ -34,10 +36,25 @@ tutoriesRouter.get(
 );
 
 tutoriesRouter.get(
+  "/recommendations/:learnerId",
+  // #swagger.tags = ['tutors/services']
+  validator(getRecommendationsSchema),
+  tutoriesController.getRecommendations,
+);
+
+tutoriesRouter.get(
+  "/interaction/:learnerId/:tutoriesId",
+  validator(trackInteractionSchema),
+  tutoriesController.trackInteraction,
+);
+
+tutoriesRouter.get(
   "/:tutoriesId",
   // #swagger.tags = ['tutors/services']
   tutoriesController.getTutories,
 );
+
+// Tutor only routes
 
 tutoriesRouter.use(verifyTutor);
 
