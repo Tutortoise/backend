@@ -16,7 +16,7 @@ export const runSeeder = async () => {
   await seedTutories({ generateWithGroq: true });
   await assignTutorProfilePictures();
   await seedOrders();
-  await seedReviews();
+  await seedReviews({ generateWithGroq: true });
 };
 
 runSeeder();

@@ -90,6 +90,7 @@ export class OrderRepository {
     const query = this.db
       .select({
         id: orders.id,
+        name: tutoriesTable.name,
         status: orders.status,
         sessionTime: orders.sessionTime,
         estimatedEndTime: orders.estimatedEndTime,
