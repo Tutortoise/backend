@@ -3,6 +3,8 @@
 This project is a RESTful API built with **Express.js**, providing a platform for
 learners and tutors to interact, manage orders, reviews, and more.
 
+You can view the API documentation [here](https://tutortoise.github.io/backend/api/).
+
 ## Tech Stack
 
 - **Express.js**: Web framework for building REST APIs.
