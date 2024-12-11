@@ -23,12 +23,14 @@ learnerRouter.use(verifyLearner);
 learnerRouter.get(
   "/profile",
   // #swagger.tags = ['learners']
+  // #swagger.description = 'Get the profile data of the currently logged in learner'
   learnerController.getProfile,
 );
 
 learnerRouter.patch(
   "/profile",
   /* #swagger.tags = ['learners']
+  #swagger.description = 'Update the profile data of the currently logged in learner'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/UpdateLearnerProfileSchema" }
   } */
@@ -39,6 +41,7 @@ learnerRouter.patch(
 learnerRouter.patch(
   "/profile/learning-style",
   /* #swagger.tags = ['learners']
+  #swagger.description = 'Update the learning style of the currently logged in learner'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/UpdateLearningStyleSchema" }
   } */
@@ -49,6 +52,7 @@ learnerRouter.patch(
 learnerRouter.patch(
   "/profile/interests",
   /* #swagger.tags = ['learners']
+  #swagger.description = 'Update the interests of the currently logged in learner'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/UpdateInterestsSchema" }
   } */
@@ -59,6 +63,7 @@ learnerRouter.patch(
 learnerRouter.put(
   "/profile/picture",
   /* #swagger.tags = ['learners']
+    #swagger.description = 'Update the profile picture of the currently logged in learner'
     #swagger.requestBody = {
       required: true,
       content: {
@@ -74,6 +79,7 @@ learnerRouter.put(
 learnerRouter.put(
   "/password",
   /* #swagger.tags = ['learners']
+  #swagger.description = 'Change the password of the currently logged in learner'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/ChangePasswordSchema" }
   } */

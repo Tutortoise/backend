@@ -15,6 +15,7 @@ const authRouter = Router();
 authRouter.get(
   "/me",
   // #swagger.tags = ['auth']
+  // #swagger.description = 'Get currently logged in user'
   jwtAuthMiddleware,
   authController.getUser,
 );
@@ -22,6 +23,7 @@ authRouter.get(
 authRouter.post(
   "/register",
   /* #swagger.tags = ['auth']
+  #swagger.description = 'Register a new user'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/RegisterSchema" }
   } */
@@ -32,6 +34,7 @@ authRouter.post(
 authRouter.post(
   "/login",
   /* #swagger.tags = ['auth']
+  #swagger.description = 'Login user'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/LoginSchema" }
   } */
@@ -42,6 +45,7 @@ authRouter.post(
 authRouter.post(
   "/google",
   /* #swagger.tags = ['auth']
+  #swagger.description = 'Login user with Google OAuth'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/OAuthSchema" }
   } */
@@ -52,6 +56,7 @@ authRouter.post(
 authRouter.post(
   "/fcm-token",
   /* #swagger.tags = ['auth']
+  #swagger.description = 'Add FCM token to user'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/FCMTokenSchema" }
   } */
@@ -63,6 +68,7 @@ authRouter.post(
 authRouter.delete(
   "/fcm-token",
   // #swagger.tags = ['auth']
+  // #swagger.description = 'Remove FCM token from user'
   jwtAuthMiddleware,
   validator(fcmTokenSchema),
   authController.removeFCMToken,

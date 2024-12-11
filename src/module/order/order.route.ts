@@ -19,6 +19,7 @@ orderRouter.use(jwtAuthMiddleware);
 orderRouter.get(
   "/me",
   // #swagger.tags = ['orders']
+  // #swagger.description = 'Get all orders (session) of the current user'
   validator(getMyOrdersSchema),
   orderController.getMyOrders,
 );
@@ -26,6 +27,7 @@ orderRouter.get(
 orderRouter.post(
   "/",
   /* #swagger.tags = ['orders'] 
+     #swagger.description = 'Create a new order'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/CreateOrderSchema" }
   } */
@@ -37,6 +39,7 @@ orderRouter.post(
 orderRouter.post(
   "/:orderId/accept",
   // #swagger.tags = ['orders']
+  // #swagger.description = 'Accept an order'
   verifyTutor,
   validator(changeOrderStatusSchema),
   orderController.acceptOrder,
@@ -45,6 +48,7 @@ orderRouter.post(
 orderRouter.post(
   "/:orderId/decline",
   // #swagger.tags = ['orders']
+  // #swagger.description = 'Decline an order'
   verifyTutor,
   validator(changeOrderStatusSchema),
   orderController.declineOrder,
@@ -53,6 +57,7 @@ orderRouter.post(
 orderRouter.post(
   "/:orderId/cancel",
   // #swagger.tags = ['orders']
+  // #swagger.description = 'Cancel an order'
   verifyTutor,
   validator(changeOrderStatusSchema),
   orderController.cancelOrder,
@@ -61,6 +66,7 @@ orderRouter.post(
 orderRouter.get(
   "/unreviewed",
   // #swagger.tags = ['orders']
+  // #swagger.description = 'Get all unreviewed orders of the learner'
   verifyLearner,
   orderController.getUnreviewedOrders,
 );

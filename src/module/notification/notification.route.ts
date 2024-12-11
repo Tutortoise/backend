@@ -18,6 +18,7 @@ notificationRouter.use(jwtAuthMiddleware);
 notificationRouter.get(
   "/",
   // #swagger.tags = ['notifications']
+  // #swagger.description = 'Get all notifications for the logged in user'
   validator(getNotificationsSchema),
   getNotifications,
 );
@@ -25,6 +26,7 @@ notificationRouter.get(
 notificationRouter.post(
   "/:notificationId/read",
   // #swagger.tags = ['notifications']
+  // #swagger.description = 'Mark a notification as read'
   validator(markAsReadSchema),
   markAsRead,
 );
@@ -32,6 +34,7 @@ notificationRouter.post(
 notificationRouter.post(
   "/read-all",
   // #swagger.tags = ['notifications']
+  // #swagger.description = 'Mark all notifications as read'
   markAllAsRead,
 );
 

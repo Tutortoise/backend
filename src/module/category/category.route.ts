@@ -8,6 +8,7 @@ const categoryRouter = Router();
 categoryRouter.get(
   "/",
   // #swagger.tags = ['categories']
+  // #swagger.description = 'Get all categories'
   categoryController.getAllCategories,
 );
 

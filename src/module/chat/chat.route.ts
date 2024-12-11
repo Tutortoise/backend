@@ -19,6 +19,7 @@ chatRouter.use(jwtAuthMiddleware);
 chatRouter.post(
   "/rooms",
   /* #swagger.tags = ['chat'] 
+  #swagger.description = 'Create a new chat room'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/CreateRoomSchema" }
   } */
@@ -28,11 +29,13 @@ chatRouter.post(
 chatRouter.get(
   "/rooms",
   // #swagger.tags = ['chat']
+  // #swagger.description = 'Get all chat rooms'
   chatController.getRooms,
 );
 chatRouter.get(
   "/rooms/:roomId/messages",
   // #swagger.tags = ['chat']
+  // #swagger.description = 'Get messages in a chat room'
   validator(getRoomMessagesSchema),
   chatController.getRoomMessages,
 );
@@ -42,6 +45,7 @@ chatRouter.get(
 chatRouter.post(
   "/rooms/:roomId/messages/text",
   /* #swagger.tags = ['chat'] 
+  #swagger.description = 'Send a text message'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/SendTextMessageSchema" }
   } */
@@ -66,6 +70,7 @@ chatRouter.post(
 chatRouter.post(
   "/rooms/:roomId/typing",
   /* #swagger.tags = ['chat'] 
+  #swagger.description = 'Update typing status'
   #swagger.requestBody = {
     schema: { $ref: "#/components/schemas/SetIsTypingSchema" }
   } */
@@ -85,6 +90,7 @@ chatRouter.post(
 chatRouter.get(
   "/rooms/:roomId/presence",
   // #swagger.tags = ['chat']
+  // #swagger.description = 'Get room presence'
   validator(
     z.object({
       params: z.object({

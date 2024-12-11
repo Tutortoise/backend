@@ -33,12 +33,10 @@ export const components = {
     UpdateLearnerProfileSchema: {
       name: "David Gacoan",
       email: "example@bangkit.academy",
-      phoneNumber: "081234567890",
+      phoneNumber: "6281234567890",
       city: "Samarinda",
       district: "Samarinda Utara",
       gender: "male/female",
-      interests: ["categoryId", "categoryId"],
-      learningStyle: "visual/auditory/kinesthetic",
     },
     UpdateTutorProfileSchema: {
       name: "Dony Gacoan",
@@ -47,7 +45,7 @@ export const components = {
       city: "Samarinda",
       district: "Samarinda Utara",
       gender: "male/female",
-      $availability: {
+      availability: {
         1: ["07:00", "08:00"],
         3: ["08:00", "09:00"],
         6: ["10:00", "13:00"],
