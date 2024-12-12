@@ -84,6 +84,7 @@ export const createReview: Controller<CreateReviewSchema> = async (
         status: "fail",
         message: error.message,
       });
+      return;
     }
 
     logger.error(`Failed to create review: ${error}`);
