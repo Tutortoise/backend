@@ -29,7 +29,7 @@ directories and files:
   - `modules/`: Contains the modules for the application. Each module is a separate directory containing the following:
 
     - `abusive-detection/`: Integrates with API for detecting abusive content.
-    - `auth/`: andles authentication (login, signup) and authorization (role-based access control).
+    - `auth/`: Handles authentication (login, signup) and authorization (role-based access control).
     - `category/`: Category related logic (popular categories, etc.).
     - `chat/`: Manages chat-related functionality, including messages, and media.
     - `face-validation/`: Integrates with API for face validation
